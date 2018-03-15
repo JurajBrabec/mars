@@ -2,7 +2,8 @@
 **/bin
 
 # DB data
-**/data
+/data
+!/data/init.sql
 
 # Log & Temp folders
 **/log
