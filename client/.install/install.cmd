@@ -1,0 +1,61 @@
+@echo off
+REM MARS 4.1 INSTALL FILE
+REM DON'T MODIFY ANYTHING BELOW THIS LINE -------------------------------------------------------------------------------
+REM
+setlocal enabledelayedexpansion
+pushd %~dp0
+FOR /f "delims=" %%i IN ("%~dp0..") DO SET "root=%%~fi"
+set "logfile=%root%\log\install.log"
+if not exist "%root%\log" mkdir "%root%\log"
+if not exist "%root%\tmp" mkdir "%root%\tmp"
+call :echo Installing MARS 4.1 Master Server...
+if "%1" neq "" goto :%1
+"%root%\bin\nodejs\node.exe" "%root%\.install\js\install.js"
+if "%errorlevel%" equ "0" goto :check-ini1
+call :echo MARS installation failed (E:%errorlevel%).
+goto :end
+:check-ini1
+call :echo Checking MARS configuration...
+if exist "%root%\config.ini" goto :check-ini2
+call :echo MARS configuration file does not exist.
+goto :end
+:check-ini2
+findstr "%%DB_HOST%%" "%root%\config.ini" >nul 2>&1
+if "%errorlevel%" equ "1" goto :check-xml1
+call :echo MARS configuration file was not edited.
+goto :end
+:check-xml1
+call :echo Checking XML file...
+if exist "%root%\.install\schtasks.xml" goto :check-xml2
+call :echo XML file does not exist.
+goto :end
+:check-xml2
+findstr "MARS_ROOT" "%root%\.install\schtasks.xml" >nul 2>&1
+if "%errorlevel%" equ "1" goto :redist
+call :echo XML file was not edited.
+goto :end
+:redist
+call :echo Installing Microsoft Visual C++ Redistributable Components...
+start /wait %root%\bin\vcredist_x86.exe /install /passive /promptrestart /showfinalerror
+if "%errorlevel%" equ "0" goto :task
+call :echo Error %errorlevel% installing Microsoft Visual C++ Redistributable Components.
+goto :end
+:task
+call :echo Installing scheduled task...
+SCHTASKS /Create /TN MARS /RU:SYSTEM /XML "%root%\.install\schtasks.xml" /F
+if "%errorlevel%" equ "0" goto :finish
+call :echo Error %errorlevel% installing scheduled task.
+goto :end
+:finish
+call :echo Finished. You can remove "%root%\.install" folder.
+goto :end
+
+:echo
+echo %date% %time% %*
+echo %date% %time% %*>>%logfile%
+goto :eof
+
+:end
+endlocal
+popd
+exit /b %errorlevel%

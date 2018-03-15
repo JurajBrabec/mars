@@ -1,0 +1,13 @@
+# Binary files
+**/bin
+
+# DB data
+**/data
+
+# Log & Temp folders
+**/log
+**/logs
+**/tmp
+
+# Install directory
+!**/.install

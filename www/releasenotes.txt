@@ -1,0 +1,123 @@
+MARS 4.1 Release notes 
+======================
+
+HOW-TO INSTALL:
+---------------
+(Automatic execution)
+•	Remotely upload the ZIP file via Administration interface, or place the ZIP file to MARS root folder
+•	Wait for next Scheduler execution (each 15 minutes)
+•	Check schedule.log/update*.log for results
+(Manual execution)
+•	Extract the ZIP file to MARS folder with overwrite
+•	Open command prompt with Administrative rights in extracted folder
+•	Run .CMD
+•	Delete the .#* folder once finished.
+
+CHANGELOG:
+----------
+16.02.2018 version 4.1 build #2
+•	Modified "Consecutive failures" report so it contains jobs with "NULL" schedules.
+•	Added DB DUMP from SCHEDULER (config.ini: default DB_DUMP_TIME="16:00").
+•	Modified NBU2SM9 ticket generation functionality according to requests.
+
+31.1.2018 version 4.1 build #1
+•	Added NBU2SM9 ticket generation functionality.
+•	Added simple help texts.
+
+22.1.2018 version 4.1 build #0
+•	Updated JQuery to v3.3.1.
+•	Added automatic component version check.
+
+19.1.2018 version 4.0 build #20
+•	Added "Maintenance" button.
+•	Added duration and last execution (tootip) to "Routine" and "Maintenance" buttons.
+•	Added "QRS audit" related reports (if available).
+•	Added "config_settings" table (internal).
+
+10.1.2018 version 4.0 build #19
+•	Bumped binaries versions (PHP & DB) to current values.
+
+4.1.2018 version 4.0 build #18
+•	Added 'Global BSR' reports.
+
+18.12.2017 version 4.0 build #17
+•	Fixed negative 'retention' values in 'Vaults' table.
+
+15.12.2017 version 4.0 build #16
+•	Renamed original 'Clients' report to 'Clients & policies'.
+•	Added new 'Clients' report.
+•	Added 'Type' colum to both reports, which idicates FS or INTEG policy type.
+•	Linked field 'Integ clients' in 'Customer overview' to 'Clients' report.
+
+13.12.2017 version 4.0 build #15
+•	Added 'Execute routine' button to Admin interface.
+•	Bumped binaries versions (DB) to current values.
+
+4.12.2017 version 4.0 build #14
+•	Added 'nbu_event' event.
+•	Added 'nbu_routine' routine.
+•	Bumped binaries versions (DB) to current values.
+
+9.11.2017 version 4.0 build #13
+•	Added 'nbu_maintenance' routine.
+•	Huge speed-up by adding "Policy-Tower-Customer" inter-table.
+•	Bumped binaries versions (HTTP,PHP) to current values.
+
+27.10.2017 version 4.0 build #12
+•	Added posibility to enter "dynamic" date filters, i.e. "[+|-] x [year|month|week|day|hour|minute]".
+
+19.10.2017 version 4.0 build #11
+•	Fixed "Consecutive failures" report.
+•	Fixed missing jobs/policies/schedules with no customer.
+•	Fixed remote upload/installation.
+
+18.10.2017 version 4.0 build #10
+•	Optimized SQL views.
+•	Fixed bugs in report ZIP-ing and time format in jobs list.
+•	Added fields "Exists" and "Last failure" to "Consecutive failures" report.
+
+12.10.2017 version 4.0 build #9
+•	Added update package upload functionality to Admin Web interface.
+•	Added 2 MB limit for HTML mail size. If exceeded, report is sent in a ZIP. Can be changed by "HTML_SIZE_LIMIT=x" in MARS.INI
+
+10.10.2017 version 4.0 build #8
+•	Added field "Integ clients" to "Customers overview" report.
+•	Added "Audits" report group.
+•	Added "Environment Audit" report to "Audits" report group.
+•	Modified "Consecutive failures" report to show policy/schedule combination from jobs rather than from configuration.
+
+6.10.2017 version 4.0 build #7
+•	Bumped binaries versions (HTTP,DB) to current values.
+
+29.9.2017 version 4.0 build #6
+•	Removed "Retention levels" from "NBU Codes". Now they are loaded from "bpretlevel" command.
+•	Fixed issue in "Overview" reports.
+•	Client is now capable to update itself remotely from web server.
+
+8.9.2017 version 4.0 build #5
+•	Added "Consecutive failures" report to "NBU Reports" group.
+•	Removed fields "Ticket Postpone Time" and "Backup Reportable" from "NBU2ESL" export.
+•	Bumped binaries versions (DB) to current values.
+
+14.7.2017 version 4.0 build #4
+•	Added field "Include" to "Policies" report.
+•	Added "Vault" policy type (30).
+•	Added "Vaults" report group.
+•	Added "Robots", "Vaults", "Profiles", "Classes", "Clients" and "Schedules" reports to "Vaults" report group.
+•	Added "custom" VPC retention levels.
+•	Bumped binaries versions (HTTP,DB,PHP) to current values.
+
+13.6.2017 version 4.0 build #3
+•	Added "Clients overview" report.
+•	Added "Customers overview" report.
+•	Added "Written (GB)" field to policies/schedules/clients reports.
+
+2.6.2017 version 4.0 build #2
+•	Added "Jobs overview" report.
+•	Modal dialogs (add/modify/delete/login) are now draggable.
+•	Added JQueryUI component.
+•	Bumped MariaDB version to 10.1.24.
+•	Changed few report colors.
+
+1.6.2017 version 4.0 build #1
+•	Initial release.

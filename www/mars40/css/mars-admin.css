@@ -1,0 +1,58 @@
+nav.navbar {
+	border-bottom: 3px solid #64ff00;
+}
+div#admin-container {
+	overflow-x: auto;
+	margin: 8px 4px;
+}
+div#admin-container div.panel-body {
+	overflow-x: auto;
+	margin: 8px 4px;
+}
+div#admin-container table {
+	border: #ddd 1px solid;
+	border-collapse: collapse;
+	color: #333333; 
+	text-align: left; 
+	margin-bottom: 1px !important;
+	font-size: 11px;
+}
+div#admin-container th {
+	border: #ddd 1px solid;
+	padding: 2px 4px;
+	text-align: center; 
+	color: black;
+	background-color: #f5f5f5;
+	white-space: nowrap;
+}
+div#admin-container tr {
+	color: green;
+	background-color: honeydew;
+}
+div#admin-container tr.updated {
+	color: green;
+	background-color: palegreen;
+}
+div#admin-container tr.created {
+	color: green;
+	background-color: greenyellow;
+}
+div#admin-container tr.obsoleted {
+	color: gray;
+	background-color: darkseagreen;
+}
+div#admin-container td {
+	border: #ddd 1px solid;
+	padding: 4px 4px; 
+	vertical-align: middle;
+	white-space: nowrap;
+}
+div#admin-container td.readonly {
+	color: gray;
+	font-size: 80%;
+}
+
+.pace .pace-progress {
+  background: #64ff00;
+}
+

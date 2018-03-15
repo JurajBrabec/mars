@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<link href="css/jquery-ui.min.css" rel="stylesheet" media="screen">
+<link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+<link href="css/bootstrap-theme.css" rel="stylesheet" media="screen">
+<link href="css/toastr.min.css" rel="stylesheet" media="screen">
+<link href="css/mars.css" rel="stylesheet" media="screen">
+<link href="css/mars-report.css" rel="stylesheet" media="screen">
+<link href="css/mars-admin.css" rel="stylesheet" media="screen">
+<script src="js/pace.min.js"></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/jquery-ui.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/toastr.min.js"></script>
+<script src="js/mars.js"></script>
+<title>MARS Admin interface</title>
+<style id="style" type="text/css"></style>
+</head>
+<body>
+<noscript><h1>Javascript not available.</h1></noscript>
+<div class="container">
+
+<nav class="navbar navbar-inverse navbar-fixed-top navbar-admin">
+	<div class="container-fluid">
+	
+	<div class="navbar-header">
+	<img src="img/header.png">
+		<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1">
+			<span class="sr-only">Toggle navigation</span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+		</button>
+		<a id="imgBrand" class="helpTooltip navbar-brand" href=""><img src="img/mars.png"></a>
+	</div>
+
+	<div class="collapse navbar-collapse" id="navbar-collapse-1">
+		<ul class="nav navbar-nav" id="menu">
+		</ul>
+		<ul class="nav navbar-nav navbar-right" id="right-menu">
+			<li id="liLogout" class="helpTooltip"><a id="logout"><span class="glyphicon glyphicon-log-out"></span></a></li>
+		</ul>
+	</div>
+
+	</div>
+</nav>
+
+<div id="admin-container">
+	<div id="buttons">
+		<span class="help-block">
+			Execute routine or maintenance tasks.
+		</span>
+		<button id="nbu_event" type="button" class="helpTooltip btn btn-default" disabled="disabled"><i class="glyphicon glyphicon-upload"></i> <span id="text">Routine (<span id="duration"></span>s.)</span></button>
+		<button id="nbu_maintenance" type="button" class="helpTooltip btn btn-default" disabled="disabled"><i class="glyphicon glyphicon-wrench"></i> <span id="text">Maintenance (<span id="duration"></span>s.)</span></button>
+	</div>
+	</p>
+	<div id="upload" class="helpTooltip">
+		<span class="help-block">
+			Select the MARS update package and upload it to the Web/DB server
+		</span>
+		<div class="input-group">
+			<label id="uploadfile" class="input-group-btn">
+				<span class="btn btn-default disabled">
+					<i class="glyphicon glyphicon-plus"></i>
+					Select package<input id="uploadfile" type="file" style="display: none;" disabled="disabled" required>
+				</span>
+			</label>
+			<input id="filename" type="text" class="form-control" readonly>
+			<label id="upload" class="input-group-btn">
+				<button id="upload" type="button" class="btn btn-success" disabled="disabled"><i class="glyphicon glyphicon-upload"></i> Upload package</button>
+			</label>
+		</div>
+	</div>
+</div>
+<div id="copyright"></div>
+<button id="gotop" type="button" class="btn btn-default btn-xs" onclick="goTop()" title="Return to top of page"><span class="glyphicon glyphicon-triangle-top"></span> Top</button>
+<div class="modal bs-example-modal" id="logon" tabindex="-1" role="dialog">
+	<div class="modal-dialog modal-sm" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+				<h4 class="modal-title"><span class="glyphicon glyphicon-cog"></span> Sign in</h4>
+			</div>
+			<div class="modal-body">
+				<div class="row">
+					<div class="col-md-10 col-md-offset-1">
+						<form>
+							<div class="form-group"><div class="input-group"><span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span><input id="username" type="text" class="form-control" placeholder="User name"></div></div>
+							<div class="form-group"><div class="input-group"><span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span><input id="password" type="password" class="form-control" placeholder="Password"></div></div>
+							<div class="form-group"><button id="signin" class="helpTooltip btn btn-md btn-success btn-block"><span class="glyphicon glyphicon-log-in"></span> Sign in</button></div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="modal" id="modal" tabindex="-1" role="dialog">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<form role="form" action="" method="post">
+			<div class="modal-header">
+				<button type="button" class="Close" data-dismiss="modal"><span>&times;</span></button>
+				<h4><span id="modal-icon"></span>&nbsp;<span id="modal-title"></span></h4>
+			</div>
+			<div class="modal-body">
+			</div>
+			<div class="modal-footer">
+			</div>
+			</form>
+		</div>
+	</div>
+</div>
+</div>
+</body>
+</html>

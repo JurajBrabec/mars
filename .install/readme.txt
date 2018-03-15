@@ -1,0 +1,48 @@
+MARS 4.1 Installation guide
+
+Recommended installation order:
+	1)	Web/DB server installation
+	2)	Master Server installation
+
+Pre-requisites:
+
+Web/DB server must be a windows based platform (64 bits).
+HTTP port 80 must be free.
+DB port 3306 must be free.
+Free disk space required: 100MB for the Application and 1GB for the DB.
+Connectivity on DB port open between Master Server and Web/DB server.
+
+Steps:
+
+1) Web/DB Server - (Windows 64bit)
+	Assuming the root folder (%MARS_HOME%) for the script will be C:\MARS
+	1.1) Installation:
+		Extract supplied archive MARS41.ZIP to %MARS_HOME%
+		Edit file %MARS_HOME%\.install\install.ini
+			modify SITE_NAME (enter the name of the site you are installing)
+			modify TIME_ZONE (enter the local time zone) - use only valid PHP time zones from http://php.net/manual/en/timezones.php !!
+			modify SMTP_SERVER (needed only to send reports via mail)
+		Execute file %MARS_HOME%\.install\install.cmd
+			If there is no error, you should be able to open http://localhost/mars40 or http://%DB_HOST%/mars40 in web browser.
+			In case of any issues, refer to the %MAR_HOME%\logs\install.log log file.
+	1.2) Final configuration:
+		Log in to MARS administration interface (http://localhost/mars40/admin.html or http://%DB_HOST%/mars40/admin.html).
+			Add Customers and other settings.
+		Install any MARS patches/upgrades you may have available.
+
+2) Master Servers (Windows)
+	Assuming the root folder (%MARS_HOME%) for the script will be C:\MARS for single-node Master Server or M:\share\MARS for clustered Master Servers.
+	2.1) Installation:
+		Extract supplied archive MARS41-CLIENT.ZIP to %MARS_HOME%
+		Edit file %MARS_HOME%\.install\install.ini
+			modify TIME_ZONE (enter the local time zone) - use only valid PHP time zones from http://php.net/manual/en/timezones.php !!
+			modify VERITAS_HOME (enter the folder, where Veritas binaries are installed)
+			modify VAULT_HOME (enter the folder, where NetBackup vault.xml file is located)
+			modify DB_HOST (enter the FQDN of Web/DB server)
+		Execute file %MARS_HOME%\.install\install.cmd
+			If there is no error, everything is done.
+			In case of any issues, refer to the %MARS_HOME%\log\install.log log file.
+	2.2) Execution:
+		Wait up to 5 minutes, or manually execute the file %MARS_HOME%\mars4.cmd.
+		You should be able to see first jobs appearing in Web Interface.
+		In case of any issues, refer to the %MARS_HOME%\log\mars4.log log file.
