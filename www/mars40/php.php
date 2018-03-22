@@ -181,7 +181,7 @@ function get_config( ) {
 			$config[ 'classes' ] = $classes;
 			mysqli_close( $db );
 		} else {
-			$config[ 'error' ] = mysqli_connect_error( $db );
+			$config[ 'error' ] = 'Connect error (' . mysqli_connect_errno() . '): ' . mysqli_connect_error();
 		}
 	}
 	$config[ 'ini' ] = $ini;

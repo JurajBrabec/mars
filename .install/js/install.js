@@ -4,6 +4,7 @@ var root = path.resolve( __dirname, '../..' );
 module.paths = [ path.resolve( root, 'bin/nodejs/node_modules' ) ];
 var ini = require( 'ini' );
 var config = ini.parse( fs.readFileSync( path.resolve( root, '.install/install.ini' ), 'utf-8' ) )
+var arg = process.argv[ 2 ];
 
 console.log( 'Processing config.ini ...' );
 var data = fs.readFileSync( path.resolve( root, '.install/conf/config.ini' ), 'utf-8' );
@@ -15,8 +16,9 @@ data = data.replace( /%SMTP_SERVER%/gim, config.Optional.SMTP_SERVER );
 data = data.replace( /%SMTP_FROM%/gim, config.Optional.SMTP_FROM );
 fs.writeFileSync( path.resolve( root, 'www/mars40/config.ini' ), data, 'utf-8' );
 
-console.log( 'Processing httpd.conf ...' );
-var data = fs.readFileSync( path.resolve( root, '.install/conf/httpd.conf' ), 'utf-8' );
+var src = ( arg == 'SSL' ? 'httpd-ssl.conf' : 'httpd.conf' );
+console.log( 'Processing ' + src + ' ...' );
+var data = fs.readFileSync( path.resolve( root, '.install/conf/' + src ), 'utf-8' );
 data = data.replace( /%MARS_ROOT%/gim, root.replace( /\\/g, '/' ) );
 data = data.replace( /%SERVER_ADMIN%/gim, config.Optional.SERVER_ADMIN );
 fs.writeFileSync( path.resolve( root, 'conf/httpd.conf' ), data, 'utf-8' );

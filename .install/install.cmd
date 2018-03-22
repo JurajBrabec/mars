@@ -7,18 +7,19 @@ pushd %~dp0
 FOR /f "delims=" %%i IN ("%~dp0..") DO SET "root=%%~fi"
 set "logfile=%root%\logs\install.log"
 call :echo Installing MARS 4.1 Web/DB server...
-if "%1" neq "" goto :%1
-:check-ok
+set port=80
+if "%1" equ "SSL" set port=443
 set "_file=%TEMP%\marsinst.tmp"
 call :echo Checking ports / processes...
-call :checkport 80
+call :checkport %port%
 call :checkport 3306
 if exist %_file% goto :check-ok
 call :echo Exiting.
 goto :end
 :check-ok
 del %_file% >nul
-"%root%\bin\nodejs\node.exe" "%root%\.install\js\install.js"
+if "%1" equ "SSL" xcopy /q /y "%root%\.install\conf\*.pem" "%root%\conf" >nul 2>&1
+"%root%\bin\nodejs\node.exe" "%root%\.install\js\install.js" %1
 :check-http1
 call :echo Checking HTTP configuration...
 if exist "%root%\conf\httpd.conf" goto :check-http2
