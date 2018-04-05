@@ -14,7 +14,7 @@ call :echo DB export of database '%db%' finished.
 goto :end
 
 :echo
-echo %date% %time% %*
+echo %time% %*
 echo %date% %time% %*>>%logfile%
 goto :eof
 

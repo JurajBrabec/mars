@@ -120,7 +120,7 @@ del %_file%
 goto :eof
 
 :echo
-echo %date% %time% %*
+echo %time% %*
 echo %date% %time% %*>>%logfile%
 goto :eof
 

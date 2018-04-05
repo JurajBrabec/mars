@@ -58,7 +58,7 @@ call :echo DB Initialization finished.
 goto :end
 
 :echo
-echo %date% %time% %*
+echo %time% %*
 echo %date% %time% %*>>%logfile%
 goto :eof
 
