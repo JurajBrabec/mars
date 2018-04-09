@@ -53,7 +53,7 @@ goto :eof
 :echo
 echo %time% %*
 if "%logfile%" equ "" goto :eof
-echo %date% %time% %*>>%logfile%
+echo %date% %time% %*>>"%logfile%"
 goto :eof
 
 :end

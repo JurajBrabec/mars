@@ -36,20 +36,20 @@ call :echo Error %errorlevel% starting DB service.
 goto :end
 :create
 call :echo Creating database...
-"%root%\bin\7z.exe" e -so "%root%\cmd\init\init.7z" create.sql | "%root%\bin\db\bin\mysql.exe" --user=root --password="" >>%logfile%
+"%root%\bin\7z.exe" e -so "%root%\cmd\init\init.7z" create.sql | "%root%\bin\db\bin\mysql.exe" --user=root --password="" >>"%logfile%"
 if "%errorlevel%" equ "0" goto :configure
 call :echo Error %errorlevel% creating database.
 goto :end
 :configure
 call :echo Configuring database...
-"%root%\bin\7z.exe" e -so "%root%\cmd\init\init.7z" config.sql | "%root%\bin\db\bin\mysql.exe" --user=root >>%logfile%
+"%root%\bin\7z.exe" e -so "%root%\cmd\init\init.7z" config.sql | "%root%\bin\db\bin\mysql.exe" --user=root >>"%logfile%"
 if "%errorlevel%" equ "0" goto :nbu
 call :echo Error %errorlevel% configuring database.
 goto :end
 :nbu
 call :echo Creating NBU database...
 "%root%\bin\7z.exe" e -so "%root%\cmd\init\init.7z" init.sql>"%root%\data\init.sql"
-"%root%\bin\7z.exe" e -so "%root%\cmd\init\init.7z" nbu.sql | "%root%\bin\db\bin\mysql.exe" --user=root >>%logfile%
+"%root%\bin\7z.exe" e -so "%root%\cmd\init\init.7z" nbu.sql | "%root%\bin\db\bin\mysql.exe" --user=root >>"%logfile%"
 if "%errorlevel%" equ "0" goto :http
 call :echo Error %errorlevel% creating NBU database.
 :http
@@ -63,7 +63,7 @@ goto :end
 
 :echo
 echo %time% %*
-echo %date% %time% %*>>%logfile%
+echo %date% %time% %*>>"%logfile%"
 goto :eof
 
 :end

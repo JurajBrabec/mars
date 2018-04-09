@@ -141,6 +141,7 @@ function get_config( ) {
 		$config = $_SESSION[ 'config' ];
 	} else {
 		$config = array( );
+		$config[ 'root' ] = substr( __DIR__, 0, strpos( __DIR__, 'www' ) );
 		if ( $db = mysqli_connect( $ini[ 'DB_HOST' ], $ini[ 'DB_USER' ], $ini[ 'DB_PWD' ], $ini[ 'DB_NAME' ] ) ) {
 			define( 'MariaDBVersion', implode( sscanf( mysqli_get_server_info( $db ), '5.5.5-%d.%d.%d-MariaDB' ), '.' ) );
 			$sql = 'select * from config_towers where obsoleted is null order by name;';
@@ -185,7 +186,7 @@ function get_config( ) {
 		}
 	}
 	$config[ 'ini' ] = $ini;
-	$config[ 'build' ] = trim( file_get_contents( sprintf( '%s/../build', dirname( __FILE__ ) ) ) );
+	$config[ 'build' ] = trim( file_get_contents( sprintf( '%s/build', $config[ 'root' ] ) ) );
 	$config[ 'copyright' ] = get_copyright( );
 	$_SESSION[ 'config' ] = $config;
 	return $_SESSION[ 'config' ];
@@ -195,6 +196,7 @@ function get_admin_config( ) {
 	global $ini;
 	
 	$config = array( );
+	$config[ 'root' ] = substr( __DIR__, 0, strpos( __DIR__, 'www' ) );
 	$config[ 'username' ] = empty( $_SESSION[ 'username' ] ) ? '' : $_SESSION[ 'username' ];
 	$config[ 'password' ] = empty( $_SESSION[ 'password' ] ) ? '' : $_SESSION[ 'password' ];
 	if ( $db = mysqli_connect( $ini[ 'DB_HOST' ], $ini[ 'DB_USER' ], $ini[ 'DB_PWD' ], $ini[ 'DB_NAME' ] ) ) {
@@ -225,7 +227,7 @@ function get_admin_config( ) {
 		$config[ 'error' ] = mysqli_connect_error( $db );
 	}
 	$config[ 'ini' ] = $ini;
-	$config[ 'build' ] = trim( file_get_contents( sprintf( '%s/../build', __DIR__ ) ) );
+	$config[ 'build' ] = trim( file_get_contents( sprintf( '%s/build', $config[ 'root' ] ) ) );
 	$config[ 'copyright' ] = get_copyright( );
 	return $config;
 }
@@ -804,7 +806,8 @@ $sorts = array(
 	);
 
 date_default_timezone_set( @date_default_timezone_get( ) );
-$ini = array_change_key_case( parse_ini_file( sprintf( '%s/config.ini', __DIR__ ) ), CASE_UPPER );
+$ini_file = sprintf( '%s/conf/config.ini', substr( __DIR__, 0, strpos( __DIR__, 'www' ) ) );
+$ini = array_change_key_case( parse_ini_file( $ini_file ), CASE_UPPER );
 date_default_timezone_set( $ini[ 'TIME_ZONE' ] );
 
 if ( PHP_SAPI === 'cli' ) {

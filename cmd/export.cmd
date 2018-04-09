@@ -8,18 +8,27 @@ set "folder=%~dp0"
 for /f "delims=" %%i in ("!folder!\..\") do set "folder=%%~fi"
 if not exist "!folder!\cmd" goto :find-root
 set "root=%folder%"
-set "logfile=%root%\logs\export-%db%.log"
-set db=mars40
+if "%1" equ "mars30" call :export mars30
+if "%1" equ "mars40" call :export mars40
+if "%1" equ "mars_backup" call :export mars_backup
+if "%1" neq "" goto :end
+call :export mars30
+call :export mars40
+call :export mars_backup
+goto :end
+
 :export
+set db=%1
+set "logfile=%root%\logs\export-%db%.log"
 call :echo Starting DB export of database '%db%'...
 "%root%\bin\db\bin\mysqldump.exe" --no-create-info --flush-logs --flush-privileges --log-error="%logfile%" --replace --databases %db% | "%root%\bin\7z.exe" u -si%db%.sql "%root%\cmd\export\%db%.7z" >nul 2>&1
-dir "%root%\cmd\export\%db%.7z" | findstr %db%>>%logfile%
+dir "%root%\cmd\export\%db%.7z" | findstr %db%>>"%logfile%"
 call :echo DB export of database '%db%' finished.
-goto :end
+goto :eof
 
 :echo
 echo %time% %*
-echo %date% %time% %*>>%logfile%
+echo %date% %time% %*>>"%logfile%"
 goto :eof
 
 :end

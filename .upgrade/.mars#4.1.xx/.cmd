@@ -10,8 +10,8 @@ if not exist "!folder!\cmd" goto :find-root
 set "root=%folder%"
 :update
 for /f %%i in (files\www\build) do set build=%%i
-set logfile=%root%\logs\update-%build%.log
-if exist "%logfile%" del /q %logfile%
+set "logfile=%root%\logs\update-%build%.log"
+if exist "%logfile%" del /q "%logfile%"
 call :echo MARS update to build #%build% starting...
 for /f %%i in (%root%\www\build) do call :check-build %%i
 goto :end
@@ -34,7 +34,7 @@ call :echo Build #%1 found
 set result=0
 rem if "%result%" equ "0" call :stop-http
 rem if "%result%" equ "0" call :stop-db
-rem if "%result%" equ "0" call :delete
+if "%result%" equ "0" call :delete
 if "%result%" equ "0" call :copy
 rem if "%result%" equ "0" call :start-db
 rem if "%result%" equ "0" call :start-http
@@ -49,51 +49,47 @@ goto :eof
 
 :delete
 call :echo Deleting file(s)...
-rem del /q %root%\tmp\*.tmp >>%logfile% 2>&1
-rem rmdir /s /q %root%\www\phpmyadmin >>%logfile% 2>&1
+rem del /q "%root%\tmp\*.tmp" >>"%logfile%" 2>&1
+rem rmdir /s /q "%root%\www\phpmyadmin" >>"%logfile%" 2>&1
 set result=%errorlevel%
 goto :eof
 
 :copy
 call :echo Copying file(s)...
-xcopy /e /i /k /y files %root%>>%logfile% 2>&1
+xcopy /e /i /k /y files "%root%" >>"%logfile%" 2>&1
 set result=%errorlevel%
 goto :eof
 
 :sql
 if not exist .sql goto :EOF
 call :echo Executing SQL...
-if exist "%root%\mysql\bin\mysql.exe" (
-	"%root%\mysql\bin\mysql.exe" --defaults-file="%root%\mysql\dump.cnf" -D mysql <.sql >>%logfile% 2>&1
-) else (
-	"%root%\bin\db\bin\mysql.exe" -u root -D mysql <.sql >>%logfile% 2>&1
-)
+"%root%\bin\db\bin\mysql.exe" -u root -D mysql <.sql >>"%logfile%" 2>&1
 set result=%errorlevel%
 goto :eof
 
 :stop-http
-call "%root%\mars.cmd" stop http %logfile% 2>&1
+call "%root%\mars.cmd" stop http "%logfile%" 2>&1
 set result=%errorlevel%
 goto :eof
 
 :stop-db
-call "%root%\mars.cmd" stop db %logfile% 2>&1
+call "%root%\mars.cmd" stop db "%logfile%" 2>&1
 set result=%errorlevel%
 goto :eof
 
 :start-db
-call "%root%\mars.cmd" start db %logfile% 2>&1
+call "%root%\mars.cmd" start db "%logfile%" 2>&1
 set result=%errorlevel%
 goto :eof
 
 :start-http
-call "%root%\mars.cmd" start http %logfile% 2>&1
+call "%root%\mars.cmd" start http "%logfile%" 2>&1
 set result=%errorlevel%
 goto :eof
 
 :echo
 echo %time% %*
-echo %date% %time% %*>>%logfile%
+echo %date% %time% %*>>"%logfile%"
 goto :eof
 
 :end
