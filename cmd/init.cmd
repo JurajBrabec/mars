@@ -3,11 +3,15 @@ REM MARS 4.1 UPDATE SCRIPT
 REM DON'T MODIFY ANYTHING BELOW THIS LINE -------------------------------------------------------------------------------
 setlocal enabledelayedexpansion
 pushd %~dp0
-FOR /f "delims=" %%i IN ("%~dp0..") DO SET "root=%%~fi"
+set "folder=%~dp0"
+:find-root
+for /f "delims=" %%i in ("!folder!\..\") do set "folder=%%~fi"
+if not exist "!folder!\cmd" goto :find-root
+set "root=%folder%"
 set "logfile=%root%\logs\init.log"
 :init
 call :echo DB Initialization started
-call "%root%\cmd\stop.cmd" all
+call "%root%\mars.cmd" stop all
 if "%errorlevel%" equ "0" goto :remove
 call :echo Error %errorlevel% stopping services.
 goto :end
@@ -26,7 +30,7 @@ if "%errorlevel%" equ "0" goto :start
 call :echo Error %errorlevel% copying files.
 goto :end
 :start
-call "%root%\cmd\start.cmd" db
+call "%root%\mars.cmd" start db
 if "%errorlevel%" equ "0" goto :create
 call :echo Error %errorlevel% starting DB service.
 goto :end
@@ -49,7 +53,7 @@ call :echo Creating NBU database...
 if "%errorlevel%" equ "0" goto :http
 call :echo Error %errorlevel% creating NBU database.
 :http
-call "%root%\cmd\start.cmd" http
+call "%root%\mars.cmd" start http
 if "%errorlevel%" equ "0" goto :finish
 call :echo Error %errorlevel% starting HTTP service.
 goto :end

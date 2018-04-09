@@ -2,10 +2,14 @@
 REM MARS 4.1 IMPORT SCRIPT
 REM DON'T MODIFY ANYTHING BELOW THIS LINE -------------------------------------------------------------------------------
 setlocal enabledelayedexpansion
-set db=mars40
 pushd %~dp0
-FOR /f "delims=" %%i IN ("%~dp0..") DO SET "root=%%~fi"
+set "folder=%~dp0"
+:find-root
+for /f "delims=" %%i in ("!folder!\..\") do set "folder=%%~fi"
+if not exist "!folder!\cmd" goto :find-root
+set "root=%folder%"
 set "logfile=%root%\logs\import-%db%.log"
+set db=mars40
 :import
 if exist "%root%\cmd\export\%db%.sql" goto :import_sql
 if exist "%root%\cmd\export\%db%.7z"  goto :import_7z

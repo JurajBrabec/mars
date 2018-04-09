@@ -2,10 +2,14 @@
 REM MARS 4.1 EXPORT SCRIPT
 REM DON'T MODIFY ANYTHING BELOW THIS LINE -------------------------------------------------------------------------------
 setlocal enabledelayedexpansion
-set db=mars40
 pushd %~dp0
-FOR /f "delims=" %%i IN ("%~dp0..") DO SET "root=%%~fi"
+set "folder=%~dp0"
+:find-root
+for /f "delims=" %%i in ("!folder!\..\") do set "folder=%%~fi"
+if not exist "!folder!\cmd" goto :find-root
+set "root=%folder%"
 set "logfile=%root%\logs\export-%db%.log"
+set db=mars40
 :export
 call :echo Starting DB export of database '%db%'...
 "%root%\bin\db\bin\mysqldump.exe" --no-create-info --flush-logs --flush-privileges --log-error="%logfile%" --replace --databases %db% | "%root%\bin\7z.exe" u -si%db%.sql "%root%\cmd\export\%db%.7z" >nul 2>&1

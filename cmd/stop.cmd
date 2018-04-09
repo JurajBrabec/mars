@@ -3,6 +3,7 @@ REM MARS 4.1 STOP SERVICES SCRIPT
 REM DON'T MODIFY ANYTHING BELOW THIS LINE -------------------------------------------------------------------------------
 setlocal enabledelayedexpansion
 pushd %~dp0
+if "%2" neq "" set "logfile=%2"
 
 if "%1" equ "db" ( 
 	call :check MARS-DB
@@ -20,7 +21,7 @@ if "%1" equ "all" (
 echo MARS 4.1 STOP SERVICES SCRIPT
 echo USAGE: stop [http^|db^|all]
 goto :end
-
+if exist "%2" set "logfile=%2"
 :check
 set service=%1
 net start | find "%service%" >nul 2>&1
@@ -36,7 +37,9 @@ if "%errorlevel%" EQU "0" call :echo %service% service stopped.
 goto :eof
 
 :echo
-echo %date% %time% %*
+echo %time% %*
+if "%logfile%" equ "" goto :eof
+echo %date% %time% %*>>%logfile%
 goto :eof
 
 :end

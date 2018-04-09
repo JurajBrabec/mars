@@ -4,7 +4,11 @@ REM DON'T MODIFY ANYTHING BELOW THIS LINE --------------------------------------
 REM
 setlocal enabledelayedexpansion
 pushd %~dp0
-FOR /f "delims=" %%i IN ("%~dp0..") DO SET "root=%%~fi"
+set "folder=%~dp0"
+:find-root
+for /f "delims=" %%i in ("!folder!\..\") do set "folder=%%~fi"
+if not exist "!folder!\cmd" goto :find-root
+set "root=%folder%"
 set "logfile=%root%\logs\install.log"
 call :echo Installing MARS 4.1 Web/DB server...
 set port=80
@@ -72,8 +76,8 @@ call :echo XML configuration file was not edited.
 goto :end
 :redist
 call :echo Installing Microsoft Visual C++ Redistributable Components...
-start /wait %root%\bin\vcredist_x86.exe /install /passive /promptrestart /showfinalerror
-if "%errorlevel%" equ "0" goto :http
+start /wait /d "%root%bin" vcredist_x86.exe /install /passive /promptrestart /showfinalerror
+if "%errorlevel%" leq "0" goto :http
 call :echo Error %errorlevel% installing Microsoft Visual C++ Redistributable Components.
 goto :end
 :http
@@ -93,7 +97,7 @@ call :echo Error %errorlevel% installing DB service.
 goto :end
 :init
 call :echo Initializing database...
-call "%root%\cmd\init.cmd"
+call "%root%\mars.cmd" init
 if "%errorlevel%" equ "0" goto :task
 call :echo Error %errorlevel% initializing database.
 goto :end

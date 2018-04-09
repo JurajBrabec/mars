@@ -15,6 +15,9 @@ HOW-TO INSTALL:
 
 CHANGELOG:
 ----------
+9.04.2018 version 4.1 build #3
+•	Modified all cmd scripts, added MARS.CMD.
+
 16.02.2018 version 4.1 build #2
 •	Modified "Consecutive failures" report so it contains jobs with "NULL" schedules.
 •	Added DB DUMP from SCHEDULER (config.ini: default DB_DUMP_TIME="16:00").

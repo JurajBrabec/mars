@@ -3,7 +3,12 @@ REM MARS 4.1 START SERVICES SCRIPT
 REM DON'T MODIFY ANYTHING BELOW THIS LINE -------------------------------------------------------------------------------
 setlocal enabledelayedexpansion
 pushd %~dp0
-FOR /f "delims=" %%i IN ("%~dp0..") DO SET "root=%%~fi"
+set "folder=%~dp0"
+:find-root
+for /f "delims=" %%i in ("!folder!\..\") do set "folder=%%~fi"
+if not exist "!folder!\cmd" goto :find-root
+set "root=%folder%"
+if "%2" neq "" set "logfile=%2"
 
 if "%1" equ "db" ( 
 	call :check MARS-DB
@@ -21,7 +26,6 @@ if "%1" equ "all" (
 echo MARS 4.1 START SERVICES SCRIPT
 echo USAGE: start [http^|db^|all]
 goto :end
-
 :check
 set service=%1
 net start | find "%service%" >nul 2>&1
@@ -47,7 +51,9 @@ if "%errorlevel%" EQU "0" call :echo %service% service started.
 goto :eof
 
 :echo
-echo %date% %time% %*
+echo %time% %*
+if "%logfile%" equ "" goto :eof
+echo %date% %time% %*>>%logfile%
 goto :eof
 
 :end
