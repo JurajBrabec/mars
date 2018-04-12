@@ -23,7 +23,7 @@ if "%1" equ "" (
 	goto :end
 )
 :usage
-echo MARS 4.1 START SERVICES SCRIPT
+echo MARS %build% START SERVICES SCRIPT
 echo USAGE: start [db^|http]
 goto :end
 

@@ -15,7 +15,7 @@ if /i "%1" equ "http" goto :uninstall-http
 if /i "%1" equ "db" goto :uninstall-db
 if /i "%1" equ "task" goto :uninstall-scheduledtask
 :usage
-echo MARS 4.1 UNINSTALL SCRIPT
+echo MARS %build% UNINSTALL SCRIPT
 echo USAGE: MARS uninstall - uninstalls MARS from the system.
 echo.
 goto :end

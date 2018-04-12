@@ -19,12 +19,12 @@ if /i "%1" equ "http" goto :install-http
 if /i "%1" equ "db" goto :install-db
 if /i "%1" equ "task" goto :install-scheduledtask
 :usage
-echo MARS 4.1 INSTALL SCRIPT
-echo USAGE: MARS install - installs MARS 4.1. Make sure you've edited "%root%\install.ini" in advance.
+echo MARS %build% INSTALL SCRIPT
+echo USAGE: MARS install - installs MARS %build%. Make sure you've edited "%root%\install.ini" in advance.
 echo.
 goto :end
 :install-prompt
-echo [91mWARNING: You are about to install MARS 4.1 with following configuration (%root%\install.ini):[0m
+echo [91mWARNING: You are about to install MARS %build% with following configuration (%root%\install.ini):[0m
 echo.
 type "%root%\install.ini" | findstr =
 echo.
@@ -37,7 +37,7 @@ for /f "tokens=1,2 delims== " %%i in ("%root%\install.ini") do if /i "%%i" equ "
 if /i "%ssl%" equ "true" set ssl=1
 if /i "%ssl%" equ "yes" set ssl=1
 if "%ssl%" neq "1" set ssl=0
-call :echo Installing MARS 4.1 Web/DB server...
+call :echo Installing MARS %build% Web/DB server...
 set port=80
 if "%ssl%" equ "1" set port=443
 set "_file=%TEMP%\marsinst.tmp"

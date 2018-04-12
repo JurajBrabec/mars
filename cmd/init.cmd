@@ -6,8 +6,6 @@ setlocal enabledelayedexpansion
 pushd %~dp0
 if "%root%" neq "" goto :setup
 echo Do not run this file directly, use MARS.CMD launcher.
-echo MARS 4.1 DATABASE INITIALIZATION SCRIPT
-echo USAGE: MARS init
 goto :end
 :setup
 set "logfile=%root%\logs\init.log"

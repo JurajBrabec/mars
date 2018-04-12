@@ -6,8 +6,6 @@ setlocal enabledelayedexpansion
 pushd %~dp0
 if "%root%" neq "" goto :setup
 echo Do not run this file directly, use MARS.CMD launcher.
-echo MARS 4.1 SCHEDULER SCRIPT
-echo USAGE: MARS scheduler
 goto :end
 :setup
 set "logfile=%root%\logs\scheduler.log"

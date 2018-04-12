@@ -29,7 +29,7 @@ if "%1" equ "" (
 	goto :end
 )
 :usage
-echo MARS 4.1 DATABASE EXPORT SCRIPT
+echo MARS %build% DATABASE EXPORT SCRIPT
 echo USAGE: MARS export [{database}]
 goto :end
 

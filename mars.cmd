@@ -7,11 +7,12 @@ pushd %~dp0
 :setup
 set "root=%~dp0"
 if "%root:~-1%"=="\" set root=%root:~0,-1%
+for /f %%i in (build) do set build=%%i
 set command=%1
 if "%logfile%" neq "" goto :begin
 if not exist "%root%\logs" mkdir "%root%\logs" >nul 2>&1
 set "logfile=%root%\logs\mars.log"
-echo [97mMARS 4.1 Monitoring And Reporting Script[0m
+echo [97mMARS %build% Monitoring And Reporting Script[0m
 echo.
 :begin
 if "%command%" equ "" goto :usage
