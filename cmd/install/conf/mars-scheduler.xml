@@ -2,7 +2,8 @@
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>
     <Date>2017-01-01T00:00:00</Date>
-    <Author>%AUTHOR%</Author>
+    <Author>Juraj Brabec</Author>
+    <URI>\MARS-Scheduler</URI>
   </RegistrationInfo>
   <Triggers>
     <TimeTrigger>
@@ -17,8 +18,8 @@
   </Triggers>
   <Principals>
     <Principal id="Author">
-      <RunLevel>LeastPrivilege</RunLevel>
       <UserId>S-1-5-18</UserId>
+      <RunLevel>LeastPrivilege</RunLevel>
     </Principal>
   </Principals>
   <Settings>
@@ -42,7 +43,8 @@
   </Settings>
   <Actions Context="Author">
     <Exec>
-      <Command>%MARS_ROOT%\cmd\scheduler.cmd</Command>
+      <Command>%MARS_ROOT%\mars.cmd</Command>
+      <Arguments>scheduler</Arguments>
     </Exec>
   </Actions>
 </Task>

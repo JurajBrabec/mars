@@ -5,10 +5,11 @@
 /data
 !/data/init.sql
 
-# Log & Temp folders
+# Log & Temp & Dump folders
 **/log
 **/logs
 **/tmp
+**/cmd/dump
 
-# Install directory
-!**/.install
+# Upgrade directory
+!**/.upgrade

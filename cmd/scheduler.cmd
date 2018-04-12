@@ -1,35 +1,38 @@
 @echo off
-setlocal enabledelayedexpansion
 REM MARS 4.1 SCHEDULER SCRIPT
 REM DON'T MODIFY ANYTHING BELOW THIS LINE -------------------------------------------------------------------------------
+setlocal enabledelayedexpansion
 pushd %~dp0
-set "folder=%~dp0"
-:find-root
-for /f "delims=" %%i in ("!folder!\..\") do set "folder=%%~fi"
-if not exist "!folder!\cmd" goto :find-root
-set "root=%folder%"
-for /f "tokens=1,2 delims=:" %%i in ("%time: =0%") do set starttime=%%i:%%j
+if "%root%" neq "" goto :setup
+echo Do not run this file directly, use MARS.CMD launcher.
+echo MARS 4.1 SCHEDULER SCRIPT
+echo USAGE: MARS scheduler
+goto :end
+:setup
 set "logfile=%root%\logs\scheduler.log"
-:scheduler
+for /f "tokens=1,2 delims=:" %%i in ("%time: =0%") do set starttime=%%i:%%j
+:begin
 call :echo Scheduler starting...
 "%root%\bin\php\php.exe" "%root%\www\mars40\php.php">>"%logfile%" 2>&1
-if not exist "%root%\.updates" goto :db-dump
-:updates
+if not exist "%root%\.updates" goto :database-dump
+:post-updates
 for /f %%i in (%root%\.updates) do call :post-update %%i
 del /q "%root%\.updates" >nul 2>&1
-:db-dump
-for /f "tokens=1,2 delims== " %%i in ("%root%\conf\config.ini") do if "%%i" equ "DB_DUMP_TIME" set dbdumptime=%%j
-if "%dbdumptime%" equ "" set dbdumptime="16:00"
-if "%starttime%" equ "%dbdumptime:"=%" call "%root%\mars.cmd" export
+:database-dump
+set dbdumptime="16:00"
+for /f "tokens=1,2 delims== " %%i in ("%root%\conf\config.ini") do if /i "%%i" equ "db_dump_time" set dbdumptime=%%j
+if "%starttime%" equ "%dbdumptime:"=%" ( 
+	call "%root%\mars.cmd" export
+)
 :finish
-call :echo Scheduler stopping.
+call :echo Scheduler finished.
 goto :end
 
 :post-update
-if exist "%root%\%1" goto :exec
-call :echo Post-update script %1 does not exist.
-goto :eof
-:exec
+if not exist "%root%\%1" (
+	call :echo Post-update script %1 does not exist.
+	goto :eof
+)
 call :echo Starting post-update script %1...
 start /b /wait cmd /c "%root%\%1">>"%logfile%" 2>&1
 call :echo Post-update script finished. E:%errorlevel%
@@ -38,7 +41,7 @@ goto :eof
 
 :echo
 echo %time% %*
-echo %date% %time% %*>>"%logfile%"
+if "%logfile%" neq "" echo %date% %time% %*>>"%logfile%"
 goto :eof
 
 :end

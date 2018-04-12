@@ -3,43 +3,48 @@ REM MARS 4.1 STOP SERVICES SCRIPT
 REM DON'T MODIFY ANYTHING BELOW THIS LINE -------------------------------------------------------------------------------
 setlocal enabledelayedexpansion
 pushd %~dp0
-if "%2" neq "" set "logfile=%2"
-
-if "%1" equ "db" ( 
-	call :check MARS-DB
+if "%root%" neq "" goto :setup
+echo Do not run this file directly, use MARS.CMD launcher.
+goto :usage
+:setup
+:begin
+if /i "%1" equ "db" ( 
+	call :service-check MARS-DB
 	goto :end
 )
-if "%1" equ "http" ( 
-	call :check MARS-HTTP
+if /i "%1" equ "http" ( 
+	call :service-check MARS-HTTP
 	goto :end
 )
-if "%1" equ "all" ( 
-	call :check MARS-DB
-	call :check MARS-HTTP
+if "%1" equ "" ( 
+	call :service-check MARS-DB
+	call :service-check MARS-HTTP
 	goto :end
 )
+:usage
 echo MARS 4.1 STOP SERVICES SCRIPT
-echo USAGE: stop [http^|db^|all]
+echo USAGE: stop [db^|http]
 goto :end
-if exist "%2" set "logfile=%2"
-:check
+
+:service-check
 set service=%1
 net start | find "%service%" >nul 2>&1
-if "%errorlevel%" EQU "0" goto :stop
+if "%errorlevel%" equ "0" goto :service-stop
 call :echo %service% service not running.
 goto :eof
-
-:stop
+:service-stop
 call :echo Stopping %service% service...
 net stop %service% >nul 2>&1
-if "%errorlevel%" NEQ "0" call :echo %service% service NOT stopped.
-if "%errorlevel%" EQU "0" call :echo %service% service stopped.
+if "%errorlevel%" equ "0" goto :finish
+call :echo %service% service NOT stopped. E:%errorlevel%
+goto :eof
+:finish 
+call :echo %service% service stopped.
 goto :eof
 
 :echo
 echo %time% %*
-if "%logfile%" equ "" goto :eof
-echo %date% %time% %*>>"%logfile%"
+if "%logfile%" neq "" echo %date% %time% %*>>"%logfile%"
 goto :eof
 
 :end

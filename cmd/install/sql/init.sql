@@ -1,0 +1,2 @@
+ALTER DEFINER=`root`@`%` EVENT MARS40.nbu_event ENABLE;
+

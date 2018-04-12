@@ -1,45 +1,66 @@
 @echo off
-REM MARS 4.1 IMPORT SCRIPT
+REM MARS 4.1 DATABASE IMPORT SCRIPT
 REM DON'T MODIFY ANYTHING BELOW THIS LINE -------------------------------------------------------------------------------
 setlocal enabledelayedexpansion
 pushd %~dp0
-set "folder=%~dp0"
-:find-root
-for /f "delims=" %%i in ("!folder!\..\") do set "folder=%%~fi"
-if not exist "!folder!\cmd" goto :find-root
-set "root=%folder%"
-if "%1" equ "mars30" call :import mars30
-if "%1" equ "mars40" call :import mars40
-if "%1" equ "mars_backup" call :import mars_backup
-if "%1" neq "" goto :end
-call :import mars30
-call :import mars40
-call :import mars_backup
+if "%root%" neq "" goto :setup
+echo Do not run this file directly, use MARS.CMD launcher.
+goto :usage
+:setup
+set "logfile=%root%\logs\import.log"
+:begin
+if /i "%1" equ "mars30" (
+	call :database-import MARS30
+	goto :end
+)
+if / i"%1" equ "mars40" {
+	call :database-import MARS40
+	goto :end
+}
+if /i "%1" equ "mars_backup" (
+	call :database-import MARS_BACKUP
+	goto :end
+}
+if "%1" equ "" (
+	call :database-import MARS30
+	call :database-import MARS40
+	call :database-import MARS_BACKUP
+	goto :end
+)
+:usage
+echo MARS 4.1 DATABASE IMPORT SCRIPT
+echo USAGE: MARS import [{database}]
 goto :end
 
-:import
+:database-import
 set db=%1
-set "logfile=%root%\logs\import-%db%.log"
-if exist "%root%\cmd\export\%db%.sql" goto :import_sql
-if exist "%root%\cmd\export\%db%.7z"  goto :import_7z
-call :echo Error: Files '%db%.sql' or '%db%.7z' not found in folder '%root%\cmd\export'.
+if "%q%" neq "" goto :import-check
+:import-prompt
+echo [91mWARING: You are about to import %db% database from dump.[0m
+set /p q=To approve and continue, type 'APPROVE' (Exit):
+:import-check
+if "%q%" equ "APPROVE" goto :import-start
+echo Import process of database %db% was not approved. Exiting.
 goto :eof
-
+:import-start
+if exist "%root%\cmd\dump\%db%.sql" goto :import_sql
+if exist "%root%\cmd\dump\%db%.7z"  goto :import_7z
+call :echo Error: Files '%db%.sql' or '%db%.7z' not found in folder '%root%\cmd\dump'.
+goto :eof
 :import_sql
 call :echo Importing '%db%.sql' dump ...
-"%root%\bin\db\bin\mysql.exe" <"%root%\cmd\export\%db%.sql" >>"%logfile%"
+"%root%\bin\db\bin\mysql.exe" <"%root%\cmd\dump\%db%.sql" >>"%logfile%"
 call :echo Import of '%db%.sql' dump finished.
-goto :end
-
+goto :eof
 :import_7z
 call :echo Importing '%db%.7z' dump ...
-"%root%\bin\7z.exe" e -so "%root%\cmd\export\%db%.7z" | "%root%\bin\db\bin\mysql.exe" >>"%logfile%"
+"%root%\bin\7z\7z.exe" e -so "%root%\cmd\dump\%db%.7z" | "%root%\bin\db\bin\mysql.exe" >>"%logfile%"
 call :echo Import of '%db%.7z' dump finished.
-goto :end
+goto :eof
 
 :echo
 echo %time% %*
-echo %date% %time% %*>>"%logfile%"
+if "%logfile%" neq "" echo %date% %time% %*>>"%logfile%"
 goto :eof
 
 :end

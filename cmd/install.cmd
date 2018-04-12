@@ -1,29 +1,53 @@
 @echo off
-REM MARS 4.1 INSTALL FILE
+REM MARS 4.1 INSTALL SCRIPT
 REM DON'T MODIFY ANYTHING BELOW THIS LINE -------------------------------------------------------------------------------
-REM
 setlocal enabledelayedexpansion
 pushd %~dp0
-set "folder=%~dp0"
-:find-root
-for /f "delims=" %%i in ("!folder!\..\") do set "folder=%%~fi"
-if not exist "!folder!\cmd" goto :find-root
-set "root=%folder%"
+if "%root%" neq "" goto :setup
+echo Do not run this file directly, use MARS.CMD launcher.
+goto :usage
+:setup
 set "logfile=%root%\logs\install.log"
+if not exist "%root%\install.ini" copy "%root%\cmd\install\conf\install.ini" "%root%" >nul 2>&1
+:begin
+if /i "%1" equ "" goto :install-prompt
+if /i "%1" equ "redist" goto :install-redist
+if /i "%1" equ "http" goto :install-http
+if /i "%1" equ "db" goto :install-db
+if /i "%1" equ "task" goto :install-scheduledtask
+:usage
+echo MARS 4.1 INSTALL SCRIPT
+echo USAGE: MARS install - installs MARS 4.1. Make sure you've edited "%root%\install.ini" in advance.
+echo.
+goto :end
+:install-prompt
+echo [91mWARNING: You are about to install MARS 4.1 with following configuration (%root%\install.ini):[0m
+echo.
+type "%root%\install.ini" | findstr =
+echo.
+set /p q=To approve and continue, type 'APPROVE' (Exit):
+if "%q%" equ "APPROVE" goto :install-start
+echo Install process was not approved. Exiting.
+goto :end
+:install-start
+for /f "tokens=1,2 delims== " %%i in ("%root%\install.ini") do if /i "%%i" equ "ssl" set ssl=%%j
+if /i "%ssl%" equ "true" set ssl=1
+if /i "%ssl%" equ "yes" set ssl=1
+if "%ssl%" neq "1" set ssl=0
 call :echo Installing MARS 4.1 Web/DB server...
 set port=80
-if "%1" equ "SSL" set port=443
+if "%ssl%" equ "1" set port=443
 set "_file=%TEMP%\marsinst.tmp"
 call :echo Checking ports / processes...
-call :checkport %port%
-call :checkport 3306
+call :check-port %port%
+call :check-port 3306
 if exist %_file% goto :check-ok
 call :echo Exiting.
 goto :end
 :check-ok
 del %_file% >nul
-if "%1" equ "SSL" xcopy /q /y "%root%\.install\conf\*.pem" "%root%\conf" >nul 2>&1
-"%root%\bin\nodejs\node.exe" "%root%\.install\js\install.js" %1
+if "%ssl%" equ "1" xcopy /q /y "%root%\cmd\install\conf\*.pem" "%root%\conf" >nul 2>&1
+"%root%\bin\nodejs\node.exe" "%root%\cmd\install\install.js" %ssl%
 :check-http1
 call :echo Checking HTTP configuration...
 if exist "%root%\conf\httpd.conf" goto :check-http2
@@ -56,63 +80,64 @@ call :echo DB configuration file was not edited.
 goto :end
 :check-ini1
 call :echo Checking MARS configuration...
-if exist "%root%\www\mars40\config.ini" goto :check-ini2
+if exist "%root%\conf\config.ini" goto :check-ini2
 call :echo MARS configuration file does not exist.
 goto :end
 :check-ini2
-findstr "SITE_NAME" "%root%\www\mars40\config.ini" >nul 2>&1
+findstr "SITE_NAME" "%root%\conf\config.ini" >nul 2>&1
 if "%errorlevel%" equ "1" goto :check-xml1
 call :echo MARS configuration file was not edited.
 goto :end
 :check-xml1
 call :echo Checking XML file...
-if exist "%root%\.install\schtasks.xml" goto :check-xml2
+if exist "%root%\conf\mars-scheduler.xml" goto :check-xml2
 call :echo XML configuration file does not exist.
 goto :end
 :check-xml2
-findstr "MARS_ROOT" "%root%\.install\schtasks.xml" >nul 2>&1
-if "%errorlevel%" equ "1" goto :redist
+findstr "MARS_ROOT" "%root%\conf\mars-scheduler.xml" >nul 2>&1
+if "%errorlevel%" equ "1" goto :install-redist
 call :echo XML configuration file was not edited.
 goto :end
-:redist
+:install-redist
 call :echo Installing Microsoft Visual C++ Redistributable Components...
-start /wait /d "%root%bin" vcredist_x86.exe /install /passive /promptrestart /showfinalerror
-if "%errorlevel%" leq "0" goto :http
+start /wait /d "%root%\bin" vcredist_x86.exe /install /passive /promptrestart /showfinalerror
+if "%errorlevel%" leq "0" goto :install-http
 call :echo Error %errorlevel% installing Microsoft Visual C++ Redistributable Components.
 goto :end
-:http
+:install-http
 call :echo Installing HTTP service...
 xcopy /q /y "%root%\conf\httpd.conf" "%root%\bin\http\conf" >nul 2>&1
 xcopy /q /y "%root%\conf\php.ini" "%root%\bin\php" >nul 2>&1
 "%root%\bin\http\bin\httpd.exe" -k install -n MARS-HTTP
-if "%errorlevel%" equ "0" goto :db
-call :echo Error %errorlevel% installing HTTP service.
+if "%errorlevel%" equ "0" goto :install-db
+call :echo Error %errorlevel% installing HTTP service (MARS-HTTP).
 goto :end
-:db
+:install-db
 call :echo Installing DB service...
 xcopy /q /y "%root%\conf\my.ini" "%root%\bin\db" >nul 2>&1
 "%root%\bin\db\bin\mysqld.exe" --install MARS-DB
-if "%errorlevel%" equ "0" goto :init
-call :echo Error %errorlevel% installing DB service.
+if "%errorlevel%" equ "0" goto :database-init
+call :echo Error %errorlevel% installing DB service (MARS-DB).
 goto :end
-:init
+:database-init
 call :echo Initializing database...
 call "%root%\mars.cmd" init
-if "%errorlevel%" equ "0" goto :task
+if "%errorlevel%" equ "0" goto :install-scheduledtask
 call :echo Error %errorlevel% initializing database.
 goto :end
-:task
+:install-scheduledtask
 call :echo Installing scheduled task...
-SCHTASKS /Create /TN MARS-Scheduler /RU:SYSTEM /XML "%root%\.install\schtasks.xml" /F
+SCHTASKS /Create /TN MARS-Scheduler /RU:SYSTEM /XML "%root%\conf\mars-scheduler.xml" /F
 if "%errorlevel%" equ "0" goto :finish
-call :echo Error %errorlevel% installing scheduled task.
+call :echo Error %errorlevel% installing scheduled task (MARS-Scheduler).
 goto :end
 :finish
-call :echo Finished. You may remove "%root%\.install" folder now.
+move "%root%\install.ini" "%root%\conf" >nul 2>&1
+call :echo Installation finished. Please open http://localhost to continue with the configuration.
 start http://localhost
 goto :end
 
-:checkport
+:check-port
 netstat -ano -p TCP | findstr LISTENING | findstr /c:":%1 " > %_file%
 if %errorlevel% EQU 1 goto :eof
 for /f "tokens=1,2,3,4,5" %%i in (%_file%) do set _pid=%%m
@@ -125,7 +150,7 @@ goto :eof
 
 :echo
 echo %time% %*
-echo %date% %time% %*>>%logfile%
+if "%logfile%" neq "" echo %date% %time% %*>>%logfile%
 goto :eof
 
 :end

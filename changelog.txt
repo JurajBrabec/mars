@@ -1,20 +1,6 @@
-MARS 4.1 Release notes 
+MARS 4.1 Change Log
 ======================
 
-HOW-TO INSTALL:
----------------
-(Automatic execution)
-•	Remotely upload the ZIP file via Administration interface, or place the ZIP file to MARS root folder
-•	Wait for next Scheduler execution (each 15 minutes)
-•	Check schedule.log/update*.log for results
-(Manual execution)
-•	Extract the ZIP file to MARS folder with overwrite
-•	Open command prompt with Administrative rights in extracted folder
-•	Run .CMD
-•	Delete the .#* folder once finished.
-
-CHANGELOG:
-----------
 9.04.2018 version 4.1 build #3
 •	Modified all cmd scripts, added MARS.CMD.
 

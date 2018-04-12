@@ -3,37 +3,36 @@ REM MARS 4.1 START SERVICES SCRIPT
 REM DON'T MODIFY ANYTHING BELOW THIS LINE -------------------------------------------------------------------------------
 setlocal enabledelayedexpansion
 pushd %~dp0
-set "folder=%~dp0"
-:find-root
-for /f "delims=" %%i in ("!folder!\..\") do set "folder=%%~fi"
-if not exist "!folder!\cmd" goto :find-root
-set "root=%folder%"
-if "%2" neq "" set "logfile=%2"
-
-if "%1" equ "db" ( 
-	call :check MARS-DB
+if "%root%" neq "" goto :setup
+echo Do not run this file directly, use MARS.CMD launcher.
+goto :usage
+:setup
+:begin
+if /i "%1" equ "db" ( 
+	call :service-check MARS-DB
 	goto :end
 )
-if "%1" equ "http" ( 
-	call :check MARS-HTTP
+if /i "%1" equ "http" ( 
+	call :service-check MARS-HTTP
 	goto :end
 )
-if "%1" equ "all" ( 
-	call :check MARS-DB
-	call :check MARS-HTTP
+if "%1" equ "" ( 
+	call :service-check MARS-DB
+	call :service-check MARS-HTTP
 	goto :end
 )
+:usage
 echo MARS 4.1 START SERVICES SCRIPT
-echo USAGE: start [http^|db^|all]
+echo USAGE: start [db^|http]
 goto :end
-:check
+
+:service-check
 set service=%1
 net start | find "%service%" >nul 2>&1
-if "%errorlevel%" EQU "1" goto :prepare
+if "%errorlevel%" EQU "1" goto :service-start
 call :echo %service% service already running.
 goto :eof
-
-:prepare
+:service-start
 if "%service%" equ "MARS-DB" (
 	xcopy /y "%root%\conf\my.ini" "%root%\bin\db\" >nul 2>&1
 	del /q "%root%\data\*.log" >nul 2>&1
@@ -43,17 +42,18 @@ if "%service%" equ "MARS-HTTP" (
 	xcopy /y "%root%\conf\php.ini" "%root%\bin\php\" >nul 2>&1
 	del /q /f "%root%\bin\http\logs\*.*" >nul 2>&1
 )
-:start
 call :echo Starting %service% service...
 net start %service% >nul 2>&1
-if "%errorlevel%" NEQ "0" call :echo %service% service NOT started (Error %errorlevel%).
-if "%errorlevel%" EQU "0" call :echo %service% service started.
+if "%errorlevel%" equ "0" goto :finish
+call :echo %service% service NOT started. E:%errorlevel%
+goto :eof
+:finish
+call :echo %service% service started.
 goto :eof
 
 :echo
 echo %time% %*
-if "%logfile%" equ "" goto :eof
-echo %date% %time% %*>>"%logfile%"
+if "%logfile%" neq "" echo %date% %time% %*>>"%logfile%"
 goto :eof
 
 :end
