@@ -8,6 +8,8 @@ if "%root%" neq "" goto :setup
 echo Do not run this file directly, use MARS.CMD launcher.
 goto :usage
 :setup
+if not exist "%root%\conf" mkdir "%root%\conf" >nul 2>&1
+if not exist "%root%\tmp" mkdir "%root%\tmp" >nul 2>&1
 set "logfile=%root%\logs\install.log"
 if not exist "%root%\install.ini" copy "%root%\cmd\install\conf\install.ini" "%root%" >nul 2>&1
 :begin
