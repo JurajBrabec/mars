@@ -1,3 +1,8 @@
+# MARS 4.1 CREATE SQL FILE
+# DON`T MODIFY ANYTHING BELOW THIS LINE ███████████████████████████████████████████████████████████████████████████████
+# © 2018 Juraj Brabec, DXC.technology
+
+USE `mysql`;
 DROP DATABASE IF EXISTS `mars40`;
 CREATE DATABASE IF NOT EXISTS `mars40` /*!40100 DEFAULT CHARACTER SET utf8 */;
 

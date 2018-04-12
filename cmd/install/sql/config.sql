@@ -1,3 +1,7 @@
+# MARS 4.1 CONFIG SQL FILE
+# DON`T MODIFY ANYTHING BELOW THIS LINE ███████████████████████████████████████████████████████████████████████████████
+# © 2018 Juraj Brabec, DXC.technology
+
 USE `mars40`;
 
 DROP TABLE IF EXISTS `config_customers`;

@@ -1,6 +1,7 @@
 @echo off
 REM MARS 4.1 UPDATE PART#1 SCRIPT
-REM DON'T MODIFY ANYTHING BELOW THIS LINE -------------------------------------------------------------------------------
+REM DON'T MODIFY ANYTHING BELOW THIS LINE █████████████████████████████████████████████████████████████████████████████
+REM © 2018 Juraj Brabec, DXC.technology
 setlocal enabledelayedexpansion
 pushd %~dp0
 :setup

@@ -1,3 +1,7 @@
+REM MARS 4.1 INSTALL JS SCRIPT
+REM DON'T MODIFY ANYTHING BELOW THIS LINE █████████████████████████████████████████████████████████████████████████████
+REM © 2018 Juraj Brabec, DXC.technology
+
 var fs = require( 'fs' );
 var path = require( 'path' );
 var root = path.resolve( __dirname, '../..' );

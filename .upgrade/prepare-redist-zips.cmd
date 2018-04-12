@@ -1,7 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
 REM MARS 4.1 BINARY REDISTRIBUTION SCRIPT
-REM DON'T MODIFY ANYTHING BELOW THIS LINE -------------------------------------------------------------------------------
+REM DON'T MODIFY ANYTHING BELOW THIS LINE █████████████████████████████████████████████████████████████████████████████
+REM © 2018 Juraj Brabec, DXC.technology
 pushd %~dp0
 :setup
 if "%folder%" equ "" set "folder=%~dp0"
