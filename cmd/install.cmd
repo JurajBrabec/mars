@@ -1,17 +1,20 @@
 @echo off
 REM MARS 4.1 INSTALL SCRIPT
-REM DON'T MODIFY ANYTHING BELOW THIS LINE █████████████████████████████████████████████████████████████████████████████
-REM © 2018 Juraj Brabec, DXC.technology
+REM (C) 2018 Juraj Brabec, DXC.technology
+REM DON'T MODIFY ANYTHING BELOW THIS LINE______________________________________________________________________________
+
 setlocal enabledelayedexpansion
 pushd %~dp0
 if "%root%" neq "" goto :setup
 echo Do not run this file directly, use MARS.CMD launcher.
-goto :usage
+goto :end
 :setup
 if not exist "%root%\conf" mkdir "%root%\conf" >nul 2>&1
 if not exist "%root%\tmp" mkdir "%root%\tmp" >nul 2>&1
 set "logfile=%root%\logs\install.log"
-if not exist "%root%\install.ini" copy "%root%\cmd\install\conf\install.ini" "%root%" >nul 2>&1
+if exist "%root%\install.ini" goto :begin
+if exist "%root%\conf\install.ini" copy "%root%\conf\install.ini" "%root%" >nul 2>&1
+if not exist "%root%\conf\install.ini" copy "%root%\cmd\install\conf\install.ini" "%root%" >nul 2>&1
 :begin
 if /i "%1" equ "" goto :install-prompt
 if /i "%1" equ "redist" goto :install-redist
@@ -20,11 +23,13 @@ if /i "%1" equ "db" goto :install-db
 if /i "%1" equ "task" goto :install-scheduledtask
 :usage
 echo MARS %build% INSTALL SCRIPT
-echo USAGE: MARS install - installs MARS %build%. Make sure you've edited "%root%\install.ini" in advance.
+echo USAGE: MARS install - installs MARS %build%. 
+echo  Make sure you've edited "%root%\install.ini" in advance.
 echo.
 goto :end
 :install-prompt
-echo [91mWARNING: You are about to install MARS %build% with following configuration (%root%\install.ini):[0m
+echo WARNING: You are about to install MARS %build% on the system.
+echo Following configuration will be used (%root%\install.ini):
 echo.
 type "%root%\install.ini" | findstr =
 echo.
@@ -33,7 +38,7 @@ if "%q%" equ "APPROVE" goto :install-start
 echo Install process was not approved. Exiting.
 goto :end
 :install-start
-for /f "tokens=1,2 delims== " %%i in ("%root%\install.ini") do if /i "%%i" equ "ssl" set ssl=%%j
+for /f "tokens=1,2 delims== " %%i in (%root%\install.ini) do if /i "%%i" equ "ssl" set ssl=%%j
 if /i "%ssl%" equ "true" set ssl=1
 if /i "%ssl%" equ "yes" set ssl=1
 if "%ssl%" neq "1" set ssl=0
@@ -41,7 +46,7 @@ call :echo Installing MARS %build% Web/DB server...
 set port=80
 if "%ssl%" equ "1" set port=443
 set "_file=%TEMP%\marsinst.tmp"
-call :echo Checking ports / processes...
+call :echo Checking ports %port%/3306 and processes...
 call :check-port %port%
 call :check-port 3306
 if exist %_file% goto :check-ok
@@ -87,7 +92,7 @@ if exist "%root%\conf\config.ini" goto :check-ini2
 call :echo MARS configuration file does not exist.
 goto :end
 :check-ini2
-findstr "SITE_NAME" "%root%\conf\config.ini" >nul 2>&1
+findstr "%%SITE_NAME%%" "%root%\conf\config.ini" >nul 2>&1
 if "%errorlevel%" equ "1" goto :check-xml1
 call :echo MARS configuration file was not edited.
 goto :end
@@ -123,20 +128,20 @@ if "%errorlevel%" equ "0" goto :database-init
 call :echo Error %errorlevel% installing DB service (MARS-DB).
 goto :end
 :database-init
-call :echo Initializing database...
 call "%root%\mars.cmd" init
 if "%errorlevel%" equ "0" goto :install-scheduledtask
 call :echo Error %errorlevel% initializing database.
 goto :end
 :install-scheduledtask
 call :echo Installing scheduled task...
-SCHTASKS /Create /TN MARS-Scheduler /RU:SYSTEM /XML "%root%\conf\mars-scheduler.xml" /F
+schtasks /create /tn MARS-Scheduler /ru:SYSTEM /xml "%root%\conf\mars-scheduler.xml" /f 2>&1
 if "%errorlevel%" equ "0" goto :finish
 call :echo Error %errorlevel% installing scheduled task (MARS-Scheduler).
 goto :end
 :finish
 move "%root%\install.ini" "%root%\conf" >nul 2>&1
-call :echo Installation finished. Please open http://localhost to continue with the configuration.
+call "%root%\mars.cmd" start http
+call :echo Installation finished. Go to http://localhost to continue with the configuration.
 start http://localhost
 goto :end
 

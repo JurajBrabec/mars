@@ -1,6 +1,6 @@
 # MARS 4.1 NBU SQL FILE
-# DON`T MODIFY ANYTHING BELOW THIS LINE ███████████████████████████████████████████████████████████████████████████████
-# © 2018 Juraj Brabec, DXC.technology
+# (C) 2018 Juraj Brabec, DXC.technology
+# DON`T MODIFY ANYTHING BELOW THIS LINE______________________________________________________________________________
 
 USE `mars40`;
 
@@ -2922,5 +2922,8 @@ REPLACE INTO `core_sources` (`report`, `ord`, `name`, `title`, `description`, `f
 	('nbu_vault_robots', 1, 'nbu_vault_robots', 'Robots', 'List of robots', NULL, NULL, NULL, 0, 0, 0, 10, '2017-07-24 15:34:10', '2017-07-24 15:41:36', NULL),
 	('nbu_vault_schedules', 1, 'nbu_vault_schedules', 'Schedules', 'List of included schedules', NULL, NULL, NULL, 0, 0, 0, 10, '2017-07-24 15:45:21', '2017-07-25 09:36:45', NULL),
 	('nbu_vault_vaults', 1, 'nbu_vault_vaults', 'Vaults', 'List of vaults', NULL, NULL, NULL, 0, 0, 0, 10, '2017-07-24 15:45:21', '2017-07-24 15:45:21', NULL);
+
+CREATE DATABASE IF NOT EXISTS mars_backup;
+CREATE TABLE IF NOT EXISTS mars_backup.bpdbjobs_report LIKE mars40.bpdbjobs_report;
 
 ALTER EVENT nbu_event ENABLE;

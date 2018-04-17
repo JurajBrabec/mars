@@ -1,7 +1,8 @@
 @echo off
 REM MARS 4.1 SCHEDULER SCRIPT
-REM DON'T MODIFY ANYTHING BELOW THIS LINE █████████████████████████████████████████████████████████████████████████████
-REM © 2018 Juraj Brabec, DXC.technology
+REM (C) 2018 Juraj Brabec, DXC.technology
+REM DON'T MODIFY ANYTHING BELOW THIS LINE______________________________________________________________________________
+
 setlocal enabledelayedexpansion
 pushd %~dp0
 if "%root%" neq "" goto :setup
@@ -12,11 +13,16 @@ set "logfile=%root%\logs\scheduler.log"
 for /f "tokens=1,2 delims=:" %%i in ("%time: =0%") do set starttime=%%i:%%j
 :begin
 call :echo Scheduler starting...
-"%root%\bin\php\php.exe" "%root%\www\mars40\php.php">>"%logfile%" 2>&1
+echo.>"%root%\tmp\.scheduler"
+if exist "%root%\www\mars40\php.php" "%root%\bin\php\php.exe" "%root%\www\mars40\php.php">>"%logfile%" 2>&1
+if exist "%root%\www\mars30\index.php" "%root%\bin\php\php.exe" "%root%\www\mars30\index.php s=scheduler">>"%logfile%" 2>&1
+del "%root%\tmp\.export" >nul 2>&1
 if not exist "%root%\.updates" goto :database-dump
 :post-updates
+echo.>"%root%\tmp\.update"
 for /f %%i in (%root%\.updates) do call :post-update %%i
 del /q "%root%\.updates" >nul 2>&1
+del "%root%\tmp\.update" >nul 2>&1
 :database-dump
 set dbdumptime="16:00"
 for /f "tokens=1,2 delims== " %%i in ("%root%\conf\config.ini") do if /i "%%i" equ "db_dump_time" set dbdumptime=%%j

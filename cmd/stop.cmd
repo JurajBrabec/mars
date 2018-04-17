@@ -1,12 +1,13 @@
 @echo off
 REM MARS 4.1 STOP SERVICES SCRIPT
-REM DON'T MODIFY ANYTHING BELOW THIS LINE █████████████████████████████████████████████████████████████████████████████
-REM © 2018 Juraj Brabec, DXC.technology
+REM (C) 2018 Juraj Brabec, DXC.technology
+REM DON'T MODIFY ANYTHING BELOW THIS LINE______________________________________________________________________________
+
 setlocal enabledelayedexpansion
 pushd %~dp0
 if "%root%" neq "" goto :setup
 echo Do not run this file directly, use MARS.CMD launcher.
-goto :usage
+goto :end
 :setup
 :begin
 if /i "%1" equ "db" ( 
@@ -32,6 +33,7 @@ set service=%1
 net start | find "%service%" >nul 2>&1
 if "%errorlevel%" equ "0" goto :service-stop
 call :echo %service% service not running.
+ver>nul
 goto :eof
 :service-stop
 call :echo Stopping %service% service...

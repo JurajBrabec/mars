@@ -1,22 +1,29 @@
 # MARS 4.1 CREATE SQL FILE
-# DON`T MODIFY ANYTHING BELOW THIS LINE ███████████████████████████████████████████████████████████████████████████████
-# © 2018 Juraj Brabec, DXC.technology
+# (C) 2018 Juraj Brabec, DXC.technology
+# DON`T MODIFY ANYTHING BELOW THIS LINE______________________________________________________________________________
 
 USE `mysql`;
-DROP DATABASE IF EXISTS `mars40`;
-CREATE DATABASE IF NOT EXISTS `mars40` /*!40100 DEFAULT CHARACTER SET utf8 */;
-
 UPDATE mysql.user SET Host = '%',Password = PASSWORD('r00t123') WHERE User = 'root' AND Host = 'localhost';
 DELETE FROM mysql.user WHERE ( User <>'root' ) OR ( User = 'root' AND Host <> '%' );
-#DROP USER IF EXISTS 'operator','script','administrator';
+DROP USER IF EXISTS 'operator','script','administrator';
 CREATE USER 'operator';
 CREATE USER 'script' IDENTIFIED BY 'omniback';
 CREATE USER 'administrator' IDENTIFIED BY 'admin';
 REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'operator'@'%','script'@'%','administrator'@'%';
+GRANT PROCESS ON *.* TO 'operator'@'%';
+GRANT PROCESS ON *.* TO 'administrator'@'%';
 
+DROP DATABASE IF EXISTS `mars40`;
+CREATE DATABASE IF NOT EXISTS `mars40` DEFAULT CHARACTER SET utf8 DEFAULT COLLATION utf8_general_ci;
 GRANT SELECT, INSERT, UPDATE, EXECUTE, EVENT ON mars40.* TO 'operator'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE ON mars40.* TO 'script'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, EVENT ON mars40.* TO 'administrator'@'%';
+
+DROP DATABASE IF EXISTS `mars30`;
+CREATE DATABASE IF NOT EXISTS `mars30` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE=utf8_general_ci;
+GRANT SELECT, INSERT, UPDATE, EVENT ON mars30.* TO 'operator'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE ON mars30.* TO 'script'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, EVENT ON mars30.* TO 'administrator'@'%';
 FLUSH PRIVILEGES;
 
 USE `mars40`;

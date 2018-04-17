@@ -1,12 +1,13 @@
 @echo off
 REM MARS 4.1 UNINSTALL SCRIPT
-REM DON'T MODIFY ANYTHING BELOW THIS LINE █████████████████████████████████████████████████████████████████████████████
-REM © 2018 Juraj Brabec, DXC.technology
+REM (C) 2018 Juraj Brabec, DXC.technology
+REM DON'T MODIFY ANYTHING BELOW THIS LINE______________________________________________________________________________
+
 setlocal enabledelayedexpansion
 pushd %~dp0
 if "%root%" neq "" goto :setup
 echo Do not run this file directly, use MARS.CMD launcher.
-goto :usage
+goto :end
 :setup
 set "logfile=%root%\logs\uninstall.log"
 :begin
@@ -20,13 +21,13 @@ echo USAGE: MARS uninstall - uninstalls MARS from the system.
 echo.
 goto :end
 :uninstall-prompt
-echo [91mWARNING: You are about to uninstall MARS 4.1 from the system.[0m
+echo WARNING: You are about to uninstall MARS %build% from the system.
 set /p q=To approve and continue, type 'APPROVE' (Exit):
 if "%q%" equ "APPROVE" goto :uninstall-start
 echo Uninstall process was not approved. Exiting.
 goto :end
 :uninstall-start
-call :echo Uninstalling MARS 4.1 Web/DB server...
+call :echo Uninstalling MARS %build% Web/DB server...
 :uninstall-stop-services
 call "%root%\mars.cmd" stop
 if "%errorlevel%" equ "0" goto :uninstall-http
@@ -45,8 +46,13 @@ if "%errorlevel%" equ "0" goto :uninstall-scheduledtask
 call :echo Error %errorlevel% uninstalling DB service (MARS-DB).
 goto :end
 :uninstall-scheduledtask
-call :echo Installing scheduled task...
-SCHTASKS /Delete /TN MARS-Scheduler /F
+call :echo Uninstalling scheduled task...
+schtasks /query /tn MARS-Scheduler > nul 2>&1
+if "%errorlevel%" equ "1" (
+	ver>nul
+	goto :finish
+)
+schtasks /delete /tn MARS-Scheduler /f 2>&1
 if "%errorlevel%" equ "0" goto :finish
 call :echo Error %errorlevel% uninstalling scheduled task (MARS-Scheduler).
 goto :end

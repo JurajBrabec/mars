@@ -1,6 +1,6 @@
 # MARS 4.1 CONFIG SQL FILE
-# DON`T MODIFY ANYTHING BELOW THIS LINE ███████████████████████████████████████████████████████████████████████████████
-# © 2018 Juraj Brabec, DXC.technology
+# (C) 2018 Juraj Brabec, DXC.technology
+# DON`T MODIFY ANYTHING BELOW THIS LINE______________________________________________________________________________
 
 USE `mars40`;
 

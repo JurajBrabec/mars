@@ -1,13 +1,13 @@
-REM MARS 4.1 INSTALL JS SCRIPT
-REM DON'T MODIFY ANYTHING BELOW THIS LINE █████████████████████████████████████████████████████████████████████████████
-REM © 2018 Juraj Brabec, DXC.technology
+// MARS 4.1 INSTALL JS SCRIPT
+// (C) 2018 Juraj Brabec, DXC.technology
+// DON'T MODIFY ANYTHING BELOW THIS LINE______________________________________________________________________________
 
 var fs = require( 'fs' );
 var path = require( 'path' );
 var root = path.resolve( __dirname, '../..' );
 module.paths = [ path.resolve( root, 'bin/nodejs/node_modules' ) ];
 var ini = require( 'ini' );
-var config = ini.parse( fs.readFileSync( path.resolve( root, 'cmd/install/install.ini' ), 'utf-8' ) )
+var config = ini.parse( fs.readFileSync( path.resolve( root, 'install.ini' ), 'utf-8' ) )
 var arg = process.argv[ 2 ];
 var source = path.resolve( root, 'cmd/install/conf' );
 var target = path.resolve( root, 'conf' );
@@ -43,4 +43,4 @@ var data = fs.readFileSync( path.resolve( source, 'mars-scheduler.xml' ), 'utf-8
 data = data.replace( /%INTERVAL%/gim, config.Optional.INTERVAL );
 data = data.replace( /%MARS_ROOT%/gim, root );
 fs.writeFileSync( path.resolve( target, 'mars-scheduler.xml' ), data, 'utf-8' );
-console.log( 'Done.' );
+console.log( 'All configuration files processed.' );

@@ -1,7 +1,8 @@
 @echo off
-REM MARS 4.1 UPDATE PART#2 SCRIPT
-REM DON'T MODIFY ANYTHING BELOW THIS LINE █████████████████████████████████████████████████████████████████████████████
-REM © 2018 Juraj Brabec, DXC.technology
+REM MARS 4.1 DB UPDATE PART#2 SCRIPT
+REM (C) 2018 Juraj Brabec, DXC.technology
+REM DON'T MODIFY ANYTHING BELOW THIS LINE______________________________________________________________________________
+
 setlocal enabledelayedexpansion
 pushd %~dp0
 if "%root%" neq "" goto :setup
