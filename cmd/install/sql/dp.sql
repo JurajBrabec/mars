@@ -34,7 +34,7 @@ CREATE TABLE config_cellservers (
   UNIQUE KEY name (name)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='List of Cell Servers';
 
-INSERT INTO config_cellservers (id,name,valid_since,updated_on) VALUES (1,'Default Cell Server','2012-12-31 23:00:00','2012-12-31 23:00:00');
+# INSERT INTO config_cellservers (id,name,valid_since,updated_on) VALUES (1,'Default Cell Server','2012-12-31 23:00:00','2012-12-31 23:00:00');
 
 DROP TABLE IF EXISTS config_customers;
 CREATE TABLE config_customers (
@@ -61,7 +61,7 @@ CREATE TABLE config_customers (
   UNIQUE KEY specification (specification)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='List of customers';
 
-INSERT INTO config_customers (id,name,specification,fqdn,valid_since,updated_on) VALUES (1,'Default Customer','_default_','.default.','2012-12-31 23:00:00','2012-12-31 23:00:00');
+# INSERT INTO config_customers (id,name,specification,fqdn,valid_since,updated_on) VALUES (1,'Default Customer','_default_','.default.','2012-12-31 23:00:00','2012-12-31 23:00:00');
 
 DROP TABLE IF EXISTS config_mediaservers;
 CREATE TABLE config_mediaservers (
@@ -76,7 +76,7 @@ CREATE TABLE config_mediaservers (
   KEY cellserver (cellserver)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='List of Media Servers';
 
-INSERT INTO config_mediaservers (id,name,cellserver,valid_since,updated_on) VALUES (1,'Default Media Server','Default Cell Server','2012-12-31 23:00:00','2012-12-31 23:00:00');
+# INSERT INTO config_mediaservers (id,name,cellserver,valid_since,updated_on) VALUES (1,'Default Media Server','Default Cell Server','2012-12-31 23:00:00','2012-12-31 23:00:00');
 
 DROP TABLE IF EXISTS config_reports;
 CREATE TABLE config_reports (
@@ -237,11 +237,11 @@ CREATE TABLE config_scheduler (
   UNIQUE KEY name (name)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='List of scheduled tasks';
 
-INSERT INTO config_scheduler (id,date,time,name,type,param1,param2,param3,param4,param5,param6,valid_since,updated_on) VALUES 
-	(1,NULL,'NEVER','Restart Apache','CMD','restart-apache.cmd',NULL,NULL,NULL,NULL,NULL,'2012-12-31 23:00:00','2012-12-31 23:00:00'),
-	(2,NULL,'NEVER','Restart MySQL','CMD','restart-mysql.cmd',NULL,NULL,NULL,NULL,NULL,'2012-12-31 23:00:00','2012-12-31 23:00:00'),
-	(3,NULL,'16:30','MySQL dump','CMD','mysql-dump\\dump.cmd',NULL,NULL,NULL,NULL,NULL,'2012-12-31 23:00:00','2012-12-31 23:00:00'),
-	(4,'01\.','16:30','MySQL backup dump','CMD','mysql-dump\\dump-backup.cmd',NULL,NULL,NULL,NULL,NULL,'2012-12-31 23:00:00','2012-12-31 23:00:00');
+# INSERT INTO config_scheduler (id,date,time,name,type,param1,param2,param3,param4,param5,param6,valid_since,updated_on) VALUES 
+# 	(1,NULL,'NEVER','Restart Apache','CMD','restart-apache.cmd',NULL,NULL,NULL,NULL,NULL,'2012-12-31 23:00:00','2012-12-31 23:00:00'),
+# 	(2,NULL,'NEVER','Restart MySQL','CMD','restart-mysql.cmd',NULL,NULL,NULL,NULL,NULL,'2012-12-31 23:00:00','2012-12-31 23:00:00'),
+# 	(3,NULL,'16:30','MySQL dump','CMD','mysql-dump\\dump.cmd',NULL,NULL,NULL,NULL,NULL,'2012-12-31 23:00:00','2012-12-31 23:00:00'),
+# 	(4,'01\.','16:30','MySQL backup dump','CMD','mysql-dump\\dump-backup.cmd',NULL,NULL,NULL,NULL,NULL,'2012-12-31 23:00:00','2012-12-31 23:00:00');
 
 DROP TABLE IF EXISTS config_scripts;
 CREATE TABLE config_scripts (

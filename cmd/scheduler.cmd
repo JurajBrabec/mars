@@ -14,9 +14,9 @@ for /f "tokens=1,2 delims=:" %%i in ("%time: =0%") do set starttime=%%i:%%j
 :begin
 call :echo Scheduler starting...
 echo.>"%root%\tmp\.scheduler"
-if exist "%root%\www\mars40\php.php" "%root%\bin\php\php.exe" "%root%\www\mars40\php.php">>"%logfile%" 2>&1
-if exist "%root%\www\mars30\index.php" "%root%\bin\php\php.exe" "%root%\www\mars30\index.php s=scheduler">>"%logfile%" 2>&1
-del "%root%\tmp\.export" >nul 2>&1
+if exist "%root%\www\nbu\php.php" "%root%\bin\php\php.exe" "%root%\www\nbu\php.php">>"%logfile%" 2>&1
+if exist "%root%\www\dp\index.php" "%root%\bin\php\php.exe" "%root%\www\dp\index.php" s=scheduler>>"%logfile%" 2>&1
+del "%root%\tmp\.scheduler" >nul 2>&1
 if not exist "%root%\.updates" goto :database-dump
 :post-updates
 echo.>"%root%\tmp\.update"

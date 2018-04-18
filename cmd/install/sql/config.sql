@@ -42,6 +42,7 @@ CREATE TABLE `config_settings` (
 	`obsoleted` TIMESTAMP NULL DEFAULT NULL,
 	PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Settings';
+GRANT SELECT, INSERT, UPDATE, DELETE ON mars40.config_settings TO 'operator'@'%';
 
 DROP TABLE IF EXISTS `config_timeperiods`;
 CREATE TABLE IF NOT EXISTS `config_timeperiods` (
@@ -113,10 +114,8 @@ INSERT INTO `config_timeperiods` (`ord`, `name`, `value`, `created`, `updated`, 
 	(6, 'Today', 'D::D+1', '2013-01-01 00:00:00', '2013-01-01 00:00:00', NULL),
 	(7, 'Yesterday', 'D-1::D', '2013-01-01 00:00:00', '2013-01-01 00:00:00', NULL);
 
-INSERT INTO `config_towers` (`name`, `policyname`, `created`, `updated`, `obsoleted`) VALUES
-	('Default', '.+', '2017-05-03 10:39:27', '2017-05-03 10:39:37', NULL);
+#INSERT INTO `config_towers` (`name`, `policyname`, `created`, `updated`, `obsoleted`) VALUES
+#	('Default', '.+', '2017-05-03 10:39:27', '2017-05-03 10:39:37', NULL);
 
-INSERT INTO `config_customers` (`name`, `policyname`, `created`, `updated`, `obsoleted`) VALUES
-	('Default', '.+', '2016-12-14 15:06:46', '2017-04-19 15:31:24', NULL);
-
-GRANT SELECT, INSERT, UPDATE, DELETE ON mars40.config_settings TO 'operator'@'%';
+#INSERT INTO `config_customers` (`name`, `policyname`, `created`, `updated`, `obsoleted`) VALUES
+#	('Default', '.+', '2016-12-14 15:06:46', '2017-04-19 15:31:24', NULL);

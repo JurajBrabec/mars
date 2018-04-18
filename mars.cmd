@@ -8,6 +8,7 @@ pushd %~dp0
 :setup
 set "root=%~dp0"
 if "%root:~-1%"=="\" set root=%root:~0,-1%
+if not exist build echo 4.1>build
 for /f %%i in (build) do set build=%%i
 set command=%1
 if "%logfile%" neq "" goto :begin

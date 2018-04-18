@@ -38,7 +38,7 @@ goto :end
 set db=%1
 call :echo Starting DB export of database '%db%'...
 echo.>"%root%\tmp\.export"
-"%root%\bin\db\bin\mysqldump.exe" --no-create-info --flush-logs --flush-privileges --log-error="%logfile%" --replace --databases %db% | "%root%\bin\7z\7z.exe" u -si%db%.sql "%root%\cmd\dump\%db%.7z" >nul 2>&1
+"%root%\bin\db\bin\mysqldump.exe" --no-create-info --flush-logs --flush-privileges --log-error="%logfile%" --replace --compact --databases %db% | "%root%\bin\7z\7z.exe" u -si%db%.sql "%root%\cmd\dump\%db%.7z" >nul 2>&1
 dir /-c "%root%\cmd\dump\%db%.7z" | findstr %db%>>"%logfile%"
 del "%root%\tmp\.export" >nul 2>&1
 call :echo DB export of database '%db%' finished.
