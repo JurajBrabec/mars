@@ -79,10 +79,11 @@ class application {
 
 	function application( $params = array( ) ) {
 		$this->micro_time = microtime( true );
-		$this->config = array_change_key_case( parse_ini_file( sprintf( '%s\conf\%s', substr( __DIR__, 0, strpos( __DIR__, 'www' ) - 1 ), INI_FILE ), CASE_UPPER ) );
+		$this->config = array_change_key_case( parse_ini_file( sprintf( '%s\conf\%s', substr( __DIR__, 0, strpos( __DIR__, 'www' ) - 1 ), INI_FILE ) ), CASE_UPPER );
 		$this->config[ 'MYSQL_HOST' ] = 'localhost';
 		$this->config[ 'MYSQL_DB' ] = 'MARS30';
 		$this->config[ 'TIME_FORMAT' ] = 'Y-m-d H:i:s';
+		$this->config[ 'MAIL_FROM' ] = $this->config[ 'SMTP_FROM' ];
 		!empty( $this->config[ 'TIME_ZONE' ] ) && date_default_timezone_set( $this->config[ 'TIME_ZONE' ] );
 		$this->start_time = date( $this->config[ 'TIME_FORMAT' ] );
 		if ( !empty( $this->config[ 'SMTP_SERVER' ] ) ) ini_set( 'SMTP', $this->config[ 'SMTP_SERVER' ] ); 

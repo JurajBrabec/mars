@@ -7,7 +7,7 @@ UPDATE mysql.user SET Host = '%',Password = PASSWORD('r00t123') WHERE User = 'ro
 DELETE FROM mysql.user WHERE ( User <>'root' ) OR ( User = 'root' AND Host <> '%' );
 DROP USER IF EXISTS 'operator','script','administrator';
 CREATE USER 'operator';
-CREATE USER 'script' IDENTIFIED BY 'omniback';
+CREATE USER 'script' IDENTIFIED BY 'm@r5';
 CREATE USER 'administrator' IDENTIFIED BY 'admin';
 REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'operator'@'%','script'@'%','administrator'@'%';
 GRANT PROCESS ON *.* TO 'operator'@'%';
