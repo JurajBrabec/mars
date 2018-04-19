@@ -11,7 +11,23 @@ goto :end
 :setup
 set "logfile=%root%\logs\scheduler.log"
 for /f "tokens=1,2 delims=:" %%i in ("%time: =0%") do set starttime=%%i:%%j
+set command=%1
 :begin
+if "%command%" equ "" goto :start
+if "%command:~0,1%"=="/" set command=%command:~1%
+if "%command:~0,1%"=="-" set command=%command:~1%
+if /i "%command%" equ "enable" goto :enable
+if /i "%command%" equ "disable" goto :disable
+goto :start
+:enable
+schtasks /change /tn MARS-Scheduler /enable >nul 2>&1
+call "%root%\cmd\status.cmd" task
+goto :end
+:disable
+schtasks /change /tn MARS-Scheduler /disable >nul 2>&1
+call "%root%\cmd\status.cmd" task
+goto :end
+:start
 call :echo Scheduler starting...
 echo.>"%root%\tmp\.scheduler"
 if exist "%root%\www\nbu\php.php" "%root%\bin\php\php.exe" "%root%\www\nbu\php.php">>"%logfile%" 2>&1

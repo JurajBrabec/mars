@@ -21,8 +21,8 @@ echo.
 if "%command%" equ "" goto :usage
 if "%command:~0,1%"=="/" set command=%command:~1%
 if "%command:~0,1%"=="-" set command=%command:~1%
-if /i "%command%" equ "disable" goto :mars-disable
-if /i "%command%" equ "enable" goto :mars-enable
+if /i "%command%" equ "disable" goto :scheduler-disable
+if /i "%command%" equ "enable" goto :scheduler-enable
 if /i "%command%" equ "status" goto :mars-status
 if /i "%command%" equ "scheduler" goto :mars-scheduler
 if /i "%command%" equ "install" goto :mars-install
@@ -41,11 +41,11 @@ echo USAGE: MARS command [parameter]
 echo  Command may be preceded by "/" (i.e. mars /install) or "-" (i.e. mars -install). 
 echo  Parameter must be bare.
 echo  Comonly used commands ^& parameters:
-echo  -disable             - Disables the scheduler.
-echo  -enable              - Enables the scheduler (if it was disabled).
 echo  -status              - Displays various status information.
 echo  -start [db^|http]     - Starts a service. Defaults to both services.
 echo  -stop [db^|http]      - Stops a service. Defaults to both services.
+echo  -disable             - Disables the scheduler.
+echo  -enable              - Enables the scheduler (if it was disabled).
 echo  Rarely used commands ^& parameters:
 echo  -scheduler           - Executes the scheduler.
 echo  -export [{database}] - Imports/exports a database. Defaults to all databases.
@@ -56,16 +56,6 @@ echo  -heidisql            - Starts the HeidiSQL tool.
 echo  Commands used once (or never):
 echo  -install             - installs MARS 4.1, Edit "%root%\install.ini" first.
 echo  -uninstall           - uninstalls MARS 4.1 from the system.
-goto :end
-:mars-disable
-call :echo Disabling scheduler...
-schtasks /change /tn MARS-Scheduler /disable >nul 2>&1
-call :mars-status status task
-goto :end
-:mars-enable
-call :echo Enabling scheduler...
-schtasks /change /tn MARS-Scheduler /enable >nul 2>&1
-call :mars-status status task
 goto :end
 :mars-status
 call "%root%\cmd\status.cmd" %2
@@ -93,6 +83,14 @@ goto :end
 :mars-scheduler
 call :echo Executing scheduler %2...
 call "%root%\cmd\scheduler.cmd" %2
+goto :end
+:scheduler-disable
+call :echo Disabling scheduler...
+call "%root%\cmd\scheduler.cmd" %1
+goto :end
+:scheduler-enable
+call :echo Enabling scheduler...
+call "%root%\cmd\scheduler.cmd" %1
 goto :end
 :mars-install
 call :echo Installing %2...
