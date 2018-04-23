@@ -27,6 +27,7 @@ if /i "%command%" equ "status" goto :mars-status
 if /i "%command%" equ "scheduler" goto :mars-scheduler
 if /i "%command%" equ "install" goto :mars-install
 if /i "%command%" equ "uninstall" goto :mars-uninstall
+if /i "%command%" equ "restart" goto :service-restart
 if /i "%command%" equ "start" goto :service-start
 if /i "%command%" equ "stop" goto :service-stop
 if /i "%command%" equ "import" goto :database-import
@@ -44,6 +45,7 @@ echo  Comonly used commands ^& parameters:
 echo  -status              - Displays various status information.
 echo  -start [db^|http]     - Starts a service. Defaults to both services.
 echo  -stop [db^|http]      - Stops a service. Defaults to both services.
+echo  -restart [db^|http]   - Restarts a service. Defaults to both services.
 echo  -disable             - Disables the scheduler.
 echo  -enable              - Enables the scheduler (if it was disabled).
 echo  Rarely used commands ^& parameters:
@@ -59,6 +61,11 @@ echo  -uninstall           - uninstalls MARS 4.1 from the system.
 goto :end
 :mars-status
 call "%root%\cmd\status.cmd" %2
+goto :end
+:service-restart
+call :echo Restarting services(s) %2...
+call "%root%\cmd\stop.cmd" %2
+call "%root%\cmd\start.cmd" %2
 goto :end
 :service-start
 call :echo Starting services(s) %2...

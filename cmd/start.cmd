@@ -39,11 +39,13 @@ goto :eof
 if "%service%" equ "MARS-DB" (
 	xcopy /y "%root%\conf\my.ini" "%root%\bin\db\" >nul 2>&1
 	del /q "%root%\data\*.log" >nul 2>&1
+	del /q "%root%\logs\db*.log" >nul 2>&1
 )
 if "%service%" equ "MARS-HTTP" (
 	xcopy /y "%root%\conf\httpd.conf" "%root%\bin\http\conf\" >nul 2>&1
 	xcopy /y "%root%\conf\php.ini" "%root%\bin\php\" >nul 2>&1
 	del /q /f "%root%\bin\http\logs\*.*" >nul 2>&1
+	del /q /f "%root%\logs\http*.log" >nul 2>&1
 )
 call :echo Starting %service% service...
 net start %service% >nul 2>&1

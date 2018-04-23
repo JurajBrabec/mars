@@ -12,6 +12,19 @@ function fetch_rows( $db, $sql ) {
 	return $rows;
 }
 
+function buffer_fetch_rows( $filename, $db, $sql ) {
+	$rows = fopen( $filename, 'w' );
+	if ( !$rows ) return file_put_contents( $filename, json_encode( array( 'error' => 'Failed to create temporary file' ) ) );
+	if ( $query = mysqli_query( $db, $sql ) ) {
+		while( $row = mysqli_fetch_assoc( $query ) ) fwrite( $rows, json_encode( $row ) );
+		mysqli_free_result( $query );
+	} else {
+		fwrite( $rows, json_encode( array( 'error' => sprintf( '%s in %s', mysqli_error( $db ), $sql ) ) ) );
+	}
+	fclose( $rows );
+	return true;
+}
+
 function update( ) {
 	$files = sprintf( '%s/upload/{,.}*.zip', dirname( __FILE__ ) );
 	foreach( glob( $files, GLOB_BRACE ) as $file ) {
