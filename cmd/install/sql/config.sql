@@ -79,12 +79,14 @@ CREATE TABLE IF NOT EXISTS `config_reports` (
   PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of user reports';
 
-DROP VIEW IF EXISTS `view_scheduled_now`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `view_scheduled_now` AS 
-select * from config_schedules
-where date_format(date_sub(now()+interval 30 second,interval mod(minute(now()+interval 30 second),5) minute),"%a %d. %b %Y %H:%i") regexp concat(ifnull(`date`,""),".+",`time`) 
-and obsoleted is null 
-order by name ;
+DROP VIEW IF EXISTS `v_schedules`;
+CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `v_schedules` AS 
+SELECT cs.*
+	FROM config_schedules cs 
+	WHERE ISNULL(cs.obsoleted) 
+	AND DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 5 SECOND),'%a %d. %b %Y') REGEXP IFNULL(cs.date,'.*')
+	ORDER BY cs.date,cs.time,cs.name
+;
 
 INSERT INTO `config_timeperiods` (`ord`, `name`, `value`, `created`, `updated`, `obsoleted`) VALUES
 	(3, 'Last 12 hours', 'H-12::H', '2013-01-01 00:00:00', '2013-01-01 00:00:00', NULL),

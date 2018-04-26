@@ -84,7 +84,7 @@ class application {
 		$this->config[ 'TIME_FORMAT' ] = 'Y-m-d H:i:s';
 		$this->config[ 'MYSQL_HOST' ] = 'localhost';
 		$this->config[ 'MYSQL_DB' ] = 'MARS30';
-		$this->config[ 'QOUTE' ] = $this->config[ 'TEXT_QUALIFIER' ];
+		$this->config[ 'QUOTE' ] = $this->config[ 'TEXT_QUALIFIER' ];
 		$this->config[ 'MAIL_FROM' ] = $this->config[ 'SMTP_FROM' ];
 #MARS30 config.ini adjustments
 		!empty( $this->config[ 'TIME_ZONE' ] ) && date_default_timezone_set( $this->config[ 'TIME_ZONE' ] );
@@ -184,10 +184,11 @@ class application {
 		}
 	}
 	
-	function execute_scheduler( ) {
+	function execute_scheduler( $starttime ) {
 		$this->execute_upgrade( );
-		$rows = array();
-		$sql = sprintf( "select * from _scheduler where type in ('%s','%s','%s');", SCHEDULER_SOURCE, SCHEDULER_PAGE, SCHEDULER_CMD);
+		$rows = array( );
+		$sql = sprintf( "select * from _scheduler where `type` in ('%s','%s','%s') and '%s' regexp `time`;", 
+			SCHEDULER_SOURCE, SCHEDULER_PAGE, SCHEDULER_CMD, $starttime );
 		$this->database->execute_query( $sql ) && $rows = $this->database->rows;
 		foreach ( $rows as $row ) {
 			try {
@@ -273,14 +274,16 @@ function error_handler( $errno, $errstr, $errfile, $errline, array $errcontext )
 	throw new ErrorException( $errstr, 0, $errno, $errfile, $errline );
 }
 
+date_default_timezone_set( @date_default_timezone_get( ) );
 set_error_handler( 'error_handler' );
 try {
 	$params =  $_REQUEST;
 	PHP_SAPI === 'cli' && parse_str( implode( '&', array_slice( $argv, 1 ) ), $params );
 	$application = new application( $params );
 	$source = empty( $application->params[ SOURCE ] ) ? '' : $application->params[ SOURCE ];
+	$starttime = empty( getenv( 'starttime' ) ) ? date( 'H:i' ) : getenv( 'starttime' );
 	switch ( $source ) {
-		case SCHEDULER: $application->execute_scheduler();break;
+		case SCHEDULER: $application->execute_scheduler( $starttime );break;
 		case ADMIN: 
 		default: $application->show_page();break;  
 	} 

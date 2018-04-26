@@ -13,16 +13,14 @@ function fetch_rows( $db, $sql ) {
 }
 
 function buffer_fetch_rows( $filename, $db, $sql ) {
-	$rows = fopen( $filename, 'w' );
-	if ( !$rows ) return file_put_contents( $filename, json_encode( array( 'error' => 'Failed to create temporary file' ) ) );
-	if ( $query = mysqli_query( $db, $sql ) ) {
-		while( $row = mysqli_fetch_assoc( $query ) ) fwrite( $rows, json_encode( $row ) );
+	$rows = array( );
+	if ( $query = mysqli_query( $db, $sql, MYSQLI_USE_RESULT ) ) {
+		while( $row = mysqli_fetch_assoc( $query ) ) $rows[ ] = $row;
 		mysqli_free_result( $query );
 	} else {
-		fwrite( $rows, json_encode( array( 'error' => sprintf( '%s in %s', mysqli_error( $db ), $sql ) ) ) );
+		$rows[ 'error' ] = sprintf( '%s in %s', mysqli_error( $db ), $sql );
 	}
-	fclose( $rows );
-	return true;
+	return $rows;
 }
 
 function update( ) {
@@ -58,13 +56,13 @@ function update( ) {
 	}
 }
 
-function scheduler( ) {
+function scheduler( $starttime ) {
 	global $config;
 	update( );
 	if ( $db = mysqli_connect( $config[ 'ini' ][ 'DB_HOST' ], $config[ 'ini' ][ 'DB_USER' ], $config[ 'ini' ][ 'DB_PWD' ], $config[ 'ini' ][ 'DB_NAME' ] ) ) {
 		$sql = sprintf( "replace into config_settings (`name`,`value`) values ('region','%s');", $config[ 'ini' ][ 'SITE_NAME' ] );
 		if ( !mysqli_query( $db, $sql ) ) echo mysqli_error( $db ) . PHP_EOL;
-		$sql = 'select * from view_scheduled_now;';
+		$sql = sprintf( "select * from v_schedules where '%s' regexp `time`;", $starttime );
 		$schedules = fetch_rows( $db, $sql );
 		$i = 1;
 		foreach( $schedules as $schedule ) {
@@ -818,112 +816,151 @@ $sorts = array(
 		array( 'name' => 'DESC', 'title' => 'descending' )
 	);
 
+function error_handler( $errno, $errstr, $errfile, $errline, array $errcontext ) {
+	if ( ( 0 === error_reporting( ) ) or ( $errno == 8192 ) ) {return false;}
+	throw new ErrorException( $errstr, 0, $errno, $errfile, $errline );
+}
+
 date_default_timezone_set( @date_default_timezone_get( ) );
-$ini_file = sprintf( '%s/conf/config.ini', substr( __DIR__, 0, strpos( __DIR__, 'www' ) ) );
-$ini = array_change_key_case( parse_ini_file( $ini_file ), CASE_UPPER );
-date_default_timezone_set( $ini[ 'TIME_ZONE' ] );
-
-if ( PHP_SAPI === 'cli' ) {
-	$config = get_config( );
-	return scheduler( ); 
+set_error_handler( 'error_handler' );
+try {
+	$params =  $_REQUEST;
+	PHP_SAPI === 'cli' && parse_str( implode( '&', array_slice( $argv, 1 ) ), $params );
+	$ini_file = sprintf( '%s/conf/config.ini', substr( __DIR__, 0, strpos( __DIR__, 'www' ) ) );
+	$ini = array_change_key_case( parse_ini_file( $ini_file ), CASE_UPPER );
+	date_default_timezone_set( $ini[ 'TIME_ZONE' ] );
+	if ( PHP_SAPI === 'cli' ) {
+		$config = get_config( );
+		$starttime = empty( getenv( 'starttime' ) ) ? date( 'H:i' ) : getenv( 'starttime' );
+		return scheduler( $starttime ); 
+	}
+	session_start( );
+	switch ( $_SERVER[ 'REQUEST_METHOD' ] ) {
+		case 'POST':
+			$post = count( $_POST ) == 0 ? json_decode( file_get_contents( 'php://input' ), true ) : $_POST;
+			if ( isset( $post[ 'action' ] ) ) {
+				if ( $post[ 'action' ] == 'help' ) {
+					$xml = simplexml_load_file( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'help-texts.xml' );
+					$result = $xml->$post[ 'id' ] ? $xml->$post[ 'id' ]->asXML( ) : 'Error retrieving help text for #' . $post[ 'id' ];
+					echo $result;
+				}
+				if ( $post[ 'action' ] == 'upload' ) {
+					if ( empty( $_FILES[ 'file' ] ) or empty( $_FILES[ 'file' ][ 'name' ] ) ) 
+						die( 'Error: No package file selected.' );
+					if ( $_FILES[ 'file' ][ 'error' ] != UPLOAD_ERR_OK )
+						die( sprintf( 'Error %s encountered during upload.', $_FILES[ 'file' ][ 'error' ] ) );
+					$file = basename( $_FILES[ 'file' ][ 'name' ] );
+					$ext = pathinfo( $file, PATHINFO_EXTENSION );
+					if ( $ext != 'zip' ) 
+						die( sprintf( 'Error: File "%s" is not a valid package.', $file ) ); 
+					if ( !move_uploaded_file( $_FILES[  'file' ][ 'tmp_name' ], dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'upload' . DIRECTORY_SEPARATOR . $file ) ) 
+						die( sprintf( 'Error moving package "%s".', $file ) );
+					echo sprintf( 'Upload of package "%s" was successful.', $file );
+				}
+				if ( $post[ 'action' ] == 'session-store' ) {
+					$sources = json_decode( $post[ 'sources' ], true );
+					$_SESSION[ 'sources' ] = $sources;
+					$_SESSION[ 'tower' ] = $post[ 'tower' ];
+					$_SESSION[ 'customer' ] = $post[ 'customer' ];
+					$_SESSION[ 'timeperiod' ] = $post[ 'timeperiod' ];
+					echo json_encode( $sources );
+				}
+				if ( $post[ 'action' ] == 'source-show' ) {
+					$config = get_config( );
+					$timeperiod = '';
+					$source = json_decode( $post[ 'source' ], true );
+					$index = -1;
+					for( $i = 0; $i < count( $_SESSION[ 'sources' ] ); $i++ ) { 
+						if ( $_SESSION[ 'sources' ][ $i ][ 'name' ] == $source[ 'name' ] ) $index = $i;
+					}
+					if ( $index == -1 ) {
+						$_SESSION[ 'sources' ][ ] = $source;
+					} else {
+						$_SESSION[ 'sources' ][ $index ] = $source;
+					}
+					foreach( $config[ 'timeperiods' ] as $period ) {
+						$timeperiod = ( $period[ 'name' ] == $post[ 'timeperiod' ] ) ? $period[ 'value' ] : $timeperiod;
+					}
+					echo get_source( $source, $post[ 'tower' ], $post[ 'customer' ], $timeperiod, $post[ 'mode' ] );
+				}
+				if ( $post[ 'action' ] == 'session-save' ) {
+					echo save_report( $post[ 'name' ], $post[ 'title' ], $post[ 'sources' ], $post[ 'tower' ], $post[ 'customer' ], $post[ 'timeperiod' ]);
+				}
+				if ( $post[ 'action' ] == 'session-send' ) {
+					$config = get_config( );
+					echo send_report( $post[ 'name' ], $post[ 'title' ], $post[ 'sources' ], $post[ 'tower' ], $post[ 'customer' ], $post[ 'timeperiod' ], $post[ 'mode' ], $post[ 'to' ], $post[ 'cc' ] );
+				}
+				if ( $post[ 'action' ] == 'session-schedule' ) {
+					echo schedule_report( $post[ 'name' ], $post[ 'title' ], $post[ 'sources' ], $post[ 'tower' ], $post[ 'customer' ], $post[ 'timeperiod' ], $post[ 'date' ], $post[ 'time' ], $post[ 'mode' ], $post[ 'to' ], $post[ 'cc' ] );
+				}
+				if ( $post[ 'action' ] == 'sql' ) {
+					echo sql( $post[ 'sql' ], $post[ 'username' ], $post[ 'password' ] );
+				}
+				session_commit( );
+				die( );
+			}
+			break;
+		case 'GET' : 
+			if ( isset( $_GET[ 'action' ] ) ) {
+				if ( $_GET[ 'action' ] == 'get-config' ) {
+					echo json_encode( get_config( ) );
+				}
+				if ( $_GET[ 'action' ] == 'get-session' ) {
+					isset( $_SESSION[ 'sources' ] ) || $_SESSION[ 'sources' ] = array( );
+					isset( $_SESSION[ 'tower' ] ) || $_SESSION[ 'tower' ] = '';
+					isset( $_SESSION[ 'customer' ] ) || $_SESSION[ 'customer' ] = '';
+					isset( $_SESSION[ 'timeperiod' ] ) || $_SESSION[ 'timeperiod' ] = '';
+					echo json_encode( $_SESSION );
+				}
+				if ( $_GET[ 'action' ] == 'get-new-session' ) {
+					$id = empty( $_GET[ 'name' ] ) ? session_id( ) : $_GET[ 'name' ];
+					unset( $_SESSION[ 'config' ] );
+					session_unset( );
+					session_destroy( );
+					session_id( $id );
+					session_start( );
+					echo json_encode( array( 'sources'=>array( ),'tower'=>'','customer'=>'','timeperiod'=>'', 'reload'=>'1' ) );
+				}
+				if ( $_GET[ 'action' ] == 'get-admin-config' ) {
+					echo json_encode( get_admin_config( ) );
+				}
+				die( );
+			}
+			break;
+	}
+	if ( $_SERVER[ 'REQUEST_URI' ] != '/' ) {
+		header( 'Location: /');
+		exit;
+	}
+} catch ( ErrorException $e ) {
+	if ( PHP_SAPI === 'cli' ) {
+		$line = '%s: %s' . PHP_EOL;
+	} else {
+		$line = '<b>%s</b>: %s</br>' . PHP_EOL;
+		echo '<div class="error">' . PHP_EOL;
+	}
+	echo sprintf( $line, 'Error', $e->getmessage( ) );
+	echo sprintf( $line, 'Severity', $e->getseverity( ) );
+	echo sprintf( $line, 'Code', $e->getcode( ) );
+	echo sprintf( $line, 'File', $e->getfile( ) );
+	echo sprintf( $line, 'Line', $e->getline( ) );
+	if ( PHP_SAPI === 'cli' ) {
+		$line = '%s: ' . PHP_EOL . '%s' . PHP_EOL;
+		echo sprintf( $line, 'Trace', $e->gettraceasstring( ) );
+	} else {
+		$line = '<b>%s</b>: </br><code>%s</code></br>' . PHP_EOL;
+		echo sprintf( $line, 'Trace', $e->gettraceasstring( ) );
+		echo '</div>' . PHP_EOL;
+	}
 }
-
-session_start( );
-switch ( $_SERVER[ 'REQUEST_METHOD' ] ) {
-	case 'POST':
-		$post = count( $_POST ) == 0 ? json_decode( file_get_contents( 'php://input' ), true ) : $_POST;
-		if ( isset( $post[ 'action' ] ) ) {
-			if ( $post[ 'action' ] == 'help' ) {
-				$xml = simplexml_load_file( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'help-texts.xml' );
-				$result = $xml->$post[ 'id' ] ? $xml->$post[ 'id' ]->asXML( ) : 'Error retrieving help text for #' . $post[ 'id' ];
-				echo $result;
-			}
-			if ( $post[ 'action' ] == 'upload' ) {
-				if ( empty( $_FILES[ 'file' ] ) or empty( $_FILES[ 'file' ][ 'name' ] ) ) 
-					die( 'Error: No package file selected.' );
-				if ( $_FILES[ 'file' ][ 'error' ] != UPLOAD_ERR_OK )
-					die( sprintf( 'Error %s encountered during upload.', $_FILES[ 'file' ][ 'error' ] ) );
-				$file = basename( $_FILES[ 'file' ][ 'name' ] );
-				$ext = pathinfo( $file, PATHINFO_EXTENSION );
-				if ( $ext != 'zip' ) 
-					die( sprintf( 'Error: File "%s" is not a valid package.', $file ) ); 
-				if ( !move_uploaded_file( $_FILES[  'file' ][ 'tmp_name' ], dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'upload' . DIRECTORY_SEPARATOR . $file ) ) 
-					die( sprintf( 'Error moving package "%s".', $file ) );
-				echo sprintf( 'Upload of package "%s" was successful.', $file );
-			}
-			if ( $post[ 'action' ] == 'session-store' ) {
-				$sources = json_decode( $post[ 'sources' ], true );
-				$_SESSION[ 'sources' ] = $sources;
-				$_SESSION[ 'tower' ] = $post[ 'tower' ];
-				$_SESSION[ 'customer' ] = $post[ 'customer' ];
-				$_SESSION[ 'timeperiod' ] = $post[ 'timeperiod' ];
-				echo json_encode( $sources );
-			}
-			if ( $post[ 'action' ] == 'source-show' ) {
-				$config = get_config( );
-				$timeperiod = '';
-				$source = json_decode( $post[ 'source' ], true );
-				$index = -1;
-				for( $i = 0; $i < count( $_SESSION[ 'sources' ] ); $i++ ) { 
-					if ( $_SESSION[ 'sources' ][ $i ][ 'name' ] == $source[ 'name' ] ) $index = $i;
-				}
-				if ( $index == -1 ) {
-					$_SESSION[ 'sources' ][ ] = $source;
-				} else {
-					$_SESSION[ 'sources' ][ $index ] = $source;
-				}
-				foreach( $config[ 'timeperiods' ] as $period ) {
-					$timeperiod = ( $period[ 'name' ] == $post[ 'timeperiod' ] ) ? $period[ 'value' ] : $timeperiod;
-				}
-				echo get_source( $source, $post[ 'tower' ], $post[ 'customer' ], $timeperiod, $post[ 'mode' ] );
-			}
-			if ( $post[ 'action' ] == 'session-save' ) {
-				echo save_report( $post[ 'name' ], $post[ 'title' ], $post[ 'sources' ], $post[ 'tower' ], $post[ 'customer' ], $post[ 'timeperiod' ]);
-			}
-			if ( $post[ 'action' ] == 'session-send' ) {
-				$config = get_config( );
-				echo send_report( $post[ 'name' ], $post[ 'title' ], $post[ 'sources' ], $post[ 'tower' ], $post[ 'customer' ], $post[ 'timeperiod' ], $post[ 'mode' ], $post[ 'to' ], $post[ 'cc' ] );
-			}
-			if ( $post[ 'action' ] == 'session-schedule' ) {
-				echo schedule_report( $post[ 'name' ], $post[ 'title' ], $post[ 'sources' ], $post[ 'tower' ], $post[ 'customer' ], $post[ 'timeperiod' ], $post[ 'date' ], $post[ 'time' ], $post[ 'mode' ], $post[ 'to' ], $post[ 'cc' ] );
-			}
-			if ( $post[ 'action' ] == 'sql' ) {
-				echo sql( $post[ 'sql' ], $post[ 'username' ], $post[ 'password' ] );
-			}
-			session_commit( );
-			die( );
-		}
-		break;
-	case 'GET' : 
-		if ( isset( $_GET[ 'action' ] ) ) {
-			if ( $_GET[ 'action' ] == 'get-config' ) {
-				echo json_encode( get_config( ) );
-			}
-			if ( $_GET[ 'action' ] == 'get-session' ) {
-				isset( $_SESSION[ 'sources' ] ) || $_SESSION[ 'sources' ] = array( );
-				isset( $_SESSION[ 'tower' ] ) || $_SESSION[ 'tower' ] = '';
-				isset( $_SESSION[ 'customer' ] ) || $_SESSION[ 'customer' ] = '';
-				isset( $_SESSION[ 'timeperiod' ] ) || $_SESSION[ 'timeperiod' ] = '';
-				echo json_encode( $_SESSION );
-			}
-			if ( $_GET[ 'action' ] == 'get-new-session' ) {
-				$id = empty( $_GET[ 'name' ] ) ? session_id( ) : $_GET[ 'name' ];
-				unset( $_SESSION[ 'config' ] );
-				session_unset( );
-				session_destroy( );
-				session_id( $id );
-				session_start( );
-				echo json_encode( array( 'sources'=>array( ),'tower'=>'','customer'=>'','timeperiod'=>'', 'reload'=>'1' ) );
-			}
-			if ( $_GET[ 'action' ] == 'get-admin-config' ) {
-				echo json_encode( get_admin_config( ) );
-			}
-			die( );
-		}
-		break;
-}
-if ( $_SERVER[ 'REQUEST_URI' ] != '/' ) {
-	header( 'Location: /');
-	exit;
+catch ( Exception $e ) {
+	if ( PHP_SAPI === 'cli' ) {
+		echo $e->getmessage( ) . PHP_EOL;
+	} else {
+		echo '<div class="error">' . PHP_EOL;
+		echo $e->getmessage( ) . PHP_EOL;
+		echo '</br>' . PHP_EOL;
+		echo '</div>' . PHP_EOL;
+	}
 }
 ?>

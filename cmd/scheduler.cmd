@@ -28,7 +28,8 @@ schtasks /change /tn MARS-Scheduler /disable >nul 2>&1
 call "%root%\cmd\status.cmd" task
 goto :end
 :start
-call :echo Scheduler starting...
+if "%command%" neq "" set starttime=%command%
+call :echo Scheduler starting for %starttime%...
 echo.>"%root%\tmp\.scheduler"
 if exist "%root%\www\nbu\php.php" "%root%\bin\php\php.exe" "%root%\www\nbu\php.php">>"%logfile%" 2>&1
 if exist "%root%\www\dp\index.php" "%root%\bin\php\php.exe" "%root%\www\dp\index.php" s=scheduler>>"%logfile%" 2>&1

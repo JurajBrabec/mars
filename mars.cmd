@@ -49,7 +49,7 @@ echo  -restart [db^|http]   - Restarts a service. Defaults to both services.
 echo  -disable             - Disables the scheduler.
 echo  -enable              - Enables the scheduler (if it was disabled).
 echo  Rarely used commands ^& parameters:
-echo  -scheduler           - Executes the scheduler.
+echo  -scheduler [HH:MM]   - Executes the scheduler. You may specify a time to emualte.
 echo  -export [{database}] - Imports/exports a database. Defaults to all databases.
 echo  -import [{database}] - Imports/exports a database. Defaults to all databases.
 echo  -init                - initializes the database to default (empty) state.
