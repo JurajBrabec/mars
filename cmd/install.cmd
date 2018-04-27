@@ -62,7 +62,7 @@ if exist "%root%\conf\httpd.conf" goto :check-http2
 call :echo HTTP configuration file does not exist.
 goto :end
 :check-http2
-findstr "MARS_ROOT" "%root%\conf\httpd.conf" >nul 2>&1
+findstr "%%MARS_ROOT%%" "%root%\conf\httpd.conf" >nul 2>&1
 if "%errorlevel%" equ "1" goto :check-php1
 call :echo HTTP configuration file was not edited.
 goto :end
@@ -72,7 +72,7 @@ if exist "%root%\conf\php.ini" goto :check-php2
 call :echo PHP configuration file does not exist.
 goto :end
 :check-php2
-findstr "MARS_ROOT" "%root%\conf\php.ini" >nul 2>&1
+findstr "%%MARS_ROOT%%" "%root%\conf\php.ini" >nul 2>&1
 if "%errorlevel%" equ "1" goto :check-db1
 call :echo PHP configuration file was not edited.
 goto :end
@@ -82,7 +82,7 @@ if exist "%root%\conf\my.ini" goto :check-db2
 call :echo DB configuration file does not exist.
 goto :end
 :check-db2
-findstr "MARS_ROOT" "%root%\conf\my.ini" >nul 2>&1
+findstr "%%MARS_ROOT%%" "%root%\conf\my.ini" >nul 2>&1
 if "%errorlevel%" equ "1" goto :check-ini1
 call :echo DB configuration file was not edited.
 goto :end
@@ -102,7 +102,7 @@ if exist "%root%\conf\mars-scheduler.xml" goto :check-xml2
 call :echo XML configuration file does not exist.
 goto :end
 :check-xml2
-findstr "MARS_ROOT" "%root%\conf\mars-scheduler.xml" >nul 2>&1
+findstr "%%MARS_ROOT%%" "%root%\conf\mars-scheduler.xml" >nul 2>&1
 if "%errorlevel%" equ "1" goto :install-redist
 call :echo XML configuration file was not edited.
 goto :end
