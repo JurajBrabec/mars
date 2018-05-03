@@ -425,6 +425,12 @@ CREATE DEFINER=`root`@`%` PROCEDURE `nbu_routine`()
 LANGUAGE SQL NOT DETERMINISTIC MODIFIES SQL DATA SQL SECURITY DEFINER
 COMMENT 'NBU Routine'
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		ALTER EVENT nbu_event ENABLE;
+		SELECT @full_error AS ERROR;
+		RESIGNAL;
+	END;
 	SET @start=NOW();
 	ALTER EVENT nbu_event DISABLE;
 	INSERT INTO nbu_policy_tower_customer (policy,tower,customer)
@@ -1061,6 +1067,19 @@ SELECT
 	WHERE j.ended > UNIX_TIMESTAMP(NOW()- INTERVAL 16 DAY)
 	AND ((j.status>1 AND j.tries>0) OR (j.status=196))
 	ORDER BY j.ended 
+;
+
+DROP VIEW IF EXISTS `nbu_bsr_job_results`;
+CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_bsr_job_results` AS 
+	SELECT
+	j.customer,j.client,j.policy,j.schedule,
+	COUNT(j.jobid) AS jobs,
+	ROUND(SUM(IF(j.status=0 OR j.status=1,100,IF(j.status>1,0,j.status)))/COUNT(j.jobid),1) AS bsr,
+	RIGHT(GROUP_CONCAT(IF(j.status>1,'F','S') ORDER BY j.jobid),5) AS results
+	FROM nbu_bsr_jobs j
+	GROUP BY j.client,j.policy,j.schedule
+	HAVING bsr<100
+	ORDER BY bsr,j.client,j.policy,j.schedule 
 ;
 
 INSERT INTO `nbu_codes` (`field`, `code`, `description`) VALUES
@@ -2185,6 +2204,13 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_bsr_jobs', 30, 'retentionperiod', 'RP', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:21:59', NULL),
 	('nbu_bsr_jobs', 31, 'restartable', 'Restart', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:22:01', NULL),
 	('nbu_bsr_jobs', 32, 'kbpersec', 'kB/s', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:22:03', NULL),
+	('nbu_bsr_job_results', 1, 'customer', 'Customer', 'STRING', NULL, NULL, '2018-04-27 14:24:06', '2018-04-27 14:26:21', NULL),
+	('nbu_bsr_job_results', 2, 'client', 'Client name', 'STRING', NULL, NULL, '2018-04-27 14:24:18', '2018-04-27 14:26:03', NULL),
+	('nbu_bsr_job_results', 3, 'policy', 'Policy name', 'STRING', NULL, NULL, '2018-04-27 14:24:26', '2018-04-27 14:26:18', NULL),
+	('nbu_bsr_job_results', 4, 'schedule', 'Schedule', 'STRING', NULL, NULL, '2018-04-27 14:24:34', '2018-04-27 14:26:13', NULL),
+	('nbu_bsr_job_results', 5, 'jobs', 'Jobs', 'NUMBER', NULL, NULL, '2018-04-27 14:24:42', '2018-04-27 14:26:28', NULL),
+	('nbu_bsr_job_results', 6, 'bsr', 'BSR%', 'FLOAT', NULL, NULL, '2018-04-27 14:24:52', '2018-04-27 14:26:35', NULL),
+	('nbu_bsr_job_results', 7, 'results', 'Results', 'STRING', NULL, NULL, '2018-04-27 14:25:01', '2018-04-27 14:26:42', NULL),
 	('nbu_bsr_policy', 1, 'day', 'Date', 'DATE', NULL, NULL, '2017-03-22 15:15:29', '2017-03-22 15:15:29', NULL),
 	('nbu_bsr_policy', 2, 'policy', 'Policy', 'STRING', NULL, NULL, '2017-03-22 15:15:29', '2017-03-22 15:18:37', NULL),
 	('nbu_bsr_policy', 3, 'jobs', 'Jobs', 'NUMBER', 'nbu_bsr_jobs', 'Show jobs for %policy% and %day%', '2017-03-22 15:15:29', '2017-03-22 15:18:43', NULL),
@@ -2742,11 +2768,11 @@ REPLACE INTO `core_formats` (`report`, `ord`, `source`, `field`, `operator`, `va
 	('nbu_(clients|policies|schedules)(_.+)?', 1, 'nbu_(clients|policies|schedules)', 'jobs', '=', '0', 'background-color: silver; color: black;', 'No jobs', NULL, '2017-03-15 14:24:58', '2017-12-15 10:03:29', NULL),
 	('nbu_(clients|policies|schedules)(_.+)?', 2, 'nbu_(clients|policies|schedules)', 'jobs', '>', '0', 'background-color: lightgreen; color: green;', 'Jobs', NULL, '2017-03-16 12:44:24', '2017-12-15 10:03:30', NULL),
 	('nbu_(clients|policies|schedules)(_.+)?', 3, 'nbu_(clients|policies|schedules)', 'failures', '>', '0', 'background-color: greenyellow; color: green;', 'Failures', NULL, '2017-03-16 12:44:24', '2017-12-15 10:03:31', NULL),
-	('nbu_(g?bsr($|_(c|p|s|t).+)|overview)', 1, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview)', 'bsr', '>=', '0', 'background-color: salmon; color: darkred;', 'Below 75%', NULL, '2017-03-22 12:30:00', '2018-01-04 10:36:45', NULL),
-	('nbu_(g?bsr($|_(c|p|s|t).+)|overview)', 2, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview)', 'bsr', '>=', '75', 'background-color: lightpink; color: red;', '75%', NULL, '2017-03-22 12:30:00', '2018-01-04 10:36:47', NULL),
-	('nbu_(g?bsr($|_(c|p|s|t).+)|overview)', 3, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview)', 'bsr', '>=', '90', 'background-color: gold; color: brown;', '90%', NULL, '2017-03-22 12:30:00', '2018-01-04 10:36:47', NULL),
-	('nbu_(g?bsr($|_(c|p|s|t).+)|overview)', 4, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview)', 'bsr', '>=', '95', 'background-color: greenyellow; color: green;', '95%', NULL, '2017-03-22 12:30:00', '2018-01-04 10:36:48', NULL),
-	('nbu_(g?bsr($|_(c|p|s|t).+)|overview)', 5, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview)', 'bsr', '>=', '97', 'background-color: lightgreen; color: green;', '97%', NULL, '2017-03-22 12:30:00', '2018-01-04 10:36:48', NULL),
+	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 1, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 'bsr', '>=', '0', 'background-color: salmon; color: darkred;', 'Below 75%', NULL, '2017-03-22 12:30:00', '2018-04-27 14:40:55', NULL),
+	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 2, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 'bsr', '>=', '75', 'background-color: lightpink; color: red;', '75%', NULL, '2017-03-22 12:30:00', '2018-04-27 14:40:54', NULL),
+	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 3, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 'bsr', '>=', '90', 'background-color: gold; color: brown;', '90%', NULL, '2017-03-22 12:30:00', '2018-04-27 14:40:54', NULL),
+	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 4, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 'bsr', '>=', '95', 'background-color: greenyellow; color: green;', '95%', NULL, '2017-03-22 12:30:00', '2018-04-27 14:40:54', NULL),
+	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 5, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 'bsr', '>=', '98', 'background-color: lightgreen; color: green;', '98%', NULL, '2017-03-22 12:30:00', '2018-04-27 14:40:54', NULL),
 	('nbu_audit', 1, 'nbu_audit', 'vault', '=', NULL, 'background-color: greenyellow; color: green;', 'Without vaulting', NULL, '2017-10-09 15:02:36', '2017-10-09 15:08:03', NULL),
 	('nbu_audit', 2, 'nbu_audit', 'vault', '!=', NULL, 'background-color: lightgreen; color: green;', 'With vaulting', NULL, '2017-10-09 15:03:30', '2017-10-09 15:08:07', NULL),
 	('nbu_codes', 1, 'nbu_codes', 'code', '=', '0', 'background-color: lightgreen; color: green;', 'Success', NULL, '2017-05-12 13:36:29', '2017-05-12 13:37:35', NULL),
@@ -2857,12 +2883,13 @@ REPLACE INTO `core_reports` (`ord`, `name`, `category`, `title`, `created`, `upd
 	(5, '---', 'NBU Reports', '', '2017-03-22 15:31:14', '2017-06-13 10:02:04', NULL),
 	(5, 'nbu_jobs', 'NBU Reports', 'Job list', '2017-03-20 08:55:38', '2017-12-15 10:19:56', NULL),
 	(6, 'nbu_consecutive_failures', 'NBU Reports', 'Consecutive failures', '2017-03-22 15:31:14', '2017-08-31 15:29:54', NULL),
-	(7, '---', 'NBU Reports', ' ', '2017-03-22 15:31:14', '2017-08-31 15:29:54', NULL),
-	(8, 'nbu_overview_jobs', 'NBU Reports', 'Jobs overview', '2017-06-01 15:18:00', '2017-08-31 15:28:41', NULL),
-	(9, 'nbu_overview_customers', 'NBU Reports', 'Customers overview', '2017-06-13 10:47:39', '2017-10-09 14:46:38', NULL),
-	(10, 'nbu_overview_clients', 'NBU Reports', 'Clients overview', '2017-06-01 15:18:00', '2017-10-09 14:46:36', NULL),
-	(11, 'nbu_bsr_jobs', NULL, 'BSR Job list', '2017-03-20 08:56:19', '2017-08-31 15:28:46', NULL),
-	(12, 'nbu_codes', NULL, 'Codes', '2017-05-12 13:06:47', '2017-08-31 15:28:48', NULL),
+	(7, 'nbu_bsr_job_results', 'NBU Reports', 'Failing BSR Job Results', '2017-03-22 15:31:14', '2018-04-27 14:32:21', NULL),
+	(8, '---', 'NBU Reports', ' ', '2017-03-22 15:31:14', '2018-04-27 14:21:44', NULL),
+	(9, 'nbu_overview_jobs', 'NBU Reports', 'Jobs overview', '2017-06-01 15:18:00', '2018-04-27 14:21:54', NULL),
+	(10, 'nbu_overview_customers', 'NBU Reports', 'Customers overview', '2017-06-13 10:47:39', '2018-04-27 14:21:56', NULL),
+	(11, 'nbu_overview_clients', 'NBU Reports', 'Clients overview', '2017-06-01 15:18:00', '2018-04-27 14:21:58', NULL),
+	(12, 'nbu_bsr_jobs', NULL, 'BSR Job list', '2017-03-20 08:56:19', '2018-04-27 14:22:04', NULL),
+	(13, 'nbu_codes', NULL, 'Codes', '2017-05-12 13:06:47', '2018-04-27 14:22:07', NULL),
 	(20, 'nbu_bsr', 'BSR', 'Daily BSR', '2017-03-20 08:57:55', '2018-01-04 10:34:49', NULL),
 	(21, 'nbu_bsr_client', 'BSR', 'Daily BSR per client', '2017-03-20 08:58:13', '2018-01-04 10:22:31', NULL),
 	(22, 'nbu_bsr_customer', 'BSR', 'Daily BSR per customer', '2017-03-20 08:58:13', '2018-01-04 10:22:31', NULL),
@@ -2897,6 +2924,7 @@ REPLACE INTO `core_sources` (`report`, `ord`, `name`, `title`, `description`, `f
 	('nbu_bsr_client', 1, 'nbu_bsr_client', 'BSR per client', 'Daily BSR per client', NULL, NULL, 'client,day', 1, 1, 1, 10, '2017-03-22 15:03:40', '2017-05-12 13:25:51', NULL),
 	('nbu_bsr_customer', 1, 'nbu_bsr_customer', 'BSR per customer', 'Daily BSR per customer', NULL, NULL, 'day,customer', 1, 1, 1, 10, '2017-03-22 15:03:40', '2017-05-12 13:25:51', NULL),
 	('nbu_bsr_jobs', 1, 'nbu_bsr_jobs', 'BSR Jobs', 'List of BSR jobs', NULL, NULL, NULL, 1, 1, 1, 10, '2017-03-20 09:01:31', '2017-05-12 13:25:52', NULL),
+	('nbu_bsr_job_results', 1, 'nbu_bsr_job_results', 'Failing BSR Job results', 'Failing BSR jobs and ther results', NULL, NULL, NULL, 1, 1, 1, 10, '2018-04-27 14:23:13', '2018-04-27 14:31:59', NULL),
 	('nbu_bsr_policy', 1, 'nbu_bsr_policy', 'BSR per policy type', 'Daily BSR per policy type', NULL, NULL, 'day,policy', 1, 1, 1, 10, '2017-03-22 15:03:40', '2017-05-12 13:25:52', NULL),
 	('nbu_bsr_schedule', 1, 'nbu_bsr_schedule', 'BSR per schedule type', 'Daily BSR per schedule type', NULL, NULL, 'day,schedule', 1, 1, 1, 10, '2017-03-22 15:03:40', '2017-05-12 13:25:53', NULL),
 	('nbu_bsr_type', 1, 'nbu_bsr_type', 'BSR per job type', 'Daily BSR per job type', NULL, NULL, 'day,type', 1, 1, 1, 10, '2017-03-22 15:03:40', '2017-05-12 13:25:53', NULL),

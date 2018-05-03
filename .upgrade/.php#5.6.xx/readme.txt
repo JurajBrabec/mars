@@ -1,7 +1,7 @@
-MARS 4.1 PHP update 5.6.35
+MARS 4.1 PHP update 5.6.xx
 
 CHANGELOG:
-•	PHP version 5.6.35.
+•	PHP version 5.6.xx. http://www.php.net/ChangeLog-5.php#5.6.xx
 
 HOW-TO INSTALL:
 (Automatic execution)

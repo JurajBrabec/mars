@@ -8,7 +8,7 @@ var StreamZip = require( 'node-stream-zip' );
 var config = ini.parse( fs.readFileSync( path.resolve( root, '.install/install.ini' ), 'utf-8' ) )
 console.log( 'Downloading client ...' );
 
-var request = http.get( 'http://' + config.Mandatory.DB_HOST + '/MARS40/client/install.zip', function( response ) {
+var request = http.get( 'http://' + config.Mandatory.DB_HOST + '/nbu/client/install.zip', function( response ) {
 	var fileName = path.resolve( root, 'tmp/install.zip' );
     if ( response.statusCode === 200 ) {
         var file = fs.createWriteStream( fileName );

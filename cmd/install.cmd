@@ -108,7 +108,7 @@ call :echo XML configuration file was not edited.
 goto :end
 :install-redist
 call :echo Installing Microsoft Visual C++ Redistributable Components...
-start /wait /d "%root%\bin" vcredist_x86.exe /install /passive /promptrestart /showfinalerror
+start /wait /d "%root%\bin" vcredist_x86.exe /install /passive /norestart
 if "%errorlevel%" leq "0" goto :install-http
 call :echo Error %errorlevel% installing Microsoft Visual C++ Redistributable Components.
 goto :end

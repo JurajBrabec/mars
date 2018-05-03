@@ -1,7 +1,7 @@
-MARS 4.1 MariaDB 10.2.14
+MARS 4.1 MariaDB 10.2.xx
 
 CHANGELOG:
-•	Maria DB version 10.2.14.
+•	Maria DB version 10.2.xx. https://mariadb.com/kb/en/library/mariadb-102xx-changelog/
 
 HOW-TO INSTALL:
 (Automatic execution)

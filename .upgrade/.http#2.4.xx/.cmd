@@ -22,12 +22,11 @@ if "%errorlevel%" equ "0" set scheduler=1
 call :echo MARS HTTP (Apache) update %build% part#1 starting...
 if "%scheduler%" equ "1" call :echo (started from scheduler)
 call :echo Copying file(s)...
-for /f %%i in ("%~dp0.") do ren files\.cmd %%~nxi.cmd >nul 2>&1
+for /f %%i in ("%~dp0.") do set postupdate=%%~nxi.cmd
 xcopy /e /i /y files "%root%">>nul 2>&1
 if "%errorlevel%" neq "0" goto :error
 :finish
-if not exist files\*.cmd goto :ok
-for /f %%i in ('dir /b files\*.cmd') do set postupdate=%%i
+ren "%root%\.cmd" %postupdate%>>nul 2>&1
 if "%scheduler%" neq "1" (
 	call :echo Starting post-update script %postupdate%...
 	start /b /wait cmd /c "%root%\%postupdate%" 2>&1

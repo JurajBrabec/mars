@@ -1,7 +1,7 @@
-MARS 4.1 Apache 2.4.33
+MARS 4.1 Apache 2.4.xx
 
 CHANGELOG:
-•	Apache version 2.4.33.
+•	Apache version 2.4.xx. http://www.apache.org/dist/httpd/CHANGES_2.4.xx
 
 HOW-TO INSTALL:
 (Automatic execution)

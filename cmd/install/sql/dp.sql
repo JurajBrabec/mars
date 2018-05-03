@@ -1038,7 +1038,7 @@ BEGIN
 	INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#02 MAINTENANCE DATAPROTECTOR');
 
 	CREATE TABLE temp_table LIKE dataprotector_omnistat;
-	INSERT INTO temp_table SELECT * FROM dataprotector_omnistat WHERE updated_on>NOW()-INTERVAL 1 DAY IS NULL ORDER BY cellserver,sessionid;
+	INSERT INTO temp_table SELECT * FROM dataprotector_omnistat WHERE updated_on>(NOW()-INTERVAL 1 DAY) ORDER BY cellserver,sessionid;
 	RENAME TABLE dataprotector_omnistat TO drop_table,temp_table TO dataprotector_omnistat;
 	DROP TABLE drop_table;
 	CREATE TABLE temp_table LIKE dataprotector_omnistat_devices;
@@ -1287,6 +1287,7 @@ BEGIN
       END IF;
     END LOOP CustomerLoop;
   CLOSE customers;
+  SET @customer=NULL;
 
   IF mode='Daily' THEN
     SET @interval=NOW() - INTERVAL 3 DAY;
@@ -1310,7 +1311,7 @@ BEGIN
         GROUP BY 1,2,3,4,5)
       ON DUPLICATE KEY UPDATE versions=VALUES(versions),oldest=VALUES(oldest),newest=VALUES(newest),updated_on=@start,valid_until=NULL;
     INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#06 DAILY OBJECTS OBSOLETE');
-    UPDATE dataprotector_objects SET versions=0,oldest=NULL,newest=NULL,valid_until=updated_on WHERE (valid_until IS NULL) AND (updated_on<@start - INTERVAL 1 DAY);
+    UPDATE dataprotector_objects SET versions=0,oldest=NULL,newest=NULL,valid_until=updated_on WHERE (valid_until IS NULL) AND (updated_on<(@start - INTERVAL 1 DAY));
     INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#07 DAILY CLIENTS INSERT');
     INSERT INTO dataprotector_clients (cellserver,name,type,mountpoints) 
       (SELECT o.cellserver,o.client AS name,o.type,count(o.id) AS mountpoints
@@ -1319,7 +1320,7 @@ BEGIN
         GROUP BY o.cellserver,o.client,o.type)
       ON DUPLICATE KEY UPDATE mountpoints=VALUES(mountpoints),updated_on=@start,valid_until=NULL;
     INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#08 DAILY CLIENTS OBSOLETE');
-     UPDATE dataprotector_clients SET specifications=0,mountpoints=0,valid_until=updated_on WHERE (valid_until IS NULL) AND (updated_on<@start - INTERVAL 1 DAY);
+     UPDATE dataprotector_clients SET specifications=0,mountpoints=0,valid_until=updated_on WHERE (valid_until IS NULL) AND (updated_on<(@start - INTERVAL 1 DAY));
      UPDATE dataprotector_clients c SET c.specifications=0,c.mountpoints=0,c.valid_until=c.updated_on 
       WHERE NOT EXISTS (SELECT o.id FROM dataprotector_objects o WHERE o.valid_until IS NULL AND o.cellserver=c.cellserver AND o.client=c.name AND o.type=c.type);
     INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#09 DAILY CLIENTS CUSTOMER');

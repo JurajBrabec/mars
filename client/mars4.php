@@ -45,7 +45,7 @@ function handler( $object ) {
 
 function update( ) {
 	global $ini;
-	$url = sprintf( 'http://%s/mars40/client/update.zip', $ini[ 'DB_HOST' ] );
+	$url = sprintf( 'http://%s/nbu/client/update.zip', $ini[ 'DB_HOST' ] );
 	$root = dirname( __FILE__ );
 	$tmp = $root . DIRECTORY_SEPARATOR . 'tmp';
 	$build = $root . DIRECTORY_SEPARATOR . 'build';

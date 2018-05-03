@@ -285,7 +285,7 @@ function nbu_test( $multi_thread = 0 ) {
 
 try {
 	if ( !os( )->php( '5.5' ) ) throw new exception( sprintf( os::PHP_UNSUPPORTED, os::php( ) ) );
-#	database( new mysqli_database( 'localhost', 'script', 'omniback', 'mars40' ) );
+#	database( new mysqli_database( 'localhost', 'script', 'm@r5', 'mars40' ) );
 	$lock = new lock_file( os( )->path( 'test.lock' ) );
 	logfile( new log_file( os( )->path( 'test.log' ) ) );
 	debug( new debug_log_file( os( )->path( 'debug.log' ) ) );

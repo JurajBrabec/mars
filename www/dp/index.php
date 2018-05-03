@@ -258,10 +258,10 @@ class application {
 	
 	function close() {
 		if ( PHP_SAPI === 'cli' ) return;
-		$duration = $application->get_duration( );
+		$duration = $this->get_duration( );
 		$this->output( '</br>' );
 		$this->output( '<div class="footer">' );
-		$this->output( sprintf( FOOTER, $application->name, COPYRIGHT, $duration, date( 'F j, Y, H:i' ), date_default_timezone_get( ) ) );
+		$this->output( sprintf( FOOTER, $this->name, COPYRIGHT, $duration, date( 'F j, Y, H:i' ), date_default_timezone_get( ) ) );
 		$this->output( '</div>' );
 		$this->output( '</br>' );
 		$this->output( '</body>' );
@@ -287,6 +287,7 @@ try {
 		case ADMIN: 
 		default: $application->show_page();break;  
 	} 
+#	$application->close( );
 } catch ( ErrorException $e ) {
 	if ( PHP_SAPI === 'cli' ) {
 		$line = '%s: %s' . PHP_EOL;
@@ -320,4 +321,3 @@ catch ( Exception $e ) {
 		echo '</div>' . PHP_EOL;
 	}
 }
-$application->close( );

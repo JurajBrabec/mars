@@ -23,10 +23,10 @@ Steps:
 			modify TIME_ZONE (enter the local time zone) - use only valid PHP time zones from http://php.net/manual/en/timezones.php !!
 			modify SMTP_SERVER (needed only to send reports via mail)
 		Execute file %MARS_HOME%\.install\install.cmd
-			If there is no error, you should be able to open http://localhost/mars40 or http://%DB_HOST%/mars40 in web browser.
+			If there is no error, you should be able to open http://localhost or http://%DB_HOST% in web browser.
 			In case of any issues, refer to the %MAR_HOME%\logs\install.log log file.
 	1.2) Final configuration:
-		Log in to MARS administration interface (http://localhost/mars40/admin.html or http://%DB_HOST%/mars40/admin.html).
+		Log in to MARS administration interface (http://localhost/nbu/admin.html or http://%DB_HOST%/nbu/admin.html).
 			Add Customers and other settings.
 		Install any MARS patches/upgrades you may have available.
 
