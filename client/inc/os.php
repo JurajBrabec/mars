@@ -39,7 +39,7 @@ class lock_file {
 }
 
 class basic_log_file {
-	const MAX_SIZE			= 100000;
+	const MAX_SIZE			= 1000000;
 	const BAK_SUFFIX		= '.bak';
 	const CANNOT_OPEN		= 'Cannot open log file %s.';
 	const CANNOT_WRITE		= 'Cannot write to log file %s.';

@@ -208,9 +208,10 @@ display( '------' );
 try {
 	if ( !os( )->php( '5.3' ) ) throw new exception( sprintf( os::PHP_UNSUPPORTED, os::php( ) ) );
 	$ini = array_change_key_case( parse_ini_file( __DIR__ . '/config.ini' ), CASE_UPPER );
-	$ini[ 'NBU2SM9_PERIODICITY' ] = 5;
+	IF ( empty( $ini[ 'NBU2SM9_PERIODICITY' ] ) ) $ini[ 'NBU2SM9_PERIODICITY' ] = 5;
 	date_default_timezone_set( $ini[ 'TIME_ZONE' ] );
-	$time = time( ) / 3600 % 24 * 60 + time( ) / 60 % 60;
+#	$time = time( ) / 3600 % 24 * 60 + time( ) / 60 % 60;
+	$time = intval( date( 'H' ) ) * 60 + intval( date( 'i' ) );
 	$lock = new lock_file( os( )->path( 'mars4.lock' ) );
 	logfile( new log_file( os( )->path( array( 'log', 'mars4.log' ) ) ) );
 	debug( new debug_log_file( os( )->path( array( 'log', 'mars4.debug.log' ) ) ) );
