@@ -984,10 +984,9 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
   BEGIN
     GET DIAGNOSTICS @conditions = NUMBER;  
-    INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG',CONCAT('ERROR conditions ', @conditions));
-    GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+    GET DIAGNOSTICS CONDITION @conditions @sqlstate = RETURNED_SQLSTATE, @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
     SET @full_error = CONCAT('ERROR ', @errno, ' (', @sqlstate, '): ', @text);
-    INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG',@full_error);
+    INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG',CONCAT('ERROR conditions ', @conditions,' ',@full_error));
     ALTER EVENT event_routine ENABLE;
     SELECT @full_error AS ERROR;
     RESIGNAL;
@@ -1191,10 +1190,9 @@ BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
   BEGIN
     GET DIAGNOSTICS @conditions = NUMBER;  
-    INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG',CONCAT('ERROR conditions ', @conditions));
-    GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+    GET DIAGNOSTICS CONDITION @conditions @sqlstate = RETURNED_SQLSTATE, @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
     SET @full_error = CONCAT('ERROR ', @errno, ' (', @sqlstate, '): ', @text);
-    INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG',@full_error);
+    INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG',CONCAT('ERROR conditions ', @conditions,' ',@full_error));
     ALTER EVENT event_routine ENABLE;
     SELECT @full_error AS ERROR;
     RESIGNAL;
