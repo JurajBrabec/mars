@@ -36,7 +36,7 @@ call :echo XML file was not edited.
 goto :end
 :redist
 call :echo Installing Microsoft Visual C++ Redistributable Components...
-start /wait %root%\bin\vcredist_x86.exe /install /passive /promptrestart /showfinalerror
+start /wait %root%\bin\VC_redist.x64.exe /install /passive /norestart
 if "%errorlevel%" equ "0" goto :task
 call :echo Error %errorlevel% installing Microsoft Visual C++ Redistributable Components.
 goto :end

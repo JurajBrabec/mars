@@ -1,10 +1,10 @@
 <?php
 
 /*
- * MARS 4.0 PHP CODE
-* build 4.0.0.0 @ 2016-09-11 00:00
-* * rewritten from scratch
-*/
+ * MARS 4.1 PHP CODE
+ * build 4.1.13 @ 2018-04-13 04:13
+ * * rewritten from scratch
+ */
 
 require_once dirname( __FILE__ ) . '/os.php';
 
@@ -149,7 +149,7 @@ class mysql_database extends sql_database {
 	const USER = 'root';
 	const PASSWORD = '';
 	const DATABASE = 'mysql';
-	const ERROR = '%s. %s error %s: "%s" (%s. try) in "%s".';
+	const QUERY_ERROR = '%s. %s error %s: "%s" (%s. try) in "%s".';
 	const INFO = '%s database %s on %s';
 	const NOT_SELECTED = 'Database not selected';
 	const CHARSET_NOT_SET = 'Charset not set';
@@ -174,7 +174,7 @@ class mysql_database extends sql_database {
 			$this->handler( NULL );
 			$this->db_info( $this->message( ) );
 			$this->error( mysql_errno( ) );
-			$this->message( trim( mysql_error( ) ) );
+			$this->message( trim( myQUERY_ERROR( ) ) );
 			throw new exception( sprintf( static::ERROR, static::NOT_CONNECTED, static::NAME, $this->error( ), $this->message( ) ) );
 		}
 		$this->db_info( sprintf( mysql_database::INFO, static::NAME, 
@@ -187,7 +187,7 @@ class mysql_database extends sql_database {
 		if ( !mysql_select_db( $database, $this->handler( ) ) ) {
 			$this->database( NULL );
 			$this->error( mysql_errno( $this->handler( ) ) );
-			$this->message( trim( mysql_error( $this->handler( ) ) ) );
+			$this->message( trim( myQUERY_ERROR( $this->handler( ) ) ) );
 			throw new exception( sprintf( static::ERROR, static::NOT_SELECTED, static::NAME, $this->error( ), $this->message( ) ) );
 		}
 		return $this->database( );
@@ -198,7 +198,7 @@ class mysql_database extends sql_database {
 		if ( !mysql_set_charset( $charset, $this->handler( ) ) ) {
 			$this->charset( NULL );
 			$this->error( mysql_errno( $this->handler( ) ) );
-			$this->message( trim( mysql_error( $this->handler( ) ) ) );
+			$this->message( trim( myQUERY_ERROR( $this->handler( ) ) ) );
 			throw new exception( sprintf( static::ERROR, static::CHARSET_NOT_SET, static::NAME, $this->error( ), $this->message( ) ) );
 		}
 		return $this->charset( );
@@ -208,7 +208,7 @@ class mysql_database extends sql_database {
 		$result = mysql_real_escape_string( parent::escape_string( $string ), $this->handler( ) );
 		if ( $result === FALSE ) {
 			$this->error( mysql_errno( $this->handler( ) ) );
-			$this->message( trim( mysql_error( $this->handler( ) ) ) );
+			$this->message( trim( myQUERY_ERROR( $this->handler( ) ) ) );
 			throw new exception( sprintf( static::ERROR, static::STRING_NOT_ESCAPED, static::NAME, $this->error( ), $this->message( ) ) );
 		}
 		return $result;
@@ -230,9 +230,9 @@ class mysql_database extends sql_database {
 		if ( !$this->query( ) ) {
 			$this->duration( 0 );
 			$this->error( mysql_errno( $this->handler( ) ) );
-			$this->message( trim( mysql_error( $this->handler( ) ) ) );
+			$this->message( trim( myQUERY_ERROR( $this->handler( ) ) ) );
 			throw new exception( 
-				sprintf( static::ERROR, static::QUERY_NOT_EXECUTED, static::NAME, $this->error( ), $this->message( ), $try, $this->sql( ) ) );
+				sprintf( static::QUERY_ERROR, static::QUERY_NOT_EXECUTED, static::NAME, $this->error( ), $this->message( ), $try, $this->sql( ) ) );
 		}
 		if ( is_resource( $this->query( ) ) ) {
 			$this->field_count( mysql_num_fields( $this->query( ) ) );
@@ -267,7 +267,7 @@ class mysql_database extends sql_database {
 		parent::free_query( );
 		if ( is_resource( $query ) and !mysql_free_result( $query ) ) {
 			$this->error( mysql_errno( $this->handler( ) ) );
-			$this->message( trim( mysql_error( $this->handler ) ) );
+			$this->message( trim( myQUERY_ERROR( $this->handler ) ) );
 			throw new exception( sprintf( static::ERROR, static::QUERY_NOT_FREE, static::NAME, $this->error( ), $this->message( ) ) );
 		}
 		return true;
@@ -301,8 +301,8 @@ class mysqli_database extends mysql_database {
 		if ( !$this->is_connected( ) ) {
 			$this->db_info( $this->message( ) );
 			if ( version_compare( phpversion( ), '5.3.0', '>=' ) ) {
-				$this->error( $this->handler( )->errno );
-				$this->message( trim( $this->handler( )->error ) );
+				$this->error( $this->handler( )->connect_errno );
+				$this->message( trim( $this->handler( )->connect_error ) );
 			} else {
 				$this->error( mysqli_connect_errno( ) );
 				$this->message( trim( mysqli_connect_error( ) ) );
@@ -375,7 +375,7 @@ class mysqli_database extends mysql_database {
 			$this->error( $this->handler( )->errno );
 			$this->message( trim( $this->handler( )->error ) );
 			throw new exception(
-				sprintf( static::ERROR, static::QUERY_NOT_EXECUTED, static::NAME, $this->error( ), $this->message( ), $try, $this->sql( ) ) );
+				sprintf( static::QUERY_ERROR, static::QUERY_NOT_EXECUTED, static::NAME, $this->error( ), $this->message( ), $try, $this->sql( ) ) );
 		}
 		if ( is_object( $this->query( ) ) ) {
 			$this->field_count( $this->query( )->field_count );

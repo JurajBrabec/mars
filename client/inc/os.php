@@ -1,10 +1,16 @@
 <?php
 
 /*
- * MARS 4.0 PHP CODE
-* build 4.0.0.0 @ 2016-09-11 00:00
-* * rewritten from scratch
-*/
+ * MARS 4.1 PHP CODE
+ * build 4.1.13 @ 2018-04-13 04:13
+ * * rewritten from scratch
+ */
+
+define ( 'UCS_4BE', chr( 0x00 ) . chr( 0x00 ) . chr( 0xFE ) . chr( 0xFF ) );
+define ( 'UCS_4LE', chr( 0xFF ) . chr( 0xFE ) . chr( 0x00 ) . chr( 0x00 ) );
+define ( 'UCS_2BE', chr( 0xFE ) . chr( 0xFF ) );
+define ( 'UCS_2LE', chr( 0xFF ) . chr( 0xFE ) );
+define ( 'UTF_8B' , chr( 0xEF ) . chr( 0xBB ) . chr( 0xBF ) );
 
 class lock_file {
 	const LOCK 				= 'PID=%s';
@@ -109,7 +115,7 @@ class debug_log_file extends log_file {
 	
 	public function enabled( $value = NULL ) { return _var( $this->enabled, func_get_args( ) ); }
 	
-	public function write( $level, $content = NULL ) {
+	public function write( $level = NULL, $content = NULL ) {
 		if ( !$this->enabled( ) ) return false;
 		if ( empty( $content ) ) {
 			$content = $level;
@@ -184,15 +190,33 @@ class os {
 		return memory_get_usage( ) - $this->start_memory( );
 	}
 	
+	public function memory_peak( ) {
+		return memory_get_peak_usage( TRUE );
+	}
+
 	public function path( $value = NULL ) {
-		if ( is_array( $value ) ) {
-			empty( $value ) && $value[ ] = static::root( );
-			$value[ 0 ] != static::root( ) && array_unshift( $value , static::root( ) );
-			$result = implode( DIRECTORY_SEPARATOR, $value );
-		} else {
-			$result = static::root( ) . DIRECTORY_SEPARATOR . $value;
-		}
+		empty( $value ) && $value[ ] = static::root( );
+		is_array( $value ) || $value = array( static::root( ), $value ) ;
+//		$value[ 0 ] != static::root( ) && array_unshift( $value , static::root( ) );
+		$result = implode( DIRECTORY_SEPARATOR, $value );
 		return $result;
+	}
+
+	public function read_file( $filename ) {
+		$contents = file_get_contents( $filename );
+		$enc = mb_detect_encoding( $contents );
+		substr( $contents, 0, 4 ) == UCS_4BE && $enc = 'UCS-4BE';
+		substr( $contents, 0, 4 ) == UCS_4LE && $enc ='UCS-4LE';
+		substr( $contents, 0, 3 ) == UTF_8B && $enc = 'UTF-8';
+		substr( $contents, 0, 2 ) == UCS_2BE && $enc = 'UCS-2BE';
+		substr( $contents, 0, 2 ) == UCS_2LE && $enc = 'UCS-2LE';
+		$enc != '' && $contents = iconv( $enc ,'ASCII//IGNORE', $contents );
+		return $contents;
+	}
+
+	public function write_file( $filename, $content ) {
+		is_array( $content ) && $content = implode( PHP_EOL, $content ) ;
+		return file_put_contents( $filename, $content );
 	}
 
 	public function processes( ) { 
@@ -543,7 +567,7 @@ class text {
 	const TEXT					= '(.+(\r?\n)?)+';
 	const XML					= '<?xml version="1.0" encoding="UTF-8" ?>';
 	const PARSING_ERROR			= 'Parsing error at item#%s: "%s"';
-	const PARSING_EXCEPTION		= 'Exception: %d parsing error(s) encountered: %s';
+	const PARSING_EXCEPTION		= 'TEXT: %d parsing error(s) encountered: %s';
 	private $row_delimiter		= NULL;
 	private $field_pattern		= NULL;
 	private $lines				= array( );
@@ -701,7 +725,7 @@ class cmd extends text {
 	const UX_BIN				= NULL;
 	const WIN_BIN				= NULL;
 	const VALID_EXITCODES		= '0';
-	const EXECUTION_EXCEPTION	= 'Exception: Execution error encoutered. Exitcode: %s Output: %s';
+	const EXECUTION_EXCEPTION	= 'CMD: Execution error encoutered. Exitcode: %s Output: %s';
 	private $arguments			= NULL;
 	private $cmdline			= NULL;
 	private $tmp				= NULL;
@@ -872,7 +896,7 @@ function debug( $level = NULL, $content = NULL ) {
 	return $debug->write( $level, $content );
 }
 
-date_default_timezone_set( @date_default_timezone_get( ) );
+date_default_timezone_set( 'UTC' );
 $os = NULL;
 if ( os_hpux::is_supported( ) ) $os = new os_hpux( );
 if ( os_linux::is_supported( ) ) $os = new os_linux( );

@@ -1,4 +1,34 @@
 <?php
+date_default_timezone_set( 'Europe/Bratislava' );
+ini_set('display_errors', false);
+error_reporting(-1);
+register_shutdown_function( function( ){
+	$error = error_get_last( );
+	if( !empty( $error ) ) {
+		echo 'Peak: ' . round( memory_get_peak_usage( )/1000000, 1 ) . 'Mb' . PHP_EOL;
+		echo array_search($error['type'], get_defined_constants());
+		echo ' caught at shutdown.' . PHP_EOL;
+		print_r( $error );
+	}
+} );
+try {
+	ini_set('memory_limit','-1');
+	$a = array( );
+	$i = 0;
+	while ( $i < 170000000 ) {
+		$a[ ] = '0123456789';
+		if ( $i % 1000 == 0 ) {
+			echo $i . ' ' . round( memory_get_usage( )/1000000, 1 ) . 'Mb' . PHP_EOL;
+		}
+		$i++;
+	}
+	echo $i . ' ' . round( memory_get_usage( )/1000000, 1 ) . 'Mb' . PHP_EOL;
+	unset( $a );
+} catch ( exception $e ) {
+	echo $e->getmessage( ) . PHP_EOL;
+}
+echo 'Peak: ' . round( memory_get_peak_usage( )/1000000, 1 ) . 'Mb' . PHP_EOL;
+die( );
 
 switch( date( 'H:i' ) ) {
     case '00:00': $days = 32; break;

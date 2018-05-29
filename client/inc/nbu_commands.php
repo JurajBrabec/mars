@@ -6,7 +6,7 @@
  * * rewritten from scratch
  */
 
-require_once dirname( __FILE__ ) . '/os.php';
+require_once implode( DIRECTORY_SEPARATOR, array( __DIR__, 'os.php' ) );
 
 class nbu extends cmd {
 	const NBU					= '$NBU';
@@ -421,14 +421,14 @@ class bppllist_policies extends bppllist_allpolicies {
 		$row[ static::FOE ] = implode( ',', $match[ 'FOE' ] );
 		$row[ static::SHAREGROUP ] = $match[ 'SHAREGROUP' ];
 		$row[ static::DATACLASSIFICATION ] = $match[ 'DATACLASSIFICATION' ];
-		$row[ static::HYPERVSERVER ] =  @$match[ 'HYPERVSERVER' ];
+		$row[ static::HYPERVSERVER ] =  empty( $match[ 'HYPERVSERVER' ] ) ? '' : $match[ 'HYPERVSERVER' ];
 		$row[ static::NAMES ] = $match[ 'NAMES' ];
 		$row[ static::BCMD ]= $match[ 'BCMD' ];
 		$row[ static::RCMD ] = $match[ 'RCMD' ];
-		$row[ static::APPLICATIONDEFINED ] = @$match[ 'APPLICATIONDEFINED' ];
-		$row[ static::ORABKUPDATAFILEARGS ] = @$match[ 'ORABKUPDATAFILEARGS' ];
-		$row[ static::ORABKUPARCHLOGARGS ] = @$match[ 'ORABKUPARCHLOGARGS' ];
-		$include = @$match[ 'INCLUDE' ];
+		$row[ static::APPLICATIONDEFINED ] = empty( $match[ 'APPLICATIONDEFINED' ] ) ? '' : $match[ 'APPLICATIONDEFINED' ];
+		$row[ static::ORABKUPDATAFILEARGS ] = empty( $match[ 'ORABKUPDATAFILEARGS' ] ) ? '' : $match[ 'ORABKUPDATAFILEARGS' ];
+		$row[ static::ORABKUPARCHLOGARGS ] = empty( $match[ 'ORABKUPARCHLOGARGS' ] ) ? '' : $match[ 'ORABKUPARCHLOGARGS' ];
+		$include = empty( $match[ 'INCLUDE' ] ) ? '' : $match[ 'INCLUDE' ];
 		if ( is_array( $include ) ) 
 			$include = implode( ' ', array_map( function ( $e ) { return is_array( $e ) ? implode( ' ' , $e ) : $e; }, $include ) );
 		$row[ static::INCLUDES ] = str_replace( '\\', '/', $include );
@@ -635,9 +635,9 @@ class bppllist_schedules extends bppllist_allpolicies {
 				$row[ static::STORAGESERVICE ],
 				$row[ static::CHECKSUMDETECTION ]
 				) = $sched[ 'SCHED' ];
-			$row[ static::CALDATES ] = @implode( ',', $sched[ 'SCHEDCALDATES' ] );
-			$row[ static::CALRETRIES ] = @$sched[ 'SCHEDCALENDAR' ];
-			$row[ static::CALDAYOFWEEK ] = @$sched[ 'SCHEDCALDAYOWEEK' ];
+			$row[ static::CALDATES ] = empty( $sched[ 'SCHEDCALDATES' ] ) ? '' : implode( ',', $sched[ 'SCHEDCALDATES' ] );
+			$row[ static::CALRETRIES ] = empty( $sched[ 'SCHEDCALENDAR' ] ) ? '' : $sched[ 'SCHEDCALENDAR' ];
+			$row[ static::CALDAYOFWEEK ] = empty( $sched[ 'SCHEDCALDAYOWEEK' ] ) ? '' : $sched[ 'SCHEDCALDAYOWEEK' ];
 			list(
 				$row[ static::WIN_SUN_START ],
 				$row[ static::WIN_SUN_DURATION ],
@@ -682,15 +682,17 @@ class bppllist_schedules extends bppllist_allpolicies {
 
 class vault_xml extends text {
 	const FILENAME					= 'vault.xml';
-	const SIMPLEXML2ARRAY_EXCEPTION	= 'Exception: unhandled "%s"\'s child item "%s".';
-	const NO_ITEMS_EXCEPTION 		= 'Error: no "%s" child item found.';
-	const MORE_ITEMS_EXCEPTION		= 'Error: more than %s "%s" child items found (%s).';
-	const MISSING_ITEMS_EXCEPTION	= 'Error: items(s) missing in "%s": %s';
+	const FILE_NOT_EXISTS_EXCEPTION	= 'VAULT: File "%s" does not exist.';
+	const SIMPLEXML2ARRAY_EXCEPTION	= 'VAULT: unhandled "%s"\'s child item "%s".';
+	const NO_ITEMS_EXCEPTION 		= 'VAULT: no "%s" child item found.';
+	const MORE_ITEMS_EXCEPTION		= 'VAULT: more than %s "%s" child items found (%s).';
+	const MISSING_ITEMS_EXCEPTION	= 'VAULT: items(s) missing in "%s": %s';
 	private $home				= NULL;
 	
 	public function home( $value = NULL ) { return _var( $this->home, func_get_args( ) ); }
 	
 	public function __construct( $home ) {
+		if ( !file_exists( $home ) ) throw new exception( sprintf( static::FILE_NOT_EXISTS_EXCEPTION, $home ) );
 		$this->home( $home );
 		$this->setup( );
 		$this->parse( );

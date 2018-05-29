@@ -2,7 +2,7 @@
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>
     <Date>2017-01-01T00:00:00</Date>
-    <Author>%AUTHOR%</Author>
+    <Author>Juraj Brabec</Author>
   </RegistrationInfo>
   <Triggers>
     <TimeTrigger>
@@ -42,7 +42,7 @@
   </Settings>
   <Actions Context="Author">
     <Exec>
-      <Command>%MARS_ROOT%\mars4.cmd</Command>
+      <Command>%MARS_ROOT%\mars.cmd</Command>
       <Arguments></Arguments>
     </Exec>
   </Actions>
