@@ -222,11 +222,10 @@ CREATE DEFINER=`root`@`%` FUNCTION `datacenter`() RETURNS varchar(32) CHARSET ut
 	COMMENT ''
 BEGIN
 set @datacenter=NULL;
-if (table_exists('mars30.config_settings')) then
-	select distinct d.data_center into @datacenter from datacenters d,mars30.config_settings m where m.name='region' and d.instance=m.value limit 1;
-end if;
 if (table_exists('mars40.config_settings')) then
 	select distinct d.data_center into @datacenter from datacenters d,mars40.config_settings m where m.name='region' and d.instance=m.value limit 1;
+elseif (table_exists('mars30.config_settings')) then
+	select distinct d.data_center into @datacenter from datacenters d,mars30.config_settings m where m.name='region' and d.instance=m.value limit 1;
 end if;
 return @datacenter;
 END;;
@@ -235,7 +234,7 @@ DROP PROCEDURE IF EXISTS procedure_audit;;
 CREATE DEFINER=root@'%' PROCEDURE procedure_audit()
 BEGIN
 ALTER EVENT event_audit DISABLE;
-set @@group_concat_max_len=2048;
+set @@group_concat_max_len=4096;
 
 truncate table audit;
 insert into audit (
@@ -253,35 +252,6 @@ insert into audit (
 		where r.STORAGE is not null
 		group by d.DEVICE_ID,q.BACKUP_RLI_ID
 		order by d.DEVICE_ID,q.BACKUP_RLI_ID;
-
-drop table if exists audit_dp;
-create table audit_dp like audit;
-if (table_exists('mars30')) then 
-	insert into audit_dp (
-			DATA_CENTER,CUSTOMER_NAME,DEVICE_ID,HOST_NAME,RLIs,BACKUP_RLI_ID,BACKUP_RLI_MRT,
-			STORAGE,TYPE,PROTECTION_DP,STATUS,COMMENT,
-			LISTS,SOURCE,OWNER,CUSTOMER,HOST,RETENTION,LIST,PROTECTION) 
-		select
-			a.DATA_CENTER,a.CUSTOMER_NAME,a.DEVICE_ID,a.HOST_NAME,a.RLIs,a.BACKUP_RLI_ID,a.BACKUP_RLI_MRT,
-			a.STORAGE,a.TYPE,a.PROTECTION_DP,a.STATUS,a.COMMENT,
-			count(distinct if(a.STORAGE='Off-site',m.copylist,m.specification)) as LISTS,
-			'DP' as SOURCE,
-			left(group_concat(distinct m.cellserver),256) as OWNER,
-			left(group_concat(distinct if(a.STORAGE='Off-site',m.clcustomer,m.customer)),64) as CUSTOMER,
-			left(group_concat(distinct cast(m.hostnames as char(256) character set utf8)),256) as HOST,
-			left(group_concat(distinct if(a.STORAGE='Off-site',null,m.retention)),64) as RETENTION,
-			left(group_concat(distinct if(a.STORAGE='Off-site',m.copylist,m.specification)),256) as LIST,
-			left(group_concat(distinct if(a.STORAGE='Off-site',m.clprotection,m.protection)),64) as PROTECTION
-			from audit a
-				left join mars30._specification_copylist m on (
-					(m.hostnames regexp concat('(^|,)',a.HOST_NAME)) 
-					and (m.specification regexp concat('_',a.TYPE,'(_|$)')) 
-				)
-			where if(a.STORAGE='Off-site',m.copylist,m.specification) is not null
-			group by a.DEVICE_ID,a.BACKUP_RLI_ID
-			order by a.DEVICE_ID,a.BACKUP_RLI_ID;
-	update audit_dp set STATUS=if(PROTECTION regexp PROTECTION_DP,'OK','WRONG') where status<>'EXCEPTION';
-end if;
 
 drop table if exists audit_nbu;
 create table audit_nbu like audit;
@@ -310,6 +280,36 @@ if (table_exists('mars40')) then
 			group by a.DEVICE_ID,a.BACKUP_RLI_ID
 			order by a.DEVICE_ID,a.BACKUP_RLI_ID;
 	update audit_nbu set STATUS=if(PROTECTION regexp PROTECTION_NBU,'OK','WRONG') where STATUS<>'EXCEPTION';
+end if;
+
+drop table if exists audit_dp;
+create table audit_dp like audit;
+#UPDATE for DP enabled sites
+if (table_exists('mars30')) then 
+	insert into audit_dp (
+			DATA_CENTER,CUSTOMER_NAME,DEVICE_ID,HOST_NAME,RLIs,BACKUP_RLI_ID,BACKUP_RLI_MRT,
+			STORAGE,TYPE,PROTECTION_DP,STATUS,COMMENT,
+			LISTS,SOURCE,OWNER,CUSTOMER,HOST,RETENTION,LIST,PROTECTION) 
+		select
+			a.DATA_CENTER,a.CUSTOMER_NAME,a.DEVICE_ID,a.HOST_NAME,a.RLIs,a.BACKUP_RLI_ID,a.BACKUP_RLI_MRT,
+			a.STORAGE,a.TYPE,a.PROTECTION_DP,a.STATUS,a.COMMENT,
+			count(distinct if(a.STORAGE='Off-site',m.copylist,m.specification)) as LISTS,
+			'DP' as SOURCE,
+			left(group_concat(distinct m.cellserver),256) as OWNER,
+			left(group_concat(distinct if(a.STORAGE='Off-site',m.clcustomer,m.customer)),64) as CUSTOMER,
+			left(group_concat(distinct cast(m.hostnames as char(256) character set utf8)),256) as HOST,
+			left(group_concat(distinct if(a.STORAGE='Off-site',null,m.retention)),64) as RETENTION,
+			left(group_concat(distinct if(a.STORAGE='Off-site',m.copylist,m.specification)),256) as LIST,
+			left(group_concat(distinct if(a.STORAGE='Off-site',m.clprotection,m.protection)),64) as PROTECTION
+			from audit a
+				left join mars30._specification_copylist m on (
+					(m.hostnames regexp concat('(^|,)',a.HOST_NAME)) 
+					and (m.specification regexp concat('_',a.TYPE,'(_|$)')) 
+				)
+			where if(a.STORAGE='Off-site',m.copylist,m.specification) is not null
+			group by a.DEVICE_ID,a.BACKUP_RLI_ID
+			order by a.DEVICE_ID,a.BACKUP_RLI_ID;
+	update audit_dp set STATUS=if(PROTECTION regexp PROTECTION_DP,'OK','WRONG') where status<>'EXCEPTION';
 end if;
 
 drop table if exists audit_final;
@@ -400,13 +400,7 @@ if (ifnull(datacenter(),'')<>'') then
 	delete from qrs where DATA_CENTER<>datacenter();
 	delete from comments where DATA_CENTER<>datacenter();
 end if;
-if (table_exists('mars30')) then
-	REPLACE INTO mars30.config_reports (`id`, `sort`, `name`, `submenu`, `title`, `description`, `sql`, `pivot`, `timeperiod`, `customer`, `fields`, `styles`, `datapage_limit`) VALUES
-		(100, 1000, 'q0', 'Auditing', 'QRS', 'QRS servers/RLI\'s', 'select * from audit.qrs', NULL, 0, 0, NULL, '#field(s)_affected		#condition		#CSS						#description\r\n#---------------------		#---------------------		#------------------------------------------------		#------------------------------------------\r\n*			HOST_NAME >= \'\'		color:green;background:palegreen;			Server in QRS\r\n*			HOST_NAME == \'\'		color:red;background:lightpink;			Server missing in QRS\r\n', 25),
-		(101, 1001, 'q1', 'Auditing', 'QRS audit partial', 'QRS partially completed servers/RLI\'s', 'select * from audit.audit_partial', NULL, 0, 0, NULL, '#field(s)_affected		#condition		#CSS						#description\r\n#---------------------		#---------------------		#------------------------------------------------		#------------------------------------------\r\n*			STATUS == \'MISSING\'	color:red;background:lightpink;			Missing\r\n*			STATUS REGEXP \'WRONG\'	color:salmon;background:gold;			Wrong protection\r\n*			STATUS == \'EXCEPTION\'	color:green;background:greenyellow;			Exception\r\n*			STATUS REGEXP \'OK\'	color:green;background:palegreen;			All OK\r\n', 25),
-		(102, 1002, 'q2', 'Auditing', 'QRS audit missing', 'QRS completely missing servers/RLI\'s', 'select * from audit.audit_missing', NULL, 0, 0, NULL, '#field(s)_affected		#condition		#CSS						#description\r\n#---------------------		#---------------------		#------------------------------------------------		#------------------------------------------\r\n*			STATUS == \'MISSING\'	color:red;background:lightpink;			Missing\r\n*			STATUS REGEXP \'WRONG\'	color:salmon;background:gold;			Wrong protection\r\n*			STATUS == \'EXCEPTION\'	color:green;background:greenyellow;			Exception\r\n*			STATUS REGEXP \'OK\'	color:green;background:palegreen;			All OK\r\n', 25),
-		(103, 1003, 'q3', 'Auditing', 'QRS audit complete', 'QRS fully completed servers/RLI\'s', 'select * from audit.audit_complete', NULL, 0, 0, NULL, '#field(s)_affected		#condition		#CSS						#description\r\n#---------------------		#---------------------		#------------------------------------------------		#------------------------------------------\r\n*			STATUS == \'MISSING\'	color:red;background:lightpink;			Missing\r\n*			STATUS REGEXP \'WRONG\'	color:salmon;background:gold;			Wrong protection\r\n*			STATUS == \'EXCEPTION\'	color:green;background:greenyellow;			Exception\r\n*			STATUS REGEXP \'OK\'	color:green;background:palegreen;			All OK\r\n', 25);
-end if;
+call procedure_audit();
 if (table_exists('mars40')) then
 	DROP VIEW IF EXISTS mars40.audit_qrs;
 	CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW mars40.audit_qrs AS SELECT * from audit.qrs;
@@ -504,20 +498,26 @@ if (table_exists('mars40')) then
 		('audit_(partial|missing|complete)', 4, 'audit_(partial|missing|complete)', 'status', '=', 'MISSING', 'background-color: lightpink; color: red;', 'Missing', NULL, '2018-01-18 14:20:23', '2018-01-18 14:22:12', NULL),
 		('audit_qrs', 1, 'audit_qrs', 'data_center', '!=', NULL, 'background-color: palegreen; color: green;', 'QRS', NULL, '2018-01-18 14:23:54', '2018-01-18 14:32:55', NULL);
 end if;
-call procedure_audit();
-	
 if (table_exists('mars30')) then
+	REPLACE INTO mars30.config_reports (`id`, `sort`, `name`, `submenu`, `title`, `description`, `sql`, `pivot`, `timeperiod`, `customer`, `fields`, `styles`, `datapage_limit`) VALUES
+		(100, 1000, 'q0', 'Auditing', 'QRS', 'QRS servers/RLI\'s', 'select * from audit.qrs', NULL, 0, 0, NULL, '#field(s)_affected		#condition		#CSS						#description\r\n#---------------------		#---------------------		#------------------------------------------------		#------------------------------------------\r\n*			HOST_NAME >= \'\'		color:green;background:palegreen;			Server in QRS\r\n*			HOST_NAME == \'\'		color:red;background:lightpink;			Server missing in QRS\r\n', 25),
+		(101, 1001, 'q1', 'Auditing', 'QRS audit partial', 'QRS partially completed servers/RLI\'s', 'select * from audit.audit_partial', NULL, 0, 0, NULL, '#field(s)_affected		#condition		#CSS						#description\r\n#---------------------		#---------------------		#------------------------------------------------		#------------------------------------------\r\n*			STATUS == \'MISSING\'	color:red;background:lightpink;			Missing\r\n*			STATUS REGEXP \'WRONG\'	color:salmon;background:gold;			Wrong protection\r\n*			STATUS == \'EXCEPTION\'	color:green;background:greenyellow;			Exception\r\n*			STATUS REGEXP \'OK\'	color:green;background:palegreen;			All OK\r\n', 25),
+		(102, 1002, 'q2', 'Auditing', 'QRS audit missing', 'QRS completely missing servers/RLI\'s', 'select * from audit.audit_missing', NULL, 0, 0, NULL, '#field(s)_affected		#condition		#CSS						#description\r\n#---------------------		#---------------------		#------------------------------------------------		#------------------------------------------\r\n*			STATUS == \'MISSING\'	color:red;background:lightpink;			Missing\r\n*			STATUS REGEXP \'WRONG\'	color:salmon;background:gold;			Wrong protection\r\n*			STATUS == \'EXCEPTION\'	color:green;background:greenyellow;			Exception\r\n*			STATUS REGEXP \'OK\'	color:green;background:palegreen;			All OK\r\n', 25),
+		(103, 1003, 'q3', 'Auditing', 'QRS audit complete', 'QRS fully completed servers/RLI\'s', 'select * from audit.audit_complete', NULL, 0, 0, NULL, '#field(s)_affected		#condition		#CSS						#description\r\n#---------------------		#---------------------		#------------------------------------------------		#------------------------------------------\r\n*			STATUS == \'MISSING\'	color:red;background:lightpink;			Missing\r\n*			STATUS REGEXP \'WRONG\'	color:salmon;background:gold;			Wrong protection\r\n*			STATUS == \'EXCEPTION\'	color:green;background:greenyellow;			Exception\r\n*			STATUS REGEXP \'OK\'	color:green;background:palegreen;			All OK\r\n', 25);
+end if;
+	
+if (table_exists('mars40')) then
+	delete from mars40.config_schedules where name='QRS audit';
+	replace into mars40.config_schedules (date,time,name,title,timeperiod,`to`,mode,sources) values (
+		date_format(now(),'%a %d. %b %Y'),date_format(date_add(now(),interval (15-minute(now())%15)*60-second(now()) second),'%H:%i'),
+#		date_format(now(),'%a %d. %b %Y'),date_format(now()-interval 5 second,'%H:%i'),
+		'qrs_audit_report','QRS audit Report','Last month','juraj.brabec@dxc.com','CSV',
+		'[{"name":"audit_missing","source":"audit_missing","filters":[],"sorts":[]},{"name":"audit_partial","source":"audit_partial","filters":[],"sorts":[]},{"name":"audit_complete","source":"audit_complete","filters":[],"sorts":[]}]');
+elseif (table_exists('mars30')) then
 	replace into mars30.config_scheduler (date,time,name,param1,param4,param6) values (
 		date_format(now(),'%a %d. %b %Y'),date_format(date_add(now(),interval (15-minute(now())%15)*60-second(now()) second),'%H:%i'),
 #		date_format(now(),'%a %d. %b %Y'),date_format(now()-interval 5 second,'%H:%i'),
-		'QRS audit','q1|q2|q3','juraj.brabec@hpe.com','CSV');
-end if;
-if (table_exists('mars40')) then
-	replace into mars40.config_schedules (date,time,`name`,title,timeperiod,`to`,mode,sources) values (
-		date_format(now(),'%a %d. %b %Y'),date_format(date_add(now(),interval (15-minute(now())%15)*60-second(now()) second),'%H:%i'),
-#		date_format(now(),'%a %d. %b %Y'),date_format(now()-interval 5 second,'%H:%i'),
-		'qrs_audit','QRS audit','Last month','juraj.brabec@hpe.com','CSV',
-		'[{"name":"audit_missing","source":"audit_missing","filters":[],"sorts":[]},{"name":"audit_partial","source":"audit_partial","filters":[],"sorts":[]},{"name":"audit_complete","source":"audit_complete","filters":[],"sorts":[]}]');
+		'QRS audit','q1|q2|q3','juraj.brabec@dxc.com','CSV');
 end if;
 end ;;
 
