@@ -507,11 +507,10 @@ if (table_exists('mars30')) then
 end if;
 	
 if (table_exists('mars40')) then
-	delete from mars40.config_schedules where name='QRS audit';
 	replace into mars40.config_schedules (date,time,name,title,timeperiod,`to`,mode,sources) values (
 		date_format(now(),'%a %d. %b %Y'),date_format(date_add(now(),interval (15-minute(now())%15)*60-second(now()) second),'%H:%i'),
 #		date_format(now(),'%a %d. %b %Y'),date_format(now()-interval 5 second,'%H:%i'),
-		'qrs_audit_report','QRS audit Report','Last month','juraj.brabec@dxc.com','CSV',
+		'qrs_audit','QRS audit','Last month','juraj.brabec@dxc.com','CSV',
 		'[{"name":"audit_missing","source":"audit_missing","filters":[],"sorts":[]},{"name":"audit_partial","source":"audit_partial","filters":[],"sorts":[]},{"name":"audit_complete","source":"audit_complete","filters":[],"sorts":[]}]');
 elseif (table_exists('mars30')) then
 	replace into mars30.config_scheduler (date,time,name,param1,param4,param6) values (
