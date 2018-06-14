@@ -187,6 +187,7 @@ INSERT INTO `rlis` (`NAME`, `STORAGE`, `TYPE`, `PROTECTION_DP`, `PROTECTION_NBU`
 	('DB Backup-64 bit MS-SQL 2008R2', NULL, NULL, NULL, NULL),
 	('DB Backup-64 bit MS-SQL 2012', NULL, NULL, NULL, NULL),
 	('DB Backup-64 bit MS-SQL 2014', NULL, NULL, NULL, NULL),
+	('DB Backup-64 bit MS-SQL 2016', NULL, NULL, NULL, NULL),
 	('DB Backup-64 bit Oracle 10g R2', NULL, NULL, NULL, NULL),
 	('DB Backup-64 bit Oracle 11g', NULL, NULL, NULL, NULL),
 	('DB Backup-64 bit Oracle 11g R2', NULL, NULL, NULL, NULL),
@@ -263,7 +264,9 @@ if (table_exists('mars40')) then
 			LISTS,SOURCE,OWNER,CUSTOMER,HOST,RETENTION,LIST,PROTECTION) 
 		select
 			a.DATA_CENTER,a.CUSTOMER_NAME,a.DEVICE_ID,a.HOST_NAME,a.RLIs,a.BACKUP_RLI_ID,a.BACKUP_RLI_MRT,
-			a.STORAGE,a.TYPE,a.PROTECTION_NBU,a.STATUS,a.COMMENT,
+			a.STORAGE,a.TYPE,a.PROTECTION_NBU,
+			if(a.status='EXCEPTION',a.status,if(left(group_concat(distinct if(a.STORAGE='Off-site',n.vault_ret,n.schedule_ret)),64) regexp a.PROTECTION_NBU,'OK','WRONG')) as STATUS,
+			a.COMMENT,
 			count(distinct if(a.STORAGE='Off-site',n.vault,n.policy)) as LISTS,
 			'NBU' as SOURCE,
 			left(group_concat(distinct n.masterserver),256) as OWNER,
@@ -279,7 +282,6 @@ if (table_exists('mars40')) then
 #FS={0:UX,13:Windows,40:VMWare,41:Hyper-V);INTEG={4:Oracle,6:Informix,7:Sybase,8:MS-SharePoint,11:DT-SQL,15:MS-SQL,16:MS-Exchange,17:SAP,18:DB2,19:SVM,25:Lotus,35:NBU Catalog};
 			group by a.DEVICE_ID,a.BACKUP_RLI_ID
 			order by a.DEVICE_ID,a.BACKUP_RLI_ID;
-	update audit_nbu set STATUS=if(PROTECTION regexp PROTECTION_NBU,'OK','WRONG') where STATUS<>'EXCEPTION';
 end if;
 
 drop table if exists audit_dp;
@@ -292,7 +294,9 @@ if (table_exists('mars30')) then
 			LISTS,SOURCE,OWNER,CUSTOMER,HOST,RETENTION,LIST,PROTECTION) 
 		select
 			a.DATA_CENTER,a.CUSTOMER_NAME,a.DEVICE_ID,a.HOST_NAME,a.RLIs,a.BACKUP_RLI_ID,a.BACKUP_RLI_MRT,
-			a.STORAGE,a.TYPE,a.PROTECTION_DP,a.STATUS,a.COMMENT,
+			a.STORAGE,a.TYPE,a.PROTECTION_DP,
+			if(a.status='EXCEPTION',a.status,if(left(group_concat(distinct if(a.STORAGE='Off-site',m.clprotection,m.protection)),64) regexp a.PROTECTION_DP,'OK','WRONG')) as STATUS,
+			a.COMMENT,
 			count(distinct if(a.STORAGE='Off-site',m.copylist,m.specification)) as LISTS,
 			'DP' as SOURCE,
 			left(group_concat(distinct m.cellserver),256) as OWNER,
@@ -309,7 +313,6 @@ if (table_exists('mars30')) then
 			where if(a.STORAGE='Off-site',m.copylist,m.specification) is not null
 			group by a.DEVICE_ID,a.BACKUP_RLI_ID
 			order by a.DEVICE_ID,a.BACKUP_RLI_ID;
-	update audit_dp set STATUS=if(PROTECTION regexp PROTECTION_DP,'OK','WRONG') where status<>'EXCEPTION';
 end if;
 
 drop table if exists audit_final;
@@ -419,7 +422,7 @@ if (table_exists('mars40')) then
 	REPLACE INTO mars40.core_sources (`report`, `ord`, `name`, `title`, `description`, `fields`, `link`, `pivot`, `tower`, `customer`, `timeperiod`, `limit`, `created`, `updated`, `obsoleted`) VALUES
 		('audit_qrs', 1, 'audit_qrs', 'QRS', 'QRS servers/RLIs', NULL, NULL, NULL, 0, 0, 0, 10, '2018-01-18 13:04:22', '2018-01-18 13:08:19', NULL),
 		('audit_missing', 1, 'audit_missing', 'Missing hosts', 'QRS completely missing servers/RLIs', NULL, NULL, NULL, 0, 0, 0, 10, '2018-01-18 13:04:22', '2018-01-18 13:08:19', NULL),
-		('audit_partial', 1, 'audit_partial', 'Complete hosts', 'QRS partially completed servers/RLIs', NULL, NULL, NULL, 0, 0, 0, 10, '2018-01-18 13:04:22', '2018-01-18 13:08:19', NULL),
+		('audit_partial', 1, 'audit_partial', 'Partial hosts', 'QRS partially completed servers/RLIs', NULL, NULL, NULL, 0, 0, 0, 10, '2018-01-18 13:04:22', '2018-01-18 13:08:19', NULL),
 		('audit_complete', 1, 'audit_complete', 'Complete hosts', 'QRS fully complete servers/RLIs', NULL, NULL, NULL, 0, 0, 0, 10, '2018-01-18 13:04:22', '2018-01-18 13:08:19', NULL);
 	REPLACE INTO mars40.core_fields (`source`, `ord`, `name`, `title`, `type`, `link`, `description`, `created`, `updated`, `obsoleted`) VALUES
 		('audit_qrs', 1, 'DATA_CENTER', 'DATA_CENTER', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:08:54', NULL),
