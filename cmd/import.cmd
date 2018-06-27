@@ -52,14 +52,14 @@ goto :eof
 :import_sql
 echo.>"%root%\tmp\.import"
 call :echo Importing '%db%.sql' dump ...
-"%root%\bin\db\bin\mysql.exe" <"%root%\cmd\dump\%db%.sql" >>"%logfile%"
+"%root%\bin\db\bin\mysql.exe" --database=%db% <"%root%\cmd\dump\%db%.sql" >>"%logfile%"
 call :echo Import of '%db%.sql' dump finished.
 del "%root%\tmp\.import" >nul 2>&1
 goto :eof
 :import_7z
 echo.>"%root%\tmp\.import"
 call :echo Importing '%db%.7z' dump ...
-"%root%\bin\7z\7z.exe" e -so "%root%\cmd\dump\%db%.7z" | "%root%\bin\db\bin\mysql.exe" >>"%logfile%"
+"%root%\bin\7z\7z.exe" e -so "%root%\cmd\dump\%db%.7z" | "%root%\bin\db\bin\mysql.exe" --database=%db% >>"%logfile%"
 call :echo Import of '%db%.7z' dump finished.
 del "%root%\tmp\.import" >nul 2>&1
 goto :eof

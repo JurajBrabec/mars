@@ -266,6 +266,18 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
+DROP TABLE IF EXISTS `nbu_codes`;
+CREATE TABLE `nbu_codes` (
+	`field` VARCHAR(32) NOT NULL,
+	`code` SMALLINT(6) NOT NULL,
+	`description` VARCHAR(128) NOT NULL,
+	PRIMARY KEY (`field`, `code`)
+)
+COMMENT='List of NBU codes and descriptions'
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+;
+
 DROP TABLE IF EXISTS `nbu_policy_tower_customer`;
 CREATE TABLE `nbu_policy_tower_customer` (
 	`policy` VARCHAR(64) NOT NULL,
@@ -370,30 +382,6 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-DROP TABLE IF EXISTS `nbu_codes`;
-CREATE TABLE `nbu_codes` (
-	`field` VARCHAR(32) NOT NULL,
-	`code` SMALLINT(6) NOT NULL,
-	`description` VARCHAR(128) NOT NULL,
-	PRIMARY KEY (`field`, `code`)
-)
-COMMENT='List of NBU codes and descriptions'
-COLLATE='utf8_general_ci'
-ENGINE=InnoDB
-;
-
-DROP TABLE IF EXISTS `nbu_policy_tower_customer`;
-CREATE TABLE `nbu_policy_tower_customer` (
-	`policy` VARCHAR(64) NOT NULL,
-	`tower` VARCHAR(32) NULL DEFAULT NULL,
-	`customer` VARCHAR(64) NULL DEFAULT NULL,
-	PRIMARY KEY (`policy`)
-)
-COMMENT='Policy-Tower-Customer inter-table'
-COLLATE='utf8_general_ci'
-ENGINE=InnoDB
-;
-
 DELIMITER //
 
 DROP EVENT IF EXISTS nbu_event //
@@ -462,51 +450,63 @@ BEGIN
 	SET @backup_jobs=1;
 	DROP TABLE IF EXISTS drop_table;
 	DROP TABLE IF EXISTS temp_table;
+	ANALYZE TABLE config_customers;
 	CREATE TABLE temp_table LIKE config_customers;
 	INSERT INTO temp_table SELECT * FROM config_customers WHERE obsoleted IS NULL ORDER BY name;
 	RENAME TABLE config_customers TO drop_table,temp_table TO config_customers;
 	DROP TABLE drop_table;
+	ANALYZE TABLE config_reports;
 	CREATE TABLE temp_table LIKE config_reports;
 	INSERT INTO temp_table SELECT * FROM config_reports WHERE obsoleted IS NULL ORDER BY name;
 	RENAME TABLE config_reports TO drop_table,temp_table TO config_reports;
 	DROP TABLE drop_table;
+	ANALYZE TABLE config_schedules;
 	CREATE TABLE temp_table LIKE config_schedules;
 	INSERT INTO temp_table SELECT * FROM config_schedules WHERE obsoleted IS NULL ORDER BY name;
 	RENAME TABLE config_schedules TO drop_table,temp_table TO config_schedules;
 	DROP TABLE drop_table;
+	ANALYZE TABLE config_towers;
 	CREATE TABLE temp_table LIKE config_towers;
 	INSERT INTO temp_table SELECT * FROM config_towers WHERE obsoleted IS NULL ORDER BY name;
 	RENAME TABLE config_towers TO drop_table,temp_table TO config_towers;
 	DROP TABLE drop_table;
 
+	ANALYZE TABLE bppllist_clients;
 	CREATE TABLE temp_table LIKE bppllist_clients;
 	INSERT INTO temp_table SELECT * FROM bppllist_clients WHERE obsoleted IS NULL ORDER BY masterserver,policyname,name;
 	RENAME TABLE bppllist_clients TO drop_table,temp_table TO bppllist_clients;
 	DROP TABLE drop_table;
+	ANALYZE TABLE bppllist_policies;
 	CREATE TABLE temp_table LIKE bppllist_policies;
 	INSERT INTO temp_table SELECT * FROM bppllist_policies WHERE obsoleted IS NULL ORDER BY masterserver,name;
 	RENAME TABLE bppllist_policies TO drop_table,temp_table TO bppllist_policies;
 	DROP TABLE drop_table;
+	ANALYZE TABLE bppllist_schedules;
 	CREATE TABLE temp_table LIKE bppllist_schedules;
 	INSERT INTO temp_table SELECT * FROM bppllist_schedules WHERE obsoleted IS NULL ORDER BY masterserver,policyname,name;
 	RENAME TABLE bppllist_schedules TO drop_table,temp_table TO bppllist_schedules;
 	DROP TABLE drop_table;
+	ANALYZE TABLE bpretlevel;
 	CREATE TABLE temp_table LIKE bpretlevel;
 	INSERT INTO temp_table SELECT * FROM bpretlevel ORDER BY masterserver,level;
 	RENAME TABLE bpretlevel TO drop_table,temp_table TO bpretlevel;
 	DROP TABLE drop_table;
+	ANALYZE TABLE nbu_policy_tower_customer;
 	CREATE TABLE temp_table LIKE nbu_policy_tower_customer;
 	INSERT INTO temp_table SELECT * FROM nbu_policy_tower_customer ORDER BY policy;
 	RENAME TABLE nbu_policy_tower_customer TO drop_table,temp_table TO nbu_policy_tower_customer;
 	DROP TABLE drop_table;
+	ANALYZE TABLE vault_xml;
 	CREATE TABLE temp_table LIKE vault_xml;
 	INSERT INTO temp_table SELECT * FROM vault_xml WHERE obsoleted IS NULL ORDER BY masterserver,profile_id;
 	RENAME TABLE vault_xml TO drop_table,temp_table TO vault_xml;
 	DROP TABLE drop_table;
+	ANALYZE TABLE vault_item_xml;
 	CREATE TABLE temp_table LIKE vault_item_xml;
 	INSERT INTO temp_table SELECT * FROM vault_item_xml WHERE obsoleted IS NULL ORDER BY masterserver,profile,type,value;
 	RENAME TABLE vault_item_xml TO drop_table,temp_table TO vault_item_xml;
 	DROP TABLE drop_table;
+	ANALYZE TABLE bpdbjobs_report;
 	IF @backup_jobs=1 THEN
 		CREATE DATABASE IF NOT EXISTS mars_backup;
 		CREATE TABLE IF NOT EXISTS mars_backup.bpdbjobs_report LIKE bpdbjobs_report;

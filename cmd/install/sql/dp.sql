@@ -32,7 +32,7 @@ CREATE TABLE config_cellservers (
   valid_until timestamp NULL DEFAULT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY name (name)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='List of Cell Servers';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='List of Cell Servers';
 
 # INSERT INTO config_cellservers (id,name,valid_since,updated_on) VALUES (1,'Default Cell Server','2012-12-31 23:00:00','2012-12-31 23:00:00');
 
@@ -59,7 +59,7 @@ CREATE TABLE config_customers (
   UNIQUE KEY name (name),
   UNIQUE KEY fqdn (fqdn),
   UNIQUE KEY specification (specification)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='List of customers';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='List of customers';
 
 # INSERT INTO config_customers (id,name,specification,fqdn,valid_since,updated_on) VALUES (1,'Default Customer','_default_','.default.','2012-12-31 23:00:00','2012-12-31 23:00:00');
 
@@ -74,7 +74,7 @@ CREATE TABLE config_mediaservers (
   PRIMARY KEY (id),
   UNIQUE KEY name (name),
   KEY cellserver (cellserver)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='List of Media Servers';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='List of Media Servers';
 
 # INSERT INTO config_mediaservers (id,name,cellserver,valid_since,updated_on) VALUES (1,'Default Media Server','Default Cell Server','2012-12-31 23:00:00','2012-12-31 23:00:00');
 
@@ -96,7 +96,7 @@ CREATE TABLE config_reports (
   PRIMARY KEY (id),
   UNIQUE KEY name (name),
   KEY submenu (submenu)
-) ENGINE=InnoDB AUTO_INCREMENT=63 DEFAULT CHARSET=utf8 COMMENT='List of Reports';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='List of Reports';
 
 INSERT INTO `config_reports` (`id`, `sort`, `name`, `submenu`, `title`, `description`, `sql`, `pivot`, `timeperiod`, `customer`, `fields`, `styles`, `datapage_limit`) VALUES
 	(1, 100, 'cs1', 'Cell Servers', 'Actual status', 'List of Cell Servers with actual status', 'select * from _cellservers', NULL, 0, 0, '#field_name	#field_title	#link_report		#highlight_condition					#link_condition					#link_description\r\n#----------	#------------	#------------------------	#------------------------					#------------------------------------			#------------------------------------------------\r\nname		Cell Server\r\nos		OS\r\ntimezone		Time Zone\r\nhost		Host name\r\nphp		PHP\r\ndp		DP version\r\nmaintenance\r\nprocesses_active	Active\r\nprocesses_down	Down\r\nmmd_local\r\nlocaltime		Time &#916\r\nlast_updated	Ago\r\nqueue		Q		q			name == \'%name\'						cellserver == \'%name\'				Show command queue for \'%name\'\r\nrunning_sessions	Ses.		rs			name == \'%name\'						cellserver == \'%name\'				Show running sessions for \'%name\'\r\nlocked_objects	Obj.		lo			name == \'%name\'						host == \'%name\'					Show locked objects for \'%name\'\r\nerrors_24h	Err.24h		l			name == \'%name\'						cellserver == \'%name\' || severity == \'Error\' || timestamp > -24 hour		Show logged errors for \'%name\r\nclients\r\nfsclients\r\nbarclients\r\nobjects\r\nfsobjects\r\nbarobjects\r\nspecifications\r\nsessions_24h\r\nbsr_sessions_24h\r\nbsr_24h\r\nsessions_1m\r\nbsr_sessions_1m\r\nbsr_1m\r\n', '#field(s)_affected		#condition		#CSS					#description\r\n#---------------------		#---------------------		#------------------------------------------------	#------------------------------------------\r\n*			maintenance == 0		background:palegreen;			Normal operation\r\n*			mmd_local == 1		font-weight:bold;				MoM/Standalone\r\n*			processes_down >= \' \'	background:salmon;			Process down\r\n*			sessions_24h == 0		color:black;				No sessions\r\n*			sessions_24h > 0		color:green;				Running sessions\r\n*			maintenance == 1		background:silver;color:gray;			Maintenance\r\n*			host REGEXP \'::\'		background:lawngreen;			Executing scheduler\r\nphp			php REGEXP \'^5\\.(1|2)\'	color:brown;				PHP version below 5.3\r\n', 25),
@@ -206,7 +206,7 @@ CREATE TABLE config_retentions (
   KEY name (name),
   KEY customer (customer),
   KEY specification (specification)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COMMENT='List of retentions';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='List of retentions';
 
 INSERT INTO config_retentions (id,name,customer,retention,restarthours,periodicity,ticket_threshold,specification,valid_since,updated_on) VALUES 
 	(1,'General',NULL,14,12,2,2,NULL,'2012-12-31 23:00:00','2012-12-31 23:00:00'),
@@ -235,7 +235,7 @@ CREATE TABLE config_scheduler (
   valid_until timestamp NULL DEFAULT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY name (name)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='List of scheduled tasks';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='List of scheduled tasks';
 
 DROP TABLE IF EXISTS config_scripts;
 CREATE TABLE config_scripts (
@@ -247,7 +247,7 @@ CREATE TABLE config_scripts (
   valid_until timestamp NULL DEFAULT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY name (name)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8 COMMENT='Cell Server Scripts';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='Cell Server Scripts';
 
 INSERT INTO config_scripts (id, name, code, valid_since, updated_on, valid_until) VALUES
 	(1, 'config.ini.default', '[PHP and DataProtector paths]\r\n;PHP_HOME path on RHEL /usr/bin, on HPUX /opt/hpws22/apache/php/bin/ or /opt/php54/php/bin, on Windows (relative) php\r\nPHP_HOME                =/usr/bin\r\nOMNI_HOME               =/opt/omni\r\nOMNI_SERVER             =/etc/opt/omni/server\r\n;PHP_HOME                =php\r\n;OMNI_HOME               =C:\\Program Files\\OmniBack\r\n;OMNI_SERVER             =C:\\Program Data\\OmniBack\\Config\\Server\r\n\r\n[MySQL connection details]\r\nMYSQL_HOST              =%MYSQL_HOST%:3306\r\nMYSQL_USER              =script\r\nMYSQL_PASSWORD          =omniback\r\nMYSQL_DB                =mars30\r\n\r\n[3rd Party paths]\r\n;BACKUPMON               =/var/opt/OV/bin/instrumentation/\r\n;OMNI2ESL                =/opt/hps/upload/obcheck2esl/\r\n;ITO_FILE                =/var/opt/OV/backupmon/log/omniback_prio_check.ito\r\nBACKUPMON               =\r\nOMNI2ESL                =tmp\r\nITO_FILE                =tmp\\omniback_prio_check.ito\r\n\r\n[Common Parameters]\r\nTIME_ZONE               =%TIME_ZONE%\r\nITO_IGNORE              =_final,_test,test_,_tlogs\r\nITO_PRIORITY            =high\r\nRECYCLE_FAILURES        =yes\r\nDECIMAL                 ="."\r\nTIME_FORMAT             =Y-m-d H:i:s\r\nDEBUG                   =0\r\n;SILENT_WINDOW           =19:00 4:00\r\nSERVICE_PRIORITY        =critical\r\n;OMNITRIG on UX, OMNIINET on WIN\r\nSERVICE_LIST            =CRS,MMD,KMS,HPDP-IDB,HPDP-IDB-CP,HPDP-AS,OMNITRIG\r\n;SERVICE_LIST            =CRS,MMD,KMS,HPDP-IDB,HPDP-IDB-CP,HPDP-AS,OMNIINET\r\nLICENSEWARNING_PRIORITY =low\r\n;SESSIONERROR_PRIORITY   =high\r\nFREEMEDIA_PRIORITY      =low\r\nFREEMEDIA_IGNORE_POOL   ="default|protected|permanent|temp|test"\r\nTABLESPACELOW_PRIORITY  =critical\r\nMOUNTREQUEST_PRIORITY   =high\r\nDEVICEERROR_PRIORITY    =critical\r\nALARM_PRIORITY          =low\r\nCSASSFAILED_PRIORITY    =low\r\nMAILSLOTSFULL_PRIORITY  =low\r\nLICENSEWILLEXPIRE_PRIORITY=low\r\nHEALTHCHECKFAILED_PRIORITY=high\r\nDBCORRUPTED_PRIORITY    =critical\r\nDBPURGENEEDED_PRIORITY  =high\r\nDBBACKUPNEEDED_PRIORITY =critical\r\nUNEXPECTEDEVENTS_PRIORITY=low\r\nUSERCHECKFAILED_PRIORITY=low\r\n\r\n[Routine Cycles]\r\nROUTINE_LIBRARIES       =15:00\r\nROUTINE_DEVICES         =15:00\r\nROUTINE_MEDIA           =15:00\r\nROUTINE_SPECIFICATIONS  =+60\r\nROUTINE_OMNI2ESL        =+480\r\nROUTINE_CHECK_BACKUPS   =+60\r\nROUTINE_LOCKED_OBJECTS  =+5\r\nROUTINE_OMNISTAT        =+5\r\n\r\n[Optional Parameters]\r\n;CELLSERVER              =%CELLSERVER%\r\n;WORKERS                 =4\r\n;MAINTENANCE_FILE        =MAINT\r\n;TIMEOUT_MULTIPLIER      =1\r\n;OMNISTAT_DETAILS        =Backup\r\n', '2013-01-01 00:00:00', '2016-07-22 14:08:20', NULL),
@@ -282,7 +282,7 @@ CREATE TABLE config_settings (
   valid_until timestamp NULL DEFAULT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY cellserver_name (cellserver,name)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8 COMMENT='Settings and parameters';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='Settings and parameters';
 
 INSERT INTO config_settings (id,cellserver,name,value,description,valid_since,updated_on) VALUES 
 	(1,NULL,'region','Default Region','Region Name','2012-12-31 23:00:00','2012-12-31 23:00:00'),
@@ -309,7 +309,7 @@ CREATE TABLE config_timeperiods (
   valid_until timestamp NULL DEFAULT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY name (name)
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8 COMMENT='List o Tile periods';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='List o time periods';
 
 INSERT INTO config_timeperiods (id,name,value,ord,valid_since,updated_on) VALUES 
 	(1,'This hour','H::H+1',1,'2013-01-01 00:00:00','2013-01-01 00:00:00'),
@@ -344,7 +344,7 @@ CREATE TABLE `config_timers` (
 	`end` TIMESTAMP NOT NULL,
 	`duration` INT(11) NOT NULL,
 	PRIMARY KEY (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List o Tile periods';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Start times and durations of events';
 
 DROP TABLE IF EXISTS dataprotector_clients;
 CREATE TABLE dataprotector_clients (
@@ -1007,28 +1007,34 @@ BEGIN
 
   INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#01 MAINTENANCE CONFIG');
 
+	ANALYZE TABLE config_cellservers;
 	DROP TABLE IF EXISTS drop_table;
 	DROP TABLE IF EXISTS temp_table;
 	CREATE TABLE temp_table LIKE config_cellservers;
 	INSERT INTO temp_table SELECT * FROM config_cellservers WHERE valid_until IS NULL ORDER BY name;
 	RENAME TABLE config_cellservers TO drop_table,temp_table TO config_cellservers;
 	DROP TABLE drop_table;
+	ANALYZE TABLE config_customers;
 	CREATE TABLE temp_table LIKE config_customers;
 	INSERT INTO temp_table SELECT * FROM config_customers WHERE valid_until IS NULL ORDER BY name;
 	RENAME TABLE config_customers TO drop_table,temp_table TO config_customers;
 	DROP TABLE drop_table;
+	ANALYZE TABLE config_mediaservers;
 	CREATE TABLE temp_table LIKE config_mediaservers;
 	INSERT INTO temp_table SELECT * FROM config_mediaservers WHERE valid_until IS NULL ORDER BY name;
 	RENAME TABLE config_mediaservers TO drop_table,temp_table TO config_mediaservers;
 	DROP TABLE drop_table;
+	ANALYZE TABLE config_retentions;
 	CREATE TABLE temp_table LIKE config_retentions;
 	INSERT INTO temp_table SELECT * FROM config_retentions WHERE valid_until IS NULL ORDER BY name;
 	RENAME TABLE config_retentions TO drop_table,temp_table TO config_retentions;
 	DROP TABLE drop_table;
+	ANALYZE TABLE config_scheduler;
 	CREATE TABLE temp_table LIKE config_scheduler;
 	INSERT INTO temp_table SELECT * FROM config_scheduler WHERE valid_until IS NULL ORDER BY name;
 	RENAME TABLE config_scheduler TO drop_table,temp_table TO config_scheduler;
 	DROP TABLE drop_table;
+	ANALYZE TABLE config_timeperiods;
 	CREATE TABLE temp_table LIKE config_timeperiods;
 	INSERT INTO temp_table SELECT * FROM config_timeperiods WHERE valid_until IS NULL ORDER BY name;
 	RENAME TABLE config_timeperiods TO drop_table,temp_table TO config_timeperiods;
@@ -1036,51 +1042,62 @@ BEGIN
 
 	INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#02 MAINTENANCE DATAPROTECTOR');
 
+	ANALYZE TABLE dataprotector_omnistat;
 	CREATE TABLE temp_table LIKE dataprotector_omnistat;
 	INSERT INTO temp_table SELECT * FROM dataprotector_omnistat WHERE updated_on>(NOW()-INTERVAL 1 DAY) ORDER BY cellserver,sessionid;
 	RENAME TABLE dataprotector_omnistat TO drop_table,temp_table TO dataprotector_omnistat;
 	DROP TABLE drop_table;
+	ANALYZE TABLE dataprotector_omnistat_devices;
 	CREATE TABLE temp_table LIKE dataprotector_omnistat_devices;
 	INSERT INTO temp_table SELECT s.* FROM dataprotector_omnistat_devices s WHERE 
 		EXISTS (SELECT * FROM dataprotector_omnistat o WHERE o.cellserver=s.cellserver AND o.sessionid=s.sessionid) 
 		ORDER BY s.cellserver,s.sessionid;
 	RENAME TABLE dataprotector_omnistat_devices TO drop_table,temp_table TO dataprotector_omnistat_devices;
 	DROP TABLE drop_table;
+	ANALYZE TABLE dataprotector_omnistat_objects;
 	CREATE TABLE temp_table LIKE dataprotector_omnistat_objects;
 	INSERT INTO temp_table SELECT s.* FROM dataprotector_omnistat_objects s WHERE 
 		EXISTS (SELECT * FROM dataprotector_omnistat o WHERE o.cellserver=s.cellserver AND o.sessionid=s.sessionid) 
 		ORDER BY s.cellserver,s.sessionid;
 	RENAME TABLE dataprotector_omnistat_objects TO drop_table,temp_table TO dataprotector_omnistat_objects;
 	DROP TABLE drop_table;
+	ANALYZE TABLE dataprotector_clients;
 	CREATE TABLE temp_table LIKE dataprotector_clients;
 	INSERT INTO temp_table SELECT * FROM dataprotector_clients WHERE valid_until IS NULL ORDER BY cellserver,name;
 	RENAME TABLE dataprotector_clients TO drop_table,temp_table TO dataprotector_clients;
 	DROP TABLE drop_table;
+	ANALYZE TABLE dataprotector_copylists;
 	CREATE TABLE temp_table LIKE dataprotector_copylists;
 	INSERT INTO temp_table SELECT * FROM dataprotector_copylists WHERE valid_until IS NULL ORDER BY cellserver,name;
 	RENAME TABLE dataprotector_copylists TO drop_table;
 	RENAME TABLE temp_table TO dataprotector_copylists;
 	DROP TABLE drop_table;
+	ANALYZE TABLE dataprotector_devices;
 	CREATE TABLE temp_table LIKE dataprotector_devices;
 	INSERT INTO temp_table SELECT * FROM dataprotector_devices WHERE valid_until IS NULL ORDER BY library,name;
 	RENAME TABLE dataprotector_devices TO drop_table,temp_table TO dataprotector_devices;
 	DROP TABLE drop_table;
+	ANALYZE TABLE dataprotector_libraries;
 	CREATE TABLE temp_table LIKE dataprotector_libraries;
 	INSERT INTO temp_table SELECT * FROM dataprotector_libraries WHERE valid_until IS NULL ORDER BY updated_by,name;
 	RENAME TABLE dataprotector_libraries TO drop_table,temp_table TO dataprotector_libraries;
 	DROP TABLE drop_table;
+	ANALYZE TABLE dataprotector_media;
 	CREATE TABLE temp_table LIKE dataprotector_media;
 	INSERT INTO temp_table SELECT * FROM dataprotector_media WHERE valid_until IS NULL ORDER BY updated_by,mediumid;
 	RENAME TABLE dataprotector_media TO drop_table,temp_table TO dataprotector_media;
 	DROP TABLE drop_table;
+	ANALYZE TABLE dataprotector_objects;
 	CREATE TABLE temp_table LIKE dataprotector_objects;
 	INSERT INTO temp_table SELECT * FROM dataprotector_objects WHERE valid_until IS NULL ORDER BY cellserver,client,type,name;
 	RENAME TABLE dataprotector_objects TO drop_table,temp_table TO dataprotector_objects;
 	DROP TABLE drop_table;
+	ANALYZE TABLE dataprotector_pools;
 	CREATE TABLE temp_table LIKE dataprotector_pools;
 	INSERT INTO temp_table SELECT * FROM dataprotector_pools WHERE valid_until IS NULL ORDER BY updated_by,name;
 	RENAME TABLE dataprotector_pools TO drop_table,temp_table TO dataprotector_pools;
 	DROP TABLE drop_table;
+	ANALYZE TABLE dataprotector_specifications;
 	CREATE TABLE temp_table LIKE dataprotector_specifications;
 	INSERT INTO temp_table SELECT * FROM dataprotector_specifications WHERE valid_until IS NULL ORDER BY cellserver,name;
 	RENAME TABLE dataprotector_specifications TO drop_table,temp_table TO dataprotector_specifications;
@@ -1088,13 +1105,24 @@ BEGIN
 
 	INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#03 MAINTENANCE MARS');
 
+	ANALYZE TABLE mars_log;
 	CREATE TABLE temp_table LIKE mars_log;
 	INSERT INTO temp_table SELECT * FROM mars_log WHERE timestamp >= (NOW() - INTERVAL @purge_log_weeks WEEK) ORDER BY timestamp;
 	RENAME TABLE mars_log TO drop_table,temp_table TO mars_log;
 	DROP TABLE drop_table;
 
-	INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#04 MAINTENANCE MEDIA');
+	INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#04 MAINTENANCE DEVICES');
 
+	ANALYZE TABLE dataprotector_session_devices;
+	CREATE TABLE temp_table LIKE dataprotector_session_devices;
+	INSERT INTO temp_table SELECT * FROM dataprotector_session_devices WHERE (starttime >= (NOW() - INTERVAL @purge_sessions_weeks WEEK))
+		ORDER BY cellserver,sessionid;
+	RENAME TABLE dataprotector_session_devices TO drop_table,temp_table TO dataprotector_session_devices;
+	DROP TABLE drop_table;
+
+	INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#05 MAINTENANCE MEDIA');
+
+	ANALYZE TABLE dataprotector_session_media;
 	CREATE TABLE temp_table LIKE dataprotector_session_media;
 	INSERT INTO temp_table SELECT * FROM dataprotector_session_media WHERE (lastused >= (NOW() - INTERVAL @purge_media_weeks WEEK))
 		OR ((protection >= (NOW() - INTERVAL @purge_media_weeks WEEK))) 
@@ -1102,8 +1130,9 @@ BEGIN
 	RENAME TABLE dataprotector_session_media TO drop_table,temp_table TO dataprotector_session_media;
 	DROP TABLE drop_table;
 
-	INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#05 MAINTENANCE OBJECTS');
+	INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#06 MAINTENANCE OBJECTS');
 
+	ANALYZE TABLE dataprotector_session_objects;
 	CREATE TABLE temp_table LIKE dataprotector_session_objects;
 	INSERT INTO temp_table SELECT * FROM dataprotector_session_objects WHERE (starttime >= (NOW() - INTERVAL @purge_objects_weeks WEEK))
 		OR ((protection >= (NOW() - INTERVAL @purge_objects_weeks WEEK))) 
@@ -1111,8 +1140,9 @@ BEGIN
 	RENAME TABLE dataprotector_session_objects TO drop_table,temp_table TO dataprotector_session_objects;
 	DROP TABLE drop_table;
 
+	ANALYZE TABLE dataprotector_sessions;
 	IF @backup_sessions in (1,'Y','T') THEN 
-		INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#06 BACKUP SESSIONS');
+		INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#07 BACKUP SESSIONS');
 		CREATE DATABASE IF NOT EXISTS mars_backup;
 		CREATE TABLE IF NOT EXISTS mars_backup.dataprotector_sessions LIKE dataprotector_sessions;
 		REPLACE INTO mars_backup.dataprotector_sessions
@@ -1121,7 +1151,7 @@ BEGIN
 		  WHERE o.cellserver=s.cellserver AND o.sessionid=s.sessionid)
 		  ORDER BY starttime);
 	END IF;
-	INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#07 MAINTENANCE SESSIONS');
+	INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#08 MAINTENANCE SESSIONS');
 
 	CREATE TABLE temp_table LIKE dataprotector_sessions;
 	INSERT INTO temp_table SELECT s.* FROM dataprotector_sessions s WHERE (s.starttime >= (NOW() - INTERVAL @purge_sessions_weeks WEEK))
