@@ -1007,34 +1007,28 @@ BEGIN
 
   INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#01 MAINTENANCE CONFIG');
 
-	ANALYZE TABLE config_cellservers;
 	DROP TABLE IF EXISTS drop_table;
 	DROP TABLE IF EXISTS temp_table;
 	CREATE TABLE temp_table LIKE config_cellservers;
 	INSERT INTO temp_table SELECT * FROM config_cellservers WHERE valid_until IS NULL ORDER BY name;
 	RENAME TABLE config_cellservers TO drop_table,temp_table TO config_cellservers;
 	DROP TABLE drop_table;
-	ANALYZE TABLE config_customers;
 	CREATE TABLE temp_table LIKE config_customers;
 	INSERT INTO temp_table SELECT * FROM config_customers WHERE valid_until IS NULL ORDER BY name;
 	RENAME TABLE config_customers TO drop_table,temp_table TO config_customers;
 	DROP TABLE drop_table;
-	ANALYZE TABLE config_mediaservers;
 	CREATE TABLE temp_table LIKE config_mediaservers;
 	INSERT INTO temp_table SELECT * FROM config_mediaservers WHERE valid_until IS NULL ORDER BY name;
 	RENAME TABLE config_mediaservers TO drop_table,temp_table TO config_mediaservers;
 	DROP TABLE drop_table;
-	ANALYZE TABLE config_retentions;
 	CREATE TABLE temp_table LIKE config_retentions;
 	INSERT INTO temp_table SELECT * FROM config_retentions WHERE valid_until IS NULL ORDER BY name;
 	RENAME TABLE config_retentions TO drop_table,temp_table TO config_retentions;
 	DROP TABLE drop_table;
-	ANALYZE TABLE config_scheduler;
 	CREATE TABLE temp_table LIKE config_scheduler;
 	INSERT INTO temp_table SELECT * FROM config_scheduler WHERE valid_until IS NULL ORDER BY name;
 	RENAME TABLE config_scheduler TO drop_table,temp_table TO config_scheduler;
 	DROP TABLE drop_table;
-	ANALYZE TABLE config_timeperiods;
 	CREATE TABLE temp_table LIKE config_timeperiods;
 	INSERT INTO temp_table SELECT * FROM config_timeperiods WHERE valid_until IS NULL ORDER BY name;
 	RENAME TABLE config_timeperiods TO drop_table,temp_table TO config_timeperiods;
@@ -1042,62 +1036,51 @@ BEGIN
 
 	INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#02 MAINTENANCE DATAPROTECTOR');
 
-	ANALYZE TABLE dataprotector_omnistat;
 	CREATE TABLE temp_table LIKE dataprotector_omnistat;
 	INSERT INTO temp_table SELECT * FROM dataprotector_omnistat WHERE updated_on>(NOW()-INTERVAL 1 DAY) ORDER BY cellserver,sessionid;
 	RENAME TABLE dataprotector_omnistat TO drop_table,temp_table TO dataprotector_omnistat;
 	DROP TABLE drop_table;
-	ANALYZE TABLE dataprotector_omnistat_devices;
 	CREATE TABLE temp_table LIKE dataprotector_omnistat_devices;
 	INSERT INTO temp_table SELECT s.* FROM dataprotector_omnistat_devices s WHERE 
 		EXISTS (SELECT * FROM dataprotector_omnistat o WHERE o.cellserver=s.cellserver AND o.sessionid=s.sessionid) 
 		ORDER BY s.cellserver,s.sessionid;
 	RENAME TABLE dataprotector_omnistat_devices TO drop_table,temp_table TO dataprotector_omnistat_devices;
 	DROP TABLE drop_table;
-	ANALYZE TABLE dataprotector_omnistat_objects;
 	CREATE TABLE temp_table LIKE dataprotector_omnistat_objects;
 	INSERT INTO temp_table SELECT s.* FROM dataprotector_omnistat_objects s WHERE 
 		EXISTS (SELECT * FROM dataprotector_omnistat o WHERE o.cellserver=s.cellserver AND o.sessionid=s.sessionid) 
 		ORDER BY s.cellserver,s.sessionid;
 	RENAME TABLE dataprotector_omnistat_objects TO drop_table,temp_table TO dataprotector_omnistat_objects;
 	DROP TABLE drop_table;
-	ANALYZE TABLE dataprotector_clients;
 	CREATE TABLE temp_table LIKE dataprotector_clients;
 	INSERT INTO temp_table SELECT * FROM dataprotector_clients WHERE valid_until IS NULL ORDER BY cellserver,name;
 	RENAME TABLE dataprotector_clients TO drop_table,temp_table TO dataprotector_clients;
 	DROP TABLE drop_table;
-	ANALYZE TABLE dataprotector_copylists;
 	CREATE TABLE temp_table LIKE dataprotector_copylists;
 	INSERT INTO temp_table SELECT * FROM dataprotector_copylists WHERE valid_until IS NULL ORDER BY cellserver,name;
 	RENAME TABLE dataprotector_copylists TO drop_table;
 	RENAME TABLE temp_table TO dataprotector_copylists;
 	DROP TABLE drop_table;
-	ANALYZE TABLE dataprotector_devices;
 	CREATE TABLE temp_table LIKE dataprotector_devices;
 	INSERT INTO temp_table SELECT * FROM dataprotector_devices WHERE valid_until IS NULL ORDER BY library,name;
 	RENAME TABLE dataprotector_devices TO drop_table,temp_table TO dataprotector_devices;
 	DROP TABLE drop_table;
-	ANALYZE TABLE dataprotector_libraries;
 	CREATE TABLE temp_table LIKE dataprotector_libraries;
 	INSERT INTO temp_table SELECT * FROM dataprotector_libraries WHERE valid_until IS NULL ORDER BY updated_by,name;
 	RENAME TABLE dataprotector_libraries TO drop_table,temp_table TO dataprotector_libraries;
 	DROP TABLE drop_table;
-	ANALYZE TABLE dataprotector_media;
 	CREATE TABLE temp_table LIKE dataprotector_media;
 	INSERT INTO temp_table SELECT * FROM dataprotector_media WHERE valid_until IS NULL ORDER BY updated_by,mediumid;
 	RENAME TABLE dataprotector_media TO drop_table,temp_table TO dataprotector_media;
 	DROP TABLE drop_table;
-	ANALYZE TABLE dataprotector_objects;
 	CREATE TABLE temp_table LIKE dataprotector_objects;
 	INSERT INTO temp_table SELECT * FROM dataprotector_objects WHERE valid_until IS NULL ORDER BY cellserver,client,type,name;
 	RENAME TABLE dataprotector_objects TO drop_table,temp_table TO dataprotector_objects;
 	DROP TABLE drop_table;
-	ANALYZE TABLE dataprotector_pools;
 	CREATE TABLE temp_table LIKE dataprotector_pools;
 	INSERT INTO temp_table SELECT * FROM dataprotector_pools WHERE valid_until IS NULL ORDER BY updated_by,name;
 	RENAME TABLE dataprotector_pools TO drop_table,temp_table TO dataprotector_pools;
 	DROP TABLE drop_table;
-	ANALYZE TABLE dataprotector_specifications;
 	CREATE TABLE temp_table LIKE dataprotector_specifications;
 	INSERT INTO temp_table SELECT * FROM dataprotector_specifications WHERE valid_until IS NULL ORDER BY cellserver,name;
 	RENAME TABLE dataprotector_specifications TO drop_table,temp_table TO dataprotector_specifications;
@@ -1105,7 +1088,6 @@ BEGIN
 
 	INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#03 MAINTENANCE MARS');
 
-	ANALYZE TABLE mars_log;
 	CREATE TABLE temp_table LIKE mars_log;
 	INSERT INTO temp_table SELECT * FROM mars_log WHERE timestamp >= (NOW() - INTERVAL @purge_log_weeks WEEK) ORDER BY timestamp;
 	RENAME TABLE mars_log TO drop_table,temp_table TO mars_log;
@@ -1113,7 +1095,6 @@ BEGIN
 
 	INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#04 MAINTENANCE DEVICES');
 
-	ANALYZE TABLE dataprotector_session_devices;
 	CREATE TABLE temp_table LIKE dataprotector_session_devices;
 	INSERT INTO temp_table SELECT * FROM dataprotector_session_devices WHERE (starttime >= (NOW() - INTERVAL @purge_sessions_weeks WEEK))
 		ORDER BY cellserver,sessionid;
@@ -1122,7 +1103,6 @@ BEGIN
 
 	INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#05 MAINTENANCE MEDIA');
 
-	ANALYZE TABLE dataprotector_session_media;
 	CREATE TABLE temp_table LIKE dataprotector_session_media;
 	INSERT INTO temp_table SELECT * FROM dataprotector_session_media WHERE (lastused >= (NOW() - INTERVAL @purge_media_weeks WEEK))
 		OR ((protection >= (NOW() - INTERVAL @purge_media_weeks WEEK))) 
@@ -1132,7 +1112,6 @@ BEGIN
 
 	INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#06 MAINTENANCE OBJECTS');
 
-	ANALYZE TABLE dataprotector_session_objects;
 	CREATE TABLE temp_table LIKE dataprotector_session_objects;
 	INSERT INTO temp_table SELECT * FROM dataprotector_session_objects WHERE (starttime >= (NOW() - INTERVAL @purge_objects_weeks WEEK))
 		OR ((protection >= (NOW() - INTERVAL @purge_objects_weeks WEEK))) 
@@ -1140,7 +1119,6 @@ BEGIN
 	RENAME TABLE dataprotector_session_objects TO drop_table,temp_table TO dataprotector_session_objects;
 	DROP TABLE drop_table;
 
-	ANALYZE TABLE dataprotector_sessions;
 	IF @backup_sessions in (1,'Y','T') THEN 
 		INSERT INTO mars_log (cellserver,pid,duration,severity,message) VALUES ('localhost',@pid,0,'DEBUG','#07 BACKUP SESSIONS');
 		CREATE DATABASE IF NOT EXISTS mars_backup;
