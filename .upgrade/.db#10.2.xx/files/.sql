@@ -1,7 +1,11 @@
-USE mars40;
+USE mars30;
 
 -- BEGIN
 
 -- END
 
-ALTER EVENT nbu_event ENABLE;
+USE mars40;
+
+-- BEGIN
+
+-- END

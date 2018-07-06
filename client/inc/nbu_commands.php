@@ -416,9 +416,9 @@ class bppllist_policies extends bppllist_allpolicies {
 			$row[ static::FASTBACKUP ]
 			) = $match[ 'INFO' ];
 		$row[ static::KEY ] = $match[ 'KEY' ];
-		$row[ static::RES ] = implode( ',', $match[ 'RES' ] );
-		$row[ static::POOL ] = implode( ',', $match[ 'POOL' ] );
-		$row[ static::FOE ] = implode( ',', $match[ 'FOE' ] );
+		$row[ static::RES ] = empty( $match[ 'RES' ] ) ? '' : implode( ',', $match[ 'RES' ] );
+		$row[ static::POOL ] = empty( $match[ 'POOL' ] ) ? '' : implode( ',', $match[ 'POOL' ] );
+		$row[ static::FOE ] = empty( $match[ 'FOE' ] ) ? '' : implode( ',', $match[ 'FOE' ] );
 		$row[ static::SHAREGROUP ] = $match[ 'SHAREGROUP' ];
 		$row[ static::DATACLASSIFICATION ] = $match[ 'DATACLASSIFICATION' ];
 		$row[ static::HYPERVSERVER ] =  empty( $match[ 'HYPERVSERVER' ] ) ? '' : $match[ 'HYPERVSERVER' ];
@@ -431,7 +431,7 @@ class bppllist_policies extends bppllist_allpolicies {
 		$include = empty( $match[ 'INCLUDE' ] ) ? '' : $match[ 'INCLUDE' ];
 		if ( is_array( $include ) ) 
 			$include = implode( ' ', array_map( function ( $e ) { return is_array( $e ) ? implode( ' ' , $e ) : $e; }, $include ) );
-		$row[ static::INCLUDES ] = str_replace( '\\', '/', $include );
+		$row[ static::INCLUDES ] = str_replace( "'", "\'", str_replace( '\\', '/', $include ) );
 		unset( $match );
 		foreach( $row as $key => $value ) {
 			$this->fields( $key ) || $this->fields( $key, field::STRING );

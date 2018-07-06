@@ -3,7 +3,7 @@ REM MARS 4.1 BINARY REDISTRIBUTION SCRIPT
 REM (C) 2018 Juraj Brabec, DXC.technology
 REM DON'T MODIFY ANYTHING BELOW THIS LINE______________________________________________________________________________
 
-set enablelocaldelayedexpansion
+setlocal enabledelayedexpansion
 pushd %~dp0
 :setup
 if "%folder%" equ "" set "folder=%~dp0"

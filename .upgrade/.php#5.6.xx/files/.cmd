@@ -43,7 +43,7 @@ if exist "%root%\bin\php.%prevversion%" call :echo Unable to delete PHP folder, 
 goto :eof
 
 :extract
-call :echo Extracting %filename%...
+call :echo Extracting archive %filename%...
 set exclude=-x^^!extras -x^^!lib -x^^!php.ini*
 "%root%\bin\7z\7z.exe" x "%root%\%filename%" -r -aoa -bd -bb0 -y -o"%root%\bin\php" !exclude!>>"%logfile%" 2>&1
 set result=%errorlevel%

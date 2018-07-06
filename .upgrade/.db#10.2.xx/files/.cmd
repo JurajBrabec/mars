@@ -19,6 +19,8 @@ call "%root%\mars.cmd" stop db 2>&1
 set result=%errorlevel%
 if "%result%" equ "0" call :remove
 if "%result%" equ "0" call :extract
+if "%result%" equ "0" call :rename
+if "%result%" equ "0" call :move
 if "%result%" equ "0" (
 	call "%root%\mars.cmd" start db 2>&1
 	set result=%errorlevel%
@@ -42,11 +44,19 @@ if exist "%root%\bin\db.%prevversion%" call :echo Unable to delete DB folder, re
 goto :eof
 
 :extract
-call :echo Extracting %filename%...
+call :echo Extracting archive %filename%...
 set exclude=-x^^!*.ini -x^^!*.jar -x^^!*.lib -x^^!*.pdb -x^^!*.pl -x^^!*\data\test\ -x^^!*\include\ -x^^!*\lib\debug\ -x^^!*\share\*.sql"
 "%root%\bin\7z\7z.exe" x "%root%\%filename%" -r -aoa -bd -bb0 -y -o"%root%\bin\db.tmp" !exclude!>>"%logfile%" 2>&1
-if "%errorlevel%" equ "0" for /d %%i in ("%root%\bin\db.tmp\*") do rename "%%i" db >nul 2>&1
-if "%errorlevel%" equ "0" move "%root%\bin\db.tmp\db" "%root%\bin" >nul 2>&1
+set result=%errorlevel%
+goto :eof
+:rename
+call :echo Renaming subfolders...
+for /d %%i in ("%root%\bin\db.tmp\*") do rename "%%i" db >nul 2>&1
+set result=%errorlevel%
+goto :eof
+:move
+call :echo Moving DB...
+move "%root%\bin\db.tmp\db" "%root%\bin" >nul 2>&1
 if "%errorlevel%" equ "0" rmdir /s /q "%root%\bin\db.tmp" >nul 2>&1
 set result=%errorlevel%
 goto :eof
