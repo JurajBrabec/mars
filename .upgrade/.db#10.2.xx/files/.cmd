@@ -23,12 +23,12 @@ if "%result%" equ "0" call :rename
 if "%result%" equ "0" call :move
 if "%result%" equ "0" (
 	call "%root%\mars.cmd" start db 2>&1
-	set result=%errorlevel%
+	if %errorlevel% gtr 0 set result=%errorlevel%
 )
 if "%result%" equ "0" call :update
 if "%result%" equ "0" goto :finish
 call :echo Error %result%. MARS DB (MariaDB) update %build% NOT successful.
-set %errorlevel%=%result%
+set errorlevel=%result%
 goto :end
 :finish
 del /q "%root%\%filename%" >nul 2>&1
@@ -39,8 +39,6 @@ goto :end
 call :echo Removing previous DB version %prevversion%...
 ren "%root%\bin\db" db.%prevversion% >nul 2>&1
 set result=%errorlevel%
-rmdir /s /q "%root%\bin\db.%prevversion%" >nul 2>&1
-if exist "%root%\bin\db.%prevversion%" call :echo Unable to delete DB folder, renaming it to DB.%prevversion%. Delete the folder manually after reboot...
 goto :eof
 
 :extract
@@ -59,6 +57,8 @@ call :echo Moving DB...
 move "%root%\bin\db.tmp\db" "%root%\bin" >nul 2>&1
 if "%errorlevel%" equ "0" rmdir /s /q "%root%\bin\db.tmp" >nul 2>&1
 set result=%errorlevel%
+if "%errorlevel%" equ "0" rmdir /s /q "%root%\bin\db.%prevversion%" >nul 2>&1
+if exist "%root%\bin\db.%prevversion%" call :echo Unable to delete DB folder, renaming it to DB.%prevversion%. Delete the folder manually after reboot...
 goto :eof
 
 :update
@@ -78,6 +78,6 @@ if "%logfile%" neq "" echo %date% %time% %*>>"%logfile%"
 goto :eof
 
 :end
-endlocal
 popd
+if "%result%" neq "" exit /b %result%
 exit /b %errorlevel%

@@ -14,6 +14,5 @@ if "%root:~-1%"=="\" set root=%root:~0,-1%
 :begin
 for /f %%i in ('dir /b *.zip') do "%root%\bin\7z\7z.exe" d -r %%i *.pdb *.h
 :end
-endlocal
 popd
 exit /b %errorlevel%

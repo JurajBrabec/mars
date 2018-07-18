@@ -22,12 +22,12 @@ if "%result%" equ "0" call :extract
 if "%result%" equ "0" call :vcredist
 if "%result%" equ "0" (
 	call "%root%\mars.cmd" start http 2>&1
-	set result=%errorlevel%
+	if %errorlevel% gtr 0 set result=%errorlevel%
 )
 if "%result%" equ "0" goto :finish
 :error
 call :echo Error %result%. MARS PHP update %build% NOT successful.
-set %errorlevel%=%result%
+set errorlevel=%result%
 goto :end
 :finish
 del /q "%root%\%filename%" >nul 2>&1
@@ -38,8 +38,6 @@ goto :end
 call :echo Removing previous PHP version %prevversion%...
 ren "%root%\bin\php" php.%prevversion% >nul 2>&1
 set result=%errorlevel%
-rmdir /s /q "%root%\bin\php.%prevversion%" >nul 2>&1
-if exist "%root%\bin\php.%prevversion%" call :echo Unable to delete PHP folder, renaming it to PHP.%prevversion%. Delete the folder manually after reboot...
 goto :eof
 
 :extract
@@ -47,6 +45,8 @@ call :echo Extracting archive %filename%...
 set exclude=-x^^!extras -x^^!lib -x^^!php.ini*
 "%root%\bin\7z\7z.exe" x "%root%\%filename%" -r -aoa -bd -bb0 -y -o"%root%\bin\php" !exclude!>>"%logfile%" 2>&1
 set result=%errorlevel%
+if "%errorlevel%" equ "0" rmdir /s /q "%root%\bin\php.%prevversion%" >nul 2>&1
+if exist "%root%\bin\php.%prevversion%" call :echo Unable to delete PHP folder, renaming it to PHP.%prevversion%. Delete the folder manually after reboot...
 goto :eof
 
 :vcredist
@@ -61,6 +61,6 @@ if "%logfile%" neq "" echo %date% %time% %*>>%logfile%
 goto :eof
 
 :end
-endlocal
 popd
-exit /b %result%
+if "%result%" neq "" exit /b %result%
+exit /b %errorlevel%

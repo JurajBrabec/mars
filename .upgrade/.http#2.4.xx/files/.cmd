@@ -24,11 +24,10 @@ if "%result%" equ "0" call :move
 if "%result%" equ "0" call :vcredist
 if "%result%" equ "0" (
 	call "%root%\mars.cmd" start http 2>&1
-	set result=%errorlevel%
+	if %errorlevel% gtr 0 set result=%errorlevel%
 )
 if "%result%" equ "0" goto :finish
 call :echo Error %result%. MARS HTTP (Apache) update %build% NOT successful.
-set %errorlevel%=%result%
 goto :end
 :finish
 del /q "%root%\%filename%" >nul 2>&1
@@ -39,14 +38,12 @@ goto :end
 call :echo Removing previous HTTP (Apache) version %prevversion%...
 ren "%root%\bin\http" http.%prevversion% >nul 2>&1
 set result=%errorlevel%
-rmdir /s /q "%root%\bin\http.%prevversion%" >nul 2>&1
-if exist "%root%\bin\http.%prevversion%" call :ECHO Unable to delete HTTP folder, renaming it to HTTP.%prevversion%. Delete the folder manually after reboot...
 goto :eof
 
 :extract
 call :echo Extracting archive %filename%...
 set exclude=-x^^!readme_first.html -x^^!*.pl -x^^!*\include\ -x^^!*\lib\ -x^^!*\logs\install.log
-"%root%\bin\7z\7z\.exe" x "%root%\%filename%" -r -aoa -bd -bb0 -y -o"%root%\bin\http.tmp" !exclude!>>"%logfile%" 2>&1
+"%root%\bin\7z\7z.exe" x "%root%\%filename%" -r -aoa -bd -bb0 -y -o"%root%\bin\http.tmp" !exclude!>>"%logfile%" 2>&1
 set result=%errorlevel%
 goto :eof
 :rename
@@ -58,7 +55,9 @@ goto :eof
 call :echo Moving HTTP...
 move "%root%\bin\http.tmp\http" "%root%\bin" >nul 2>&1
 if "%errorlevel%" equ "0" rmdir /s /q "%root%\bin\http.tmp" >nul 2>&1
+if "%errorlevel%" equ "0" rmdir /s /q "%root%\bin\http.%prevversion%" >nul 2>&1
 set result=%errorlevel%
+if exist "%root%\bin\http.%prevversion%" call :ECHO Unable to delete HTTP folder, renaming it to HTTP.%prevversion%. Delete the folder manually after reboot...
 goto :eof
 
 :vcredist
@@ -73,6 +72,6 @@ if "%logfile%" neq "" echo %date% %time% %*>>"%logfile%"
 goto :eof
 
 :end
-endlocal
 popd
+if "%result%" neq "" exit /b %result%
 exit /b %errorlevel%

@@ -32,8 +32,7 @@ if "%errorlevel%" neq "0" goto :error
 call :echo MARS %build% successful.
 goto :eof
 :error
-call :echo Error %result%. MARS %build% NOT successful.
-set errorlevel=%result%
+call :echo Error %errorlevel%. MARS %build% NOT successful.
 goto :eof
 
 :echo
@@ -42,6 +41,5 @@ if "%logfile%" neq "" echo %date% %time% %*>>"%logfile%"
 goto :eof
 
 :end
-endlocal
 popd
 exit /b %errorlevel%

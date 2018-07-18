@@ -54,6 +54,5 @@ if "%logfile%" neq "" echo %date% %time% %*>>"%logfile%"
 goto :eof
 
 :end
-endlocal
 popd
 exit /b %errorlevel%

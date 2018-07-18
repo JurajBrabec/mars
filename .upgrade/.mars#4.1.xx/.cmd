@@ -24,7 +24,7 @@ set _new=0
 for /f "delims=. tokens=1-3" %%a in ("%1") do (
 	for /f "delims=. tokens=1-3" %%d in ("%build%") do (
 		if %%d gtr %%a set _new=1
-		if %%e grt %%b set _new=1
+		if %%e gtr %%b set _new=1
 		if %%f geq %%c set _new=1
 	)
 )
@@ -81,6 +81,6 @@ if "%logfile%" neq "" echo %date% %time% %*>>"%logfile%"
 goto :eof
 
 :end
-endlocal
 popd
+if "%result%" neq "" exit /b %result%
 exit /b %errorlevel%
