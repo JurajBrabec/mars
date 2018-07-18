@@ -11,5 +11,8 @@
 **/tmp
 **/cmd/dump
 
+# Audit folder
+**/.audit
+
 # Upgrade directory
 !**/.upgrade
