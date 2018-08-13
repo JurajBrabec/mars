@@ -13,6 +13,7 @@
 
 # Audit folder
 **/.audit
+**/.qrs_audit
 
 # Upgrade directory
 !**/.upgrade
