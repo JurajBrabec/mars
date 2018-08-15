@@ -15,6 +15,7 @@ console.log( 'Processing config.ini ...' );
 var data = fs.readFileSync( path.resolve( source, 'config.ini' ), 'utf-8' );
 data = data.replace( /%SITE_NAME%/gim, config.Mandatory.SITE_NAME );
 data = data.replace( /%TIME_ZONE%/gim, config.Mandatory.TIME_ZONE );
+data = data.replace( /%BW_START_TIME%/gim, config.Optional.BW_START_TIME );
 data = data.replace( /%DB_DUMP_TIME%/gim, config.Optional.DB_DUMP_TIME );
 data = data.replace( /%DB_HOST%/gim, config.Optional.DB_HOST );
 data = data.replace( /%SMTP_SERVER%/gim, config.Optional.SMTP_SERVER );

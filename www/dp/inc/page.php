@@ -362,25 +362,25 @@ class page {
 				break;
 			case 'D':
 				$key = 'day';
-				$start = 'Today midnight';
+				$start = sprintf( 'Today %s', $this->application->bw_start );
 				break;
 			case 'W':
 				$key = 'week';
 #	PHP BUG FOR SUNDAYS	RETURNS NEXT MONDAY	$start = 'Monday this week midnight';
-				$start = date( 'w' ) == 1 ? 'Today midnight' : 'Last Monday midnight';
+				$start = sprintf( date( 'w' ) == 1 ? 'Today %s' : 'Last Monday %s', $this->application->bw_start );
 				break;
 			case 'N':
 				$key = 'month';
-				$start = sprintf( '+14 day %s', date( 'Y-m-d H:i:s', strtotime( 'first day of this month midnight' ) ) );
+				$start = sprintf( '+14 day %s', date( 'Y-m-d H:i:s', strtotime( sprintf( 'first day of this month %s', $this->application->bw_start ) ) ) );
 				break;
 			case 'Y':
 				$key = 'year';
-				$start = 'First day of january midnight';
+				$start = sprintf( 'First day of january %s', $this->application->bw_start );
 				break;
 			case 'M':
 			default:
 				$key = 'month';
-				$start = 'First day of this month midnight';
+				$start = sprintf ('First day of this month %s', $this->application->bw_start );
 				break;
 		}
 		return strtotime( sprintf( '%s%s %s', $result[ 'sign' ], $result[ 'value' ], $key ), strtotime( $start ) );

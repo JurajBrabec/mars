@@ -60,7 +60,9 @@ function scheduler( $starttime ) {
 	global $config;
 	update( );
 	if ( $db = mysqli_connect( $config[ 'ini' ][ 'DB_HOST' ], $config[ 'ini' ][ 'DB_USER' ], $config[ 'ini' ][ 'DB_PWD' ], $config[ 'ini' ][ 'DB_NAME' ] ) ) {
-		$sql = sprintf( "replace into config_settings (`name`,`value`) values ('region','%s');", $config[ 'ini' ][ 'SITE_NAME' ] );
+		$site_name = empty( $config[ 'ini' ][ 'SITE_NAME' ] ) ? 'Default site' : $config[ 'ini' ][ 'SITE_NAME' ];
+		$bw_start = empty( $config[ 'ini' ][ 'BW_START_TIME' ] ) ? 'midnight' : $config[ 'ini' ][ 'BW_START_TIME' ];
+		$sql = sprintf( "replace into config_settings (`name`,`value`) values ('region','%s'),('bw_start','%s');", $site_name, $bw_start );
 		if ( !mysqli_query( $db, $sql ) ) echo mysqli_error( $db ) . PHP_EOL;
 		$sql = sprintf( "select * from v_schedules where '%s' regexp `time`;", $starttime );
 		$schedules = fetch_rows( $db, $sql );
@@ -107,7 +109,7 @@ function scheduler( $starttime ) {
 	}
 }
 
-function get_datetime( $timeperiod ) {
+function get_datetime( $timeperiod, $bw_start = 'midnight' ) {
 	preg_match( '/(?P<key>[HDWMNY])(?P<sign>[+-]*)(?P<value>\d*)/', $timeperiod, $result );
 	$result[ 'sign' ] == '' && $result[ 'sign' ] = '+';
 	$result[ 'value' ] == '' && $result[ 'value' ] = '0';
@@ -118,25 +120,25 @@ function get_datetime( $timeperiod ) {
 			break;
 		case 'D':
 			$key = 'day';
-			$start = 'Today midnight';
+			$start = sprintf( 'Today %s', $bw_start );
 			break;
 		case 'W':
 			$key = 'week';
 #	PHP BUG FOR SUNDAYS	RETURNS NEXT MONDAY	$start = 'Monday this week midnight';
-			$start = date( 'w' ) == 1 ? 'Today midnight' : 'Last Monday midnight';
+			$start = sprintf( date( 'w' ) == 1 ? 'Today %s' : 'Last Monday %s', $bw_start );
 			break;
 		case 'N':
 			$key = 'month';
-			$start = sprintf( '+14 day %s', date( 'Y-m-d H:i:s', strtotime( 'first day of this month midnight' ) ) );
+			$start = sprintf( '+14 day %s', date( 'Y-m-d H:i:s', strtotime( sprintf( 'first day of this month %s', $bw_start ) ) ) );
 			break;
 		case 'Y':
 			$key = 'year';
-			$start = 'First day of january midnight';
+			$start = sprintf( 'First day of january %s', $bw_start );
 			break;
 		case 'M':
 		default:
 			$key = 'month';
-			$start = 'First day of this month midnight';
+			$start = sprintf ('First day of this month %s', $bw_start );
 			break;
 	}
 	return strtotime( sprintf( '%s%s %s', $result[ 'sign' ], $result[ 'value' ], $key ), strtotime( $start ) );
@@ -191,6 +193,8 @@ function get_config( ) {
 				in_array( $format[ 'style' ], $classes ) === false && $classes[ ] = $format[ 'style' ];
 			}
 			$config[ 'classes' ] = $classes;
+			$sql = "select value from config_settings where name='bw_start';"; 
+			$config[ 'bw_start' ] = fetch_rows( $db, $sql )[ 0 ][ 'value' ];
 			mysqli_close( $db );
 		} else {
 			$config[ 'error' ] = 'Connect error (' . mysqli_connect_errno() . '): ' . mysqli_connect_error();
@@ -233,6 +237,8 @@ function get_admin_config( ) {
 		$config[ 'routine_duration' ] = fetch_rows( $db, $sql )[ 0 ];
 		$sql = "select 'maintenance',ifnull((select value from config_settings where name='maintenance'),'0') as value,ifnull((select updated from config_settings where name='maintenance'),'never') as updated from dual";
 		$config[ 'maintenance_duration' ] = fetch_rows( $db, $sql )[ 0 ];
+		$sql = "select value from config_settings where name='bw_start';"; 
+		$config[ 'bw_start' ] = fetch_rows( $db, $sql )[ 0 ][ 'value' ];
 		mysqli_close( $db );
 	} else {
 		$config[ 'error' ] = mysqli_connect_error( $db );
@@ -513,7 +519,7 @@ function set_data( $row, $pivots, $data ) {
 }
 
 function get_source( $source, $tower, $customer, $timeperiod, $mode ) {
-	global $ini;
+	global $ini,$config;
 	
 	$result = '';
 	$tower = $tower == 'All towers' ? '' : $tower;
@@ -523,8 +529,8 @@ function get_source( $source, $tower, $customer, $timeperiod, $mode ) {
 		$to = '';
 	} else {
 		list( $f, $t ) = explode( '::', $timeperiod );
-		$from = get_datetime( $f );
-		$to = get_datetime( $t );
+		$from = get_datetime( $f, $config[ 'bw_start' ] );
+		$to = get_datetime( $t, $config[ 'bw_start' ] );
 	}
 	switch( $mode ) {
 		case 'HTML':

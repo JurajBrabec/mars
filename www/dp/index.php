@@ -14,6 +14,9 @@ define( 'INI_FILE', 'config.ini' );
 define( 'BUILD_FILE', 'build' );
 define( 'USERNAME', 'usr' );
 define( 'PWD', 'pwd' );
+define( 'REGION', 'region' );
+define( 'BW_START', 'bw_start' );
+define( 'BW_START_DEFAULT', 'midnight' );
 define( 'USERNAME_DEFAULT', 'operator' );
 define( 'PWD_DEFAULT', '' );
 define( 'COOKIE_TIME', 24 * 60 * 60 );
@@ -94,7 +97,8 @@ class application {
 		$build = file_get_contents( sprintf( '%s\%s', substr( __DIR__, 0, strpos( __DIR__, 'www' ) - 1 ), BUILD_FILE ) );
 		$this->name = sprintf( APPLICATION, trim( $build ) );
 		$this->database_connect( );
-		$this->region = $this->get_config( 'region', APPLICATION );
+		$this->region = $this->get_config( REGION, APPLICATION );
+		$this->bw_start = $this->get_config( BW_START, BW_START_DEFAULT );
 		$this->params = $params;
 	}
 
