@@ -35,6 +35,94 @@ class nbu extends cmd {
 	}
 }
 
+### BPCLIENTS
+
+class bpclients extends nbu {
+	const WIN_BIN	= 'admincmd\\bpclients';
+	const ARGUMENTS	= '-All -l';
+	const NAME		= 'name';
+	const HOST		= 'host';
+	const DUMMY		= 'dummy';
+	const INFO		= 'info';
+	const UPDATED				= 'updated';
+	const OBSOLETED				= 'obsoleted';
+
+	private $updated			= '';
+	private $clients			= array( );
+	
+	public function updated( $value = NULL ) { return _var( $this->updated, func_get_args( ) ); }
+	public function clients( $field = NULL, $value = NULL) { return _arr( $this->clients, func_get_args( ) ); }
+	
+	public static function pattern( ) {
+		$pattern = array(
+			sprintf( 'Client Name: %s', text::P( static::NAME ) ),
+			sprintf( 'CURRENT HOST\s+%s', text::P( static::HOST ) ),
+			sprintf( '%s', text::P( static::DUMMY ) ),
+			sprintf( 'HOST INFO\s+%s', text::P( static::INFO, text::ALL ) ) 
+		);
+		return sprintf( static::PATTERN, implode( text::SPACES, $pattern ) );
+	}
+
+	protected function setup( ) {
+		parent::setup( );
+		$this->row_delimiter( text::DOUBLE_NEW_LINE );
+		$this->add_fields( static::UPDATED, $this->updated( date( 'Y-m-d H:i:s' ) ) );
+		$this->add_fields( static::OBSOLETED, NULL );
+	}
+
+	protected function parse_split( $split ) {
+		$result = FALSE;
+		echo 'Split:' . $split . PHP_EOL;
+		echo 'Pattern:' . $this->field_pattern( ) . PHP_EOL;
+		if ( preg_match( sprintf( '/%s/m', $this->field_pattern( ) ), $split, $match ) ) {
+			$result = array( );
+			foreach ( $this->fields( ) as $name => $type ) {
+				$result[ $name ] = field::validate( isset( $match[ $name ] ) ? $match[ $name ] : $this->add_fields( $name ), $type );
+			}
+		}
+		return $result;
+	}
+
+	protected function parse_rows( ) {
+		$lines = $this->lines( );
+		$rows = $this->rows( );
+		$i = 1;
+		foreach( preg_split( sprintf( '/%s/m', $this->row_delimiter( ) ), implode( PHP_EOL, $lines ) ) as $split ) {
+			$split = trim( $split );
+			$ignore = FALSE;
+			foreach( $this->ignore_lines( ) as $ignore_line ) {
+				$ignore = $ignore || preg_match( sprintf( '/%s/m', $ignore_line ), $split, $match );
+			}
+			if ( empty( $split ) or $ignore ) continue;
+			$result = $this->parse_split( $split );
+			if ( $result === FALSE ) {
+				$this->parsing_errors( NULL, sprintf( static::PARSING_ERROR, $i, $split ) );
+			} else {
+#				isset( $result[ 0 ] ) && !is_array( $result[ 0 ] ) && $result = array( $result );
+				is_array( current( $result ) ) || $result = array( $result );
+				foreach( $result as $r ) count( $r ) > 0 && $rows[ ] = $r;
+			}
+			$i++;
+		}
+		if ( $this->parsing_errors( ) )
+			throw new Exception( sprintf( static::PARSING_EXCEPTION, count( $this->parsing_errors( ) ), get_class( $this ) . implode( PHP_EOL, $this->parsing_errors( ) ) ) );
+			return count( $this->rows( $rows ) );
+	}
+
+	protected function parse_rows1( ) {
+		parent::parse_rows( );
+		foreach ( $this->rows( ) as $row ) $this->clients( $row[ static::NAME ], $row );
+	}
+	
+	public function sql( $table = NULL ) {
+		$result = parent::sql( $table );
+		$result[ ] = sprintf( "update %s set %s=%s where %s is null and %s<'%s';", $table, 
+			static::OBSOLETED, static::UPDATED, static::OBSOLETED, static::UPDATED, $this->updated( ) );
+		return $result;
+	}
+	
+}
+
 ### BPDBJOBS
 
 class bpdbjobs extends nbu {
@@ -698,7 +786,6 @@ class vault_xml extends text {
 		$this->parse( );
 	}
 	
-	
 	public function setup( ) {
 		$fields = array( );
 		$fields[ 'VAULT_MGR' ] = array( 'VaultConfigVersion', 'ROBOT', 'VAULT_PREFERENCES' );
@@ -996,6 +1083,7 @@ class bpretlevel extends nbu {
 
 #-----------------------------------
 function bpdbjobs_summary( ) { return new bpdbjobs_summary( ); }
+function bpclients( ) { return new bpclients( ); }
 function bpdbjobs_report( $days = 7 ) { return new bpdbjobs_report( date( 'm/d/Y H:i:s', time( ) - ( 60 * 60 * ( 24 * $days + 1 ) ) ) ); }
 function bppllist_policies( ) { return new bppllist_policies( ); }
 function bppllist_clients( ) { return new bppllist_clients( ); }

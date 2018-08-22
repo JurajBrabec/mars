@@ -1,52 +1,56 @@
 <?php
 date_default_timezone_set( 'Europe/Bratislava' );
-ini_set('display_errors', false);
-error_reporting(-1);
-register_shutdown_function( function( ){
-	$error = error_get_last( );
-	if( !empty( $error ) ) {
-		echo 'Peak: ' . round( memory_get_peak_usage( )/1000000, 1 ) . 'Mb' . PHP_EOL;
-		echo array_search($error['type'], get_defined_constants());
-		echo ' caught at shutdown.' . PHP_EOL;
-		print_r( $error );
-	}
-} );
-try {
-	ini_set('memory_limit','-1');
-	$a = array( );
-	$i = 0;
-	while ( $i < 170000000 ) {
-		$a[ ] = '0123456789';
-		if ( $i % 1000 == 0 ) {
-			echo $i . ' ' . round( memory_get_usage( )/1000000, 1 ) . 'Mb' . PHP_EOL;
+function memtest() {
+	ini_set('display_errors', false);
+	error_reporting(-1);
+	register_shutdown_function( function( ){
+		$error = error_get_last( );
+		if( !empty( $error ) ) {
+			echo 'Peak: ' . round( memory_get_peak_usage( )/1000000, 1 ) . 'Mb' . PHP_EOL;
+			echo array_search($error['type'], get_defined_constants());
+			echo ' caught at shutdown.' . PHP_EOL;
+			print_r( $error );
 		}
-		$i++;
+	} );
+	try {
+		ini_set('memory_limit','-1');
+		$a = array( );
+		$i = 0;
+		while ( $i < 170000000 ) {
+			$a[ ] = '0123456789';
+			if ( $i % 1000 == 0 ) {
+				echo $i . ' ' . round( memory_get_usage( )/1000000, 1 ) . 'Mb' . PHP_EOL;
+			}
+			$i++;
+		}
+		echo $i . ' ' . round( memory_get_usage( )/1000000, 1 ) . 'Mb' . PHP_EOL;
+		unset( $a );
+	} catch ( exception $e ) {
+		echo $e->getmessage( ) . PHP_EOL;
 	}
-	echo $i . ' ' . round( memory_get_usage( )/1000000, 1 ) . 'Mb' . PHP_EOL;
-	unset( $a );
-} catch ( exception $e ) {
-	echo $e->getmessage( ) . PHP_EOL;
+	echo 'Peak: ' . round( memory_get_peak_usage( )/1000000, 1 ) . 'Mb' . PHP_EOL;
+	die( );
 }
-echo 'Peak: ' . round( memory_get_peak_usage( )/1000000, 1 ) . 'Mb' . PHP_EOL;
-die( );
+function daystest() {
+	switch( date( 'H:i' ) ) {
+		case '00:00': $days = 32; break;
+		case '12:00': $days = 16; break;
+		case '06:00':
+		case '18:00': $days = 8; break;
+		default : switch ( date( 'i' ) ){
+			case '00' : $days = 4; break;
+			case '30' : $days = 2; break;
+			case '15' : 
+			case '45' : $days = 1; break;
+			default : $days = 0; break;
+		}
+	}
+	echo $days;
+	echo PHP_EOL;
+	echo date( 'm/d/Y H:i:s', time( ) - ( 60 * 60 * ( 24 * $days + 1 ) ) );
+	die();
+}
 
-switch( date( 'H:i' ) ) {
-    case '00:00': $days = 32; break;
-    case '12:00': $days = 16; break;
-    case '06:00':
-    case '18:00': $days = 8; break;
-    default : switch ( date( 'i' ) ){
-        case '00' : $days = 4; break;
-        case '30' : $days = 2; break;
-        case '15' : 
-        case '45' : $days = 1; break;
-        default : $days = 0; break;
-    }
-}
-echo $days;
-echo PHP_EOL;
-echo date( 'm/d/Y H:i:s', time( ) - ( 60 * 60 * ( 24 * $days + 1 ) ) );
-die();
 function xml( ) {
     $skip_items = array( 
         'MAP','RETENTION_MAP','RETMAP_ITEM',
@@ -292,12 +296,13 @@ function nbu_process( $t ) {
 function nbu_test( $multi_thread = 0 ) {
 	nbu( )->home( 'M:\\Veritas' );
 	nbu( )->tmp( os( )->path( 'tmp' ) );
-#	nbu( )->masterserver( 'nlr-nbmastc1.res.hpe.com' );
+	nbu( )->masterserver( 'edc-nbmastc1.res.hpe.com' );
 #	nbu_process( bpdbjobs_summary( )->execute( ) );
 #	$t = bpdbjobs_report( );
 #	$t = bppllist_policies( );
 #	$t = bpretlevel( );
-    $t = vault_xml( 'm:\\Veritas\\NetBackup\\db\\vault' );
+#	$t = vault_xml( 'm:\\Veritas\\NetBackup\\db\\vault' );
+	$t = bpclients( );
     if ( $multi_thread == 0 ) {
 		$t->execute( );
 		nbu_process( $t );
