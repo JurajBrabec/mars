@@ -1,6 +1,9 @@
 MARS 4.1 Change Log
 ======================
 
+30.08.2018 version 4.1 build #5
+•	Added bpplclients and bpimagelist. 
+
 15.08.2018 version 4.1 build #4
 •	Introduced Backup Window Start Time. 
 	Daily reports are not longer hardcoded from midnight to midnight, rather from BW_START_TIME to BW_START_TIME next day.

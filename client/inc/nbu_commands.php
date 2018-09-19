@@ -33,87 +33,61 @@ class nbu extends cmd {
 		}
 		is_null( $this->masterserver( ) ) || $this->add_fields( nbu::MASTERSERVER, $this->masterserver( ) );
 	}
+	
 }
 
-### BPCLIENTS
+### BPPLCLIENTS
 
-class bpclients extends nbu {
-	const WIN_BIN	= 'admincmd\\bpclients';
-	const ARGUMENTS	= '-All -l';
-	const NAME		= 'name';
-	const HOST		= 'host';
-	const DUMMY		= 'dummy';
-	const INFO		= 'info';
-	const UPDATED				= 'updated';
-	const OBSOLETED				= 'obsoleted';
+class bpplclients extends nbu {
+	const WIN_BIN		= 'admincmd\\bpplclients';
+	const ARGUMENTS		= '-allunique -l';
+	const NAME			= 'name';
+	const ARCHITECTURE	= 'architecture';
+	const OS			= 'os';
+	const PRIORITY		= 'priority';
+	const UNUSED1		= 'u1';
+	const UNUSED2		= 'u2';
+	const UNUSED3		= 'u3';
+	const UPDATED		= 'updated';
+	const OBSOLETED		= 'obsoleted';
 
-	private $updated			= '';
-	private $clients			= array( );
+	private $updated	= '';
+	private $clients	= array( );
 	
 	public function updated( $value = NULL ) { return _var( $this->updated, func_get_args( ) ); }
 	public function clients( $field = NULL, $value = NULL) { return _arr( $this->clients, func_get_args( ) ); }
 	
 	public static function pattern( ) {
 		$pattern = array(
-			sprintf( 'Client Name: %s', text::P( static::NAME ) ),
-			sprintf( 'CURRENT HOST\s+%s', text::P( static::HOST ) ),
-			sprintf( '%s', text::P( static::DUMMY ) ),
-			sprintf( 'HOST INFO\s+%s', text::P( static::INFO, text::ALL ) ) 
+			'CLIENT',
+			text::P(static::NAME, text::CSV ),
+			text::P(static::ARCHITECTURE, text::CSV ),
+			text::P(static::OS, text::CSV ),
+			text::P(static::PRIORITY, text::CSV ),
+			text::P(static::UNUSED1, text::CSV ),
+			text::P(static::UNUSED2, text::CSV ),
+			text::P(static::UNUSED3, text::CSV )
 		);
 		return sprintf( static::PATTERN, implode( text::SPACES, $pattern ) );
 	}
 
 	protected function setup( ) {
 		parent::setup( );
-		$this->row_delimiter( text::DOUBLE_NEW_LINE );
+		$this->row_delimiter( '^(?=CLIENT)' );
 		$this->add_fields( static::UPDATED, $this->updated( date( 'Y-m-d H:i:s' ) ) );
 		$this->add_fields( static::OBSOLETED, NULL );
 	}
 
 	protected function parse_split( $split ) {
-		$result = FALSE;
-		echo 'Split:' . $split . PHP_EOL;
-		echo 'Pattern:' . $this->field_pattern( ) . PHP_EOL;
-		if ( preg_match( sprintf( '/%s/m', $this->field_pattern( ) ), $split, $match ) ) {
-			$result = array( );
-			foreach ( $this->fields( ) as $name => $type ) {
-				$result[ $name ] = field::validate( isset( $match[ $name ] ) ? $match[ $name ] : $this->add_fields( $name ), $type );
-			}
-		}
-		return $result;
+		$split = str_replace( '*NULL*', '', $split );
+		return parent::parse_split( $split );	
 	}
 
 	protected function parse_rows( ) {
-		$lines = $this->lines( );
-		$rows = $this->rows( );
-		$i = 1;
-		foreach( preg_split( sprintf( '/%s/m', $this->row_delimiter( ) ), implode( PHP_EOL, $lines ) ) as $split ) {
-			$split = trim( $split );
-			$ignore = FALSE;
-			foreach( $this->ignore_lines( ) as $ignore_line ) {
-				$ignore = $ignore || preg_match( sprintf( '/%s/m', $ignore_line ), $split, $match );
-			}
-			if ( empty( $split ) or $ignore ) continue;
-			$result = $this->parse_split( $split );
-			if ( $result === FALSE ) {
-				$this->parsing_errors( NULL, sprintf( static::PARSING_ERROR, $i, $split ) );
-			} else {
-#				isset( $result[ 0 ] ) && !is_array( $result[ 0 ] ) && $result = array( $result );
-				is_array( current( $result ) ) || $result = array( $result );
-				foreach( $result as $r ) count( $r ) > 0 && $rows[ ] = $r;
-			}
-			$i++;
-		}
-		if ( $this->parsing_errors( ) )
-			throw new Exception( sprintf( static::PARSING_EXCEPTION, count( $this->parsing_errors( ) ), get_class( $this ) . implode( PHP_EOL, $this->parsing_errors( ) ) ) );
-			return count( $this->rows( $rows ) );
-	}
-
-	protected function parse_rows1( ) {
 		parent::parse_rows( );
 		foreach ( $this->rows( ) as $row ) $this->clients( $row[ static::NAME ], $row );
 	}
-	
+
 	public function sql( $table = NULL ) {
 		$result = parent::sql( $table );
 		$result[ ] = sprintf( "update %s set %s=%s where %s is null and %s<'%s';", $table, 
@@ -121,6 +95,291 @@ class bpclients extends nbu {
 		return $result;
 	}
 	
+}
+
+### BPIMAGELIST
+
+class bpimagelist extends nbu {
+	const WIN_BIN	= 'admincmd\\bpimagelist';
+}
+
+class bpimagelist_hoursago extends bpimagelist {
+	const ARGUMENTS				= '-l -hoursago %s';
+	const CLIENT_NAME			= 'name';
+	const DATE1					= 'date1';
+	const DATE2					= 'date2';
+	const VERSION				= 'version';
+	const BACKUPID				= 'backupid';
+	const POLICY_NAME			= 'policy_name';
+	const CLIENT_TYPE			= 'client_type';
+	const PROXY_CLIENT			= 'proxy_client';
+	const CREATOR				= 'creator';
+	const SCHED_LABEL			= 'sched_label';
+	const SCHED_TYPE			= 'sched_type';
+	const RETENTION				= 'retention';
+	const BACKUP_TIME			= 'backup_time';
+	const ELAPSED				= 'elapsed';
+	const EXPIRATION			= 'expiration';
+	const COMPRESSION			= 'compression';
+	const ENCRYPTION			= 'encryption';
+	const KBYTES				= 'kbytes';
+	const NUM_FILES				= 'num_files';
+	const COPIES				= 'copies';
+	const NUM_FRAGMENTS			= 'num_fragments';
+	const FILES_COMPRESSED		= 'files_compressed';
+	const FILES_FILE			= 'files_file';
+	const SW_VERSION			= 'sw_version';
+	const NAME1					= 'name1';
+	const OPTIONS				= 'options';
+	const PRIMARY				= 'primary';
+	const IMAGE_TYPE			= 'image_type';
+	const TIR_INFO				= 'tir_info';
+	const TIR_EXPIRATION		= 'tir_expiration';
+	const KEYWORDS				= 'keywords';
+	const MPX 					= 'mpx';
+	const EXT_SECURITY			= 'ext_security';
+	const RAW					= 'raw';
+	const DUMP_LVL				= 'dump_lvl';
+	const FS_ONLY				= 'fs_only';
+	const PREV_BITIME			= 'prev_bitime';
+	const BIFULL_TIME			= 'bifull_time';
+	const OBJ_DESC				= 'obj_desc';
+	const REQUESTID				= 'requestid';
+	const BACKUP_STAT			= 'backup_stat';
+	const BACKUP_COPY			= 'backup_copy';
+	const PREV_IMAGE			= 'prev_image';
+	const JOBID					= 'jobid';
+	const NUM_RESUMES			= 'num_resumes';
+	const RESUME_EXPR			= 'resume_expr';
+	const FF_SIZE				= 'ff_size';
+	const PFI_TYPE				= 'pfi_type';
+	const IMAGE_ATTRIB			= 'image_attrib';
+	const SS_CLASSIFICATION_ID	= 'ss_classification_id';
+	const SS_NAME				= 'ss_name';
+	const SS_COMPLETED			= 'ss_completed';
+	const SS_SNAP_TIME			= 'snap_time';
+	const SLP_VERSION			= 'slp_version';
+	const REMOTE_EXPIRATION		= 'remote_expiration';
+	const ORIGIN_MASTER_SERVER	= 'origin_master_server';
+	const ORIGIN_MASTER_GUID	= 'origin_master_guid';
+	const IR_ENABLED			= 'ir_enabled';
+	const CLIENT_CHARSET		= 'client_charset';
+	const HOLD					= 'hold';
+	const INDEXING_STATUS		= 'indexing_status';
+
+	private $images			= array( );
+	private $frags			= array( );
+	private $_frags			= NULL;
+
+	public function _frags( $value = NULL ) { return _var( $this->_frags, func_get_args( ) ); }
+	public function images( $field = NULL, $value = NULL) { return _arr( $this->images, func_get_args( ) ); }
+	public function frags( $field = NULL, $value = NULL) { return _arr( $this->frags, func_get_args( ) ); }
+
+	protected function setup( ) {
+		parent::setup( );
+		$this->row_delimiter( '^(?=IMAGE)' );
+		$this->_frags( new bpimagelist_frags( ) );
+		$this->_frags->add_fields( static::BACKUPID, '' );
+	}
+
+	protected function parse_split( $split ) {
+		$match = array( );
+		foreach( explode( PHP_EOL, $split ) as $line ) {
+			$line = str_replace( '*NULL*', '', $line );
+			$line = str_replace( '*ANY*', 'ANY', $line );
+			$value = explode( ' ', $line );
+			$field = array_shift( $value );
+			count( $value ) == 1 && $value = $value[ 0 ];
+			$match[ $field ][ ] = $value;
+		}
+		foreach( $match as $key => $value )
+			is_array( $value ) && count( $value ) == 1 && $match[ $key ] = empty( $value[ 0 ] ) ? NULL : $value[ 0 ];
+		$row = array( );
+		foreach ( $this->fields( ) as $name => $type ) {
+			$row[ $name ] = field::validate( isset( $match[ $name ] ) ? $match[ $name ] : $this->add_fields( $name ), $type );
+		}
+		list(
+			$row[ static::CLIENT_NAME ],
+			$row[ static::DATE1 ],
+			$row[ static::DATE2 ],
+			$row[ static::VERSION ],
+			$row[ static::BACKUPID ],
+			$row[ static::POLICY_NAME ],
+			$row[ static::CLIENT_TYPE ],
+			$row[ static::PROXY_CLIENT ],
+			$row[ static::CREATOR ],
+			$row[ static::SCHED_LABEL ],
+			$row[ static::SCHED_TYPE ],
+			$row[ static::RETENTION ],
+			$row[ static::BACKUP_TIME ],
+			$row[ static::ELAPSED ],
+			$row[ static::EXPIRATION ],
+			$row[ static::COMPRESSION ],
+			$row[ static::ENCRYPTION ],
+			$row[ static::KBYTES ],
+			$row[ static::NUM_FILES ],
+			$row[ static::COPIES ],
+			$row[ static::NUM_FRAGMENTS ],
+			$row[ static::FILES_COMPRESSED ],
+			$row[ static::FILES_FILE ],
+			$row[ static::SW_VERSION ],
+			$row[ static::NAME1 ],
+			$row[ static::OPTIONS ],
+			$row[ static::PRIMARY ],
+			$row[ static::IMAGE_TYPE ],
+			$row[ static::TIR_INFO ],
+			$row[ static::TIR_EXPIRATION ],
+			$row[ static::KEYWORDS ],
+			$row[ static::MPX ],
+			$row[ static::EXT_SECURITY ],
+			$row[ static::RAW ],
+			$row[ static::DUMP_LVL ],
+			$row[ static::FS_ONLY ],
+			$row[ static::PREV_BITIME ],
+			$row[ static::BIFULL_TIME ],
+			$row[ static::OBJ_DESC ],
+			$row[ static::REQUESTID ],
+			$row[ static::BACKUP_STAT ],
+			$row[ static::BACKUP_COPY ],
+			$row[ static::PREV_IMAGE ],
+			$row[ static::JOBID ],
+			$row[ static::NUM_RESUMES ],
+			$row[ static::RESUME_EXPR ],
+			$row[ static::FF_SIZE ],
+			$row[ static::PFI_TYPE ],
+			$row[ static::IMAGE_ATTRIB ],
+			$row[ static::SS_CLASSIFICATION_ID ],
+			$row[ static::SS_NAME ],
+			$row[ static::SS_COMPLETED ],
+			$row[ static::SS_SNAP_TIME ],
+			$row[ static::SLP_VERSION ],
+			$row[ static::REMOTE_EXPIRATION ],
+			$row[ static::ORIGIN_MASTER_SERVER ],
+			$row[ static::ORIGIN_MASTER_GUID ],
+			$row[ static::IR_ENABLED ],
+			$row[ static::CLIENT_CHARSET ],
+			$row[ static::HOLD ],
+			$row[ static::INDEXING_STATUS ]
+		) = $match[ 'IMAGE' ];
+		unset( $match );
+		foreach( $row as $key => $value ) {
+			$this->fields( $key ) || $this->fields( $key, field::STRING );
+			if ( is_array( $row[ $key ] ) ) {
+				$row[ $key ] = serialize( $row[ $key ] );
+			}
+			$row[ $key ] = field::validate( $row[ $key ] );
+		}
+		$frags = new bpimagelist_frags( );
+		$frags->add_fields( static::BACKUPID, $row[ static::BACKUPID ] );
+		$frags->parse( $split );
+		$this->_frags->fields( $frags->fields( ) );
+		$this->_frags->rows( array_merge( $this->_frags->rows( ), $frags->rows( ) ) );
+		$this->frags( array_merge( $this->frags( ), $frags->frags( ) ) );
+		$this->parsing_errors( array_merge( $this->parsing_errors( ), $frags->parsing_errors( ) ) );
+		unset( $frags );
+		return $row;
+	}
+
+	protected function parse_rows( ) {
+		parent::parse_rows( );
+		foreach ( $this->rows( ) as $row ) $this->images( $row[ static::BACKUPID ], $row );
+	}
+	
+	public function sql( $table = NULL ) {
+		$result = array_merge( parent::sql( 'bpimagelist' ), $this->_frags( )->sql( get_class( $this->_frags( ) ) ) );
+		return $result;
+	}
+}
+
+class bpimagelist_frags extends nbu {
+	const BACKUPID				= 'backupid';
+	const COPY_NUMBER			= 'copy_number';
+	const FRAGMENT_NUMBER		= 'fragment_number';
+	const KILOBYTES				= 'kilobytes';
+	const REMAINDER				= 'remainder';
+	const MEDIA_TYPE			= 'media_type';
+	const DENSITY				= 'density';
+	const FILE_NUMBER			= 'file_number';
+	const ID_PATH				= 'id_path';
+	const HOST					= 'host';
+	const BLOCK_SIZE			= 'block_size';
+	const OFFSET				= 'offset';
+	const MEDIA_DATE			= 'media_date';
+	const DEVICE_WRITTEN_ON		= 'device_written_on';
+	const F_FLAGS				= 'f_flags';
+	const MEDIA_DESCRIPTOR		= 'media_descriptor';
+	const EXPIRATION			= 'expiration';
+	const MPX					= 'mpx';
+	const RETENTION_LEVEL		= 'retention_level';
+	const CHECKPOINT			= 'checkpoint';
+	const RESUME_NBR			= 'resume_nbr';
+	const MEDIA_SEQ				= 'media_seq';
+	const MEDIA_SUBTYPE			= 'media_subtype';
+	const TRY_TO_KEEP_TIME		= 'try_to_keep_time';
+	const COPY_CREATION_TIME	= 'copy_creation_time';
+	const FRAGMENT_STATE		= 'fragment_state';
+	const DATA_FORMAT			= 'data_format';
+	const KEY_TAG				= 'key_tag';
+	const STL_TAG				= 'stl_tag';
+	const MIRROR_PARENT			= 'mirror_parent';
+	const COPY_ON_HOLD			= 'copy_on_hold';
+
+	private $frags			= array( );
+
+	public function frags( $field = NULL, $value = NULL) { return _arr( $this->frags, func_get_args( ) ); }
+
+	public static function pattern( ) {
+		$pattern = array(
+			'FRAG',
+			text::P(static::COPY_NUMBER, text::CSV ),
+			text::P(static::FRAGMENT_NUMBER, text::CSV ),
+			text::P(static::KILOBYTES, text::CSV ),
+			text::P(static::REMAINDER, text::CSV ),
+			text::P(static::MEDIA_TYPE, text::CSV ),
+			text::P(static::DENSITY, text::CSV ),
+			text::P(static::FILE_NUMBER, text::CSV ),
+			text::P(static::ID_PATH, text::CSV ),
+			text::P(static::HOST, text::CSV ),
+			text::P(static::BLOCK_SIZE, text::CSV ),
+			text::P(static::OFFSET, text::CSV ),
+			text::P(static::MEDIA_DATE, text::CSV ),
+			text::P(static::DEVICE_WRITTEN_ON, text::CSV ),
+			text::P(static::F_FLAGS, text::CSV ),
+			text::P(static::MEDIA_DESCRIPTOR, text::CSV ),
+			text::P(static::EXPIRATION, text::CSV ),
+			text::P(static::MPX, text::CSV ),
+			text::P(static::RETENTION_LEVEL, text::CSV ),
+			text::P(static::CHECKPOINT, text::CSV ),
+			text::P(static::RESUME_NBR, text::CSV ),
+			text::P(static::MEDIA_SEQ, text::CSV ),
+			text::P(static::MEDIA_SUBTYPE, text::CSV ),
+			text::P(static::TRY_TO_KEEP_TIME, text::CSV ),
+			text::P(static::COPY_CREATION_TIME, text::CSV ),
+			text::P(static::FRAGMENT_STATE, text::CSV ),
+			text::P(static::DATA_FORMAT, text::CSV ),
+			text::P(static::KEY_TAG, text::CSV ),
+			text::P(static::STL_TAG, text::CSV ),
+			text::P(static::MIRROR_PARENT, text::CSV ),
+			text::P(static::COPY_ON_HOLD, text::CSV )
+		);
+		return sprintf( static::PATTERN, implode( text::SPACES, $pattern ) );
+	}
+	
+	protected function setup( ) {
+		parent::setup( );
+		$this->row_delimiter( '^(?=FRAG)' );
+		$this->ignore_lines( NULL, '^(IMAGE|HISTO)' );
+	}
+
+	protected function parse_split( $split ) {
+		$split = str_replace( '*NULL*', '', $split );
+		return parent::parse_split( $split );	
+	}
+	
+	protected function parse_rows( ) {
+		parent::parse_rows( );
+		foreach ( $this->rows( ) as $row ) $this->frags( sprintf( '%s_%s', $row[ static::BACKUPID ], $row[ static::FRAGMENT_NUMBER ] ), $row );
+	}
 }
 
 ### BPDBJOBS
@@ -415,7 +674,7 @@ class bppllist_policies extends bppllist_allpolicies {
 	const APPLICATIONDEFINED	= 'applicationdefined';
 	const ORABKUPDATAFILEARGS	= 'orabkupdatafileargs';
 	const ORABKUPARCHLOGARGS	= 'orabkuparchlogargs';
-	const INCLUDES			= 'include';
+	const INCLUDES				= 'include';
 
 	private $policies 			= array( );
 	private $_clients			= NULL;
@@ -536,18 +795,17 @@ class bppllist_policies extends bppllist_allpolicies {
 		foreach ( $this->rows( ) as $row ) $this->policies( $row[ static::POLICYNAME ], $row );
 		$this->_clients( new bppllist_clients( ) )->parse( $this->lines( ) );
 		$this->_schedules( new bppllist_schedules( ) )->parse( $this->lines( ) );
-		$this->parsing_errors( array_unique( array_merge(
-				$this->_clients( )->parsing_errors( ),
-				$this->_schedules( )->parsing_errors( ) ) ) );
+		$this->parsing_errors( 
+			array_unique( 
+				array_merge( $this->parsing_errors( ), $this->_clients( )->parsing_errors( ), $this->_schedules( )->parsing_errors( ) ) 
+			)
+		);
 		$this->clients( $this->_clients( )->clients( ) );
 		$this->schedules( $this->_schedules( )->schedules( ) );
 	}
 	
 	public function sql( $table = NULL ) {
-		$result = array_merge( parent::sql( $table ), 
-			$this->_clients( )->sql( get_class( $this->_clients( ) ) ), 
-			$this->_schedules( )->sql( get_class( $this->_schedules( ) ) )
-		);
+		$result = array_merge( parent::sql( $table ), $this->_clients( )->sql( get_class( $this->_clients( ) ) ), $this->_schedules( )->sql( get_class( $this->_schedules( ) ) ) );
 		return array_filter( $result );
 	}
 }
@@ -1083,7 +1341,8 @@ class bpretlevel extends nbu {
 
 #-----------------------------------
 function bpdbjobs_summary( ) { return new bpdbjobs_summary( ); }
-function bpclients( ) { return new bpclients( ); }
+function bpplclients( ) { return new bpplclients( ); }
+function bpimagelist_hoursago( $hours = 24 ) { return new bpimagelist_hoursago( $hours ); }
 function bpdbjobs_report( $days = 7 ) { return new bpdbjobs_report( date( 'm/d/Y H:i:s', time( ) - ( 60 * 60 * ( 24 * $days + 1 ) ) ) ); }
 function bppllist_policies( ) { return new bppllist_policies( ); }
 function bppllist_clients( ) { return new bppllist_clients( ); }

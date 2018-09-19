@@ -36,6 +36,8 @@ function convert_config( ) {
 //REMOVE			preg_match( '/^NBUJOBS_DAYS_BACK/', $line ) && $remove = true;
 			$remove && logfile( display( 'Removed line ' . $line ) ) || $newconfig[ ] = $line;
 //ADD			preg_match( '/^NBU2ESL_PATH/', $line ) && !preg_match( '/NBU2SM9_PATH/', $content ) && $add = true && $line = str_pad( 'NBU2SM9_PATH', 24 ) . '="tmp"';
+			preg_match( '/^NBUJOBS_TIME/', $line ) && !preg_match( '/NBUCLIENTS_TIME/', $content ) && $add = true && $line = str_pad( 'NBUCLIENTS_TIME', 24 ) . '="..:(00|15|30|45)"';
+			preg_match( '/^NBUPOLICIES_TIME/', $line ) && !preg_match( '/NBUIMAGES_TIME/', $content ) && $add = true && $line = str_pad( 'NBUIMAGES_TIME', 24 ) . '="..:(00|15|30|45)"';
 			$add && logfile( display( 'Added line ' . $line ) ) && $newconfig[ ] = $line;
 			$modified = $modified || $remove || $add;
 			$i++;
@@ -267,11 +269,23 @@ try {
 	$ini = array_change_key_case( parse_ini_file( os( )->path( 'config.ini' ), FALSE ), CASE_UPPER );
 	date_default_timezone_set( $ini[ 'TIME_ZONE' ] );
 	debug( )->enabled( $ini[ 'DEBUG' ] );
-	$opts = array( 'esl', 'sm9', 'jobs', 'policies', 'vault', 'retlevel', 'update', 'summary', 'days::', 'time::'  );
+	$opts = array( 'esl', 'clients', 'images', 'jobs', 'policies', 'retlevel', 'sm9', 'summary', 'update', 'vault', 'hours::', 'days::', 'time::'  );
 	$opt = array_change_key_case( array_map( 'strtoupper', getopt( '', $opts ) ), CASE_UPPER );
 	if ( isset( $opt[ 'TIME' ] ) ) { $time = $opt[ 'TIME' ]; unset( $opt[ 'TIME' ] ); }
-	if ( isset( $opt[ 'DAYS' ] ) ) { $days = $opt[ 'DAYS' ]; unset( $opt[ 'DAYS' ] ); }
 	empty( $time ) && $time = date( 'H:i' );
+	if ( isset( $opt[ 'HOURS' ] ) ) { $hours = $opt[ 'HOURS' ]; unset( $opt[ 'HOURS' ] ); }
+	if ( empty( $hours ) ) switch( $time ) {
+		case '00:45':
+		case '12:45': $hours = 12; break;
+		case '06:45':
+		case '18:45': $hours = 24; break;
+		case '03:45':
+		case '09:45':
+		case '15:45':
+		case '21:45': $hours = 6; break;
+		default : $hours = 2; break;
+	}
+	if ( isset( $opt[ 'DAYS' ] ) ) { $days = $opt[ 'DAYS' ]; unset( $opt[ 'DAYS' ] ); }
 	if ( empty( $days ) ) switch( $time ) {
 		case '00:15':
 		case '12:15': $days = 7; break;
@@ -290,6 +304,8 @@ try {
 		empty( $opt ) || logfile( display( 'Executing ' . implode( ',', array_keys( $opt ) ) ) );
 		( empty( $opt ) || isset( $opt[ 'UPDATE' ] ) ) && update( );
 		try { handler( bpdbjobs_summary( )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
+		( ( empty( $opt ) && preg_match( '/' . $ini[ 'NBUCLIENTS_TIME' ] . '/', $time ) ) || isset( $opt[ 'CLIENTS' ] ) ) && bpplclients( )->execute( $threads );
+		( ( empty( $opt ) && preg_match( '/' . $ini[ 'NBUIMAGES_TIME' ] . '/', $time ) ) || isset( $opt[ 'IMAGES' ] ) ) && bpimagelist_hoursago( $hours )->execute( $threads );
 		( ( empty( $opt ) && preg_match( '/' . $ini[ 'NBUJOBS_TIME' ] . '/', $time ) ) || isset( $opt[ 'JOBS' ] ) ) && bpdbjobs_report( $days )->execute( $threads );
 		( ( empty( $opt ) && preg_match( '/' . $ini[ 'NBUPOLICIES_TIME' ] . '/', $time ) ) || isset( $opt[ 'POLICIES' ] ) ) && bppllist_policies( )->execute( $threads );
 		$threads->execute( );

@@ -97,12 +97,12 @@ function on_assign_callback( $threads, $thread ) {
 }
 
 function on_finish_callback( $threads, $thread ) {
-	logfile( timestamp( display( 'Result: ' ) . display( $thread->name( ) . print_r( $thread->result( ), true ) ) ) );
+	logfile( timestamp( display( '#Result: ' ) . display( $thread->name( ) . print_r( $thread->result( ), true ) ) ) );
 	$name = $threads->put( $thread );
 	$t = $threads->get( $name );
-	display( 'Result: ' ) . display( $t->lines( ) );
-	display( sprintf( 'Fields (%s): %s', count( $t->fields( ) ), print_r( $t->fields( ), true ) ) );
-	display( sprintf( 'Rows (%s): %s', count( $t->rows( ) ), print_r( $t->rows( ), true ) ) );
+	display( '#Result: ' ) . display( $t->lines( ) );
+	display( sprintf( '#Fields (%s): %s', count( $t->fields( ) ), print_r( $t->fields( ), true ) ) );
+	display( sprintf( '#Rows (%s): %s', count( $t->rows( ) ), print_r( $t->rows( ), true ) ) );
 	}
 
 	function single_thread_test( ) {
@@ -112,7 +112,7 @@ function on_finish_callback( $threads, $thread ) {
 		$items = array( );
 		$thread = new thread( $command, $name );
 		$task = $thread->finish( );
-		logfile( timestamp( display( 'Result: ' ) . display( print_r( $task, true ) ) ) );
+		logfile( timestamp( display( '#Result: ' ) . display( print_r( $task, true ) ) ) );
 	}
 	
 	function multi_thread_test( ) {
@@ -135,11 +135,11 @@ function on_finish_callback( $threads, $thread ) {
 			$threads->execute( );
 			$task = $threads->get( $name );
 		}
-		logfile( timestamp( display( 'Result: ' ) . display( print_r( $task, true ) ) ) );
+		logfile( timestamp( display( '#Result: ' ) . display( print_r( $task, true ) ) ) );
 	}
 	
 function omni_on_finish_callback( $threads, $thread ) {
-	logfile( timestamp( display( 'Result: ' ) . display( $thread->name( ) . print_r( $thread->result( ), true ) ) ) );
+	logfile( timestamp( display( '#Result: ' ) . display( $thread->name( ) . print_r( $thread->result( ), true ) ) ) );
 	$name = $threads->put( $thread );
 	omni_process( omni( )->get( $name, $threads->get( $name ) ) );
 #	$name = $thread->name( );
@@ -154,30 +154,30 @@ function omni_on_finish_callback( $threads, $thread ) {
 function omni_process( $t ) {
 	if ( !is_object( $t ) ) return FALSE;
 	switch ( get_class( $t ) ) {
-		case 'ps': display( 'Processes: ' . print_r( $t->processes( ), true) ); break;
-		case 'omnidbutil_show_cell_name': display( 'Cell Server: ' . $t->cellserver( ) ); break;
-		case 'omnisv_version': display( 'Version: ' . $t->version( ) );
-		display( 'Build: ' . $t->build( ) );
-		display( 'Timestamp: ' . $t->timestamp( ) );
+		case 'ps': display( '#Processes: ' . print_r( $t->processes( ), true) ); break;
+		case 'omnidbutil_show_cell_name': display( '#Cell Server: ' . $t->cellserver( ) ); break;
+		case 'omnisv_version': display( '#Version: ' . $t->version( ) );
+		display( '#Build: ' . $t->build( ) );
+		display( '#Timestamp: ' . $t->timestamp( ) );
 		break;
-		case 'omnisv_status':display( 'Services: ' . print_r( $t->services( ), true ) );
+		case 'omnisv_status':display( '#Services: ' . print_r( $t->services( ), true ) );
 		display( 'Status: ' . $t->status( ) );
 		break;
 		case 'omnistat':
 		case 'omnistat_detail':
 		case 'omnistat_previous':
 		case 'omnistat_previous_last':
-			display( 'Sessions: ' . print_r( $t->sessions( ), true ) );
+			display( '#Sessions: ' . print_r( $t->sessions( ), true ) );
 			break;
 		case 'omnistat_session':
 		case 'omnistat_session_detail':
-			display( 'Devices: ' . print_r( $t->devices( ), true ) );
-			display( 'Objects: ' . print_r( $t->objects( ), true ) );
+			display( '#Devices: ' . print_r( $t->devices( ), true ) );
+			display( '#Objects: ' . print_r( $t->objects( ), true ) );
 			break;
 		case 'omnistat_session_devices':
 		case 'omnistat_session_detail_devices':
 		case 'omnirpt_session_devices':
-			display( 'Devices: ' . print_r( $t->devices( ), true ) );
+			display( '#Devices: ' . print_r( $t->devices( ), true ) );
 			break;
 		case 'omnistat_session_objects':
 		case 'omnistat_session_detail_objects':
@@ -185,33 +185,33 @@ function omni_process( $t ) {
 		case 'omnidb_session_detail':
 		case 'omnirpt_single_session_failed_objects':
 		case 'omnirpt_session_objects':
-			display( 'Objects: ' . print_r( $t->objects( ), true ) );
+			display( '#Objects: ' . print_r( $t->objects( ), true ) );
 			break;
 		case 'omnidb_rpt':
 		case 'omnidb_rpt_detail':
 		case 'omnirpt_single_session_session':
-			display( 'Session: ' . print_r( $t->session( ), true ) );
+			display( '#Session: ' . print_r( $t->session( ), true ) );
 			break;
 		case 'omnidb_session_media':
 		case 'omnidb_session_media_detail':
 		case 'omnirpt_session_media':
-			display( 'Media: ' . print_r( $t->media( ), true ) );
+			display( '#Media: ' . print_r( $t->media( ), true ) );
 			break;
 		case 'omnidb_session_report':
 		case 'omnirpt_single_session_errors':
-			display( 'Errors: ' . print_r( $t->errors( ), true ) );
+			display( '#Errors: ' . print_r( $t->errors( ), true ) );
 			break;
 		case 'omnirpt_single_session':
-			display( 'Session: ' . print_r( $t->session( ), true ) );
-			display( 'Failed objects: ' . print_r( $t->objects( ), true ) );
-			display( 'Errors: ' . print_r( $t->errors( ), true ) );
+			display( '#Session: ' . print_r( $t->session( ), true ) );
+			display( '#Failed objects: ' . print_r( $t->objects( ), true ) );
+			display( '#Errors: ' . print_r( $t->errors( ), true ) );
 			break;
 		default:
-			display( 'Result: ' ) . display( $t->lines( ) );
-			display( sprintf( 'Fields (%s): %s', count( $t->fields( ) ), print_r( $t->fields( ), true ) ) );
-			display( sprintf( 'Rows (%s): %s', count( $t->rows( ) ), print_r( $t->rows( ), true ) ) );
+			display( '#Result: ' ) . display( $t->lines( ) );
+			display( sprintf( '#Fields (%s): %s', count( $t->fields( ) ), print_r( $t->fields( ), true ) ) );
+			display( sprintf( '#Rows (%s): %s', count( $t->rows( ) ), print_r( $t->rows( ), true ) ) );
 	}
-	display( 'SQL: ' . $t->SQL( get_class( $t ) ) );
+	display( '#SQL: ' . $t->SQL( get_class( $t ) ) );
 }
 
 function omni_test( $multi_thread = 0 ) {
@@ -256,7 +256,7 @@ $t = omnistat( );
 }
 
 function nbu_on_finish_callback( $threads, $thread ) {
-	logfile( timestamp( display( 'Result: ' . $thread->name( ) ) . display( print_r( $thread->result( ), true ) ) ) );
+	logfile( timestamp( display( '#Result: ' . $thread->name( ) ) . display( print_r( $thread->result( ), true ) ) ) );
 	$name = $threads->put( $thread );
 	nbu_process( nbu( )->get( $name, $threads->get( $name ) ) );
 }
@@ -264,32 +264,39 @@ function nbu_on_finish_callback( $threads, $thread ) {
 function nbu_process( $t ) {
 	if ( !is_object( $t ) ) return FALSE;
 	switch ( get_class( $t ) ) {
-		case 'bpdbjobs_summary': display( 'Summary: ' . print_r( $t->summary( ), true) ); return; break;
-		case 'bpdbjobs_report': display( 'Jobs: ' . count( $t->jobs( ) ) ); break;
+		case 'bpdbjobs_summary': display( '#Summary: ' . print_r( $t->summary( ), true) ); return; break;
+		case 'bpdbjobs_report': display( '#Jobs: ' . count( $t->jobs( ) ) ); break;
 		case 'bppllist_policies': 
-			display( 'Policies: '. count( $t->policies( ) ) ); 
-			display( 'Clients: ' . count( $t->clients( ) ) );
-			display( 'Schedules: ' . count( $t->schedules( ) ) );
+			display( '#Policies: '. count( $t->policies( ) ) ); 
+			display( '#Clients: ' . count( $t->clients( ) ) );
+			display( '#Schedules: ' . count( $t->schedules( ) ) );
 			break;
 		case 'vault_xml':
-			display( 'Vault rows: ' . count( $t->rows( ) ) );
+			display( '#Vault rows: ' . count( $t->rows( ) ) );
+			break;
+		case 'bpplclients':
+			display( '#Clients: ' . count( $t->clients( ) ) );
+			break;
+		case 'bpimagelist_hoursago': 
+			display( '#Images: '. count( $t->images( ) ) ); 
+			display( '#Fragments: ' . count( $t->frags( ) ) );
 			break;
 		default:
-			display( 'Result: ' ) . display( $t->lines( ) );
-			display( sprintf( 'Fields (%s): %s', count( $t->fields( ) ), print_r( $t->fields( ), true ) ) );
-			display( sprintf( 'Rows (%s): %s', count( $t->rows( ) ), print_r( $t->rows( ), true ) ) );
+			display( '#Result: ' ) . display( $t->lines( ) );
+			display( sprintf( '#Fields (%s): %s', count( $t->fields( ) ), print_r( $t->fields( ), true ) ) );
+			display( sprintf( '#Rows (%s): %s', count( $t->rows( ) ), print_r( $t->rows( ), true ) ) );
 	}
 	$sql = $t->SQL( get_class( $t ) );
 	is_array( $sql ) || $sql = array( $sql );
 	foreach( $sql as $s ) {
-		display( 'SQL: ' . $s );
-#		display( 'SQL result:' . database( )->execute_query( $s ) );
-#		display( 'SQL insert ID:' . database( )->insert_id( ) );
-#		display( 'SQL rows:' . database( )->row_count( ) );
-#		display( 'SQL info:' . database( )->query_info( ) );
-#		display( 'SQL error:' . database( )->error( ) );
-#		display( 'SQL message:' . database( )->message( ) );
-#		display( 'SQL duration:' . database( )->duration( ) );
+		display( '#SQL: ' . $s );
+#		display( '#SQL result:' . database( )->execute_query( $s ) );
+#		display( '#SQL insert ID:' . database( )->insert_id( ) );
+#		display( '#SQL rows:' . database( )->row_count( ) );
+#		display( '#SQL info:' . database( )->query_info( ) );
+#		display( '#SQL error:' . database( )->error( ) );
+#		display( '#SQL message:' . database( )->message( ) );
+#		display( '#SQL duration:' . database( )->duration( ) );
 	}
 }
 
@@ -302,7 +309,8 @@ function nbu_test( $multi_thread = 0 ) {
 #	$t = bppllist_policies( );
 #	$t = bpretlevel( );
 #	$t = vault_xml( 'm:\\Veritas\\NetBackup\\db\\vault' );
-	$t = bpclients( );
+	$t = bpplclients( );
+#	$t = bpimagelist_hoursago( 24 );
     if ( $multi_thread == 0 ) {
 		$t->execute( );
 		nbu_process( $t );
@@ -322,8 +330,8 @@ try {
 	if ( !os( )->php( '5.5' ) ) throw new exception( sprintf( os::PHP_UNSUPPORTED, os::php( ) ) );
 #	database( new mysqli_database( 'localhost', 'script', 'm@r5', 'mars40' ) );
 	$lock = new lock_file( os( )->path( 'test.lock' ) );
-	logfile( new log_file( os( )->path( 'test.log' ) ) );
-	debug( new debug_log_file( os( )->path( 'debug.log' ) ) );
+	logfile( new log_file( os( )->path( 'log/test.log' ) ) );
+	debug( new debug_log_file( os( )->path( 'log/debug.log' ) ) );
 	debug( )->enabled( true );
 	debug( 100, timestamp( 'START' ) );
 	logfile( timestamp( display( os( )->name( ) . '-' . os( )->root( ) ) ) );
@@ -341,7 +349,7 @@ try {
 	display( $e->getmessage( ) );
 }
 
-display( '------' );
-display( sprintf( 'Memory used: %sb',os( )->memory( ) ) );
-display( sprintf( 'Duration: %sms', os( )->duration( ) ) );
+display( '#------' );
+display( sprintf( '#Memory used: %sb',os( )->memory( ) ) );
+display( sprintf( '#Duration: %sms', os( )->duration( ) ) );
 debug( 100, timestamp( 'STOP' ) );
