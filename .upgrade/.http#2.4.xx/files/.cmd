@@ -45,11 +45,12 @@ call :echo Extracting archive %filename%...
 set exclude=-x^^!readme_first.html -x^^!*.pl -x^^!*\include\ -x^^!*\lib\ -x^^!*\logs\install.log
 "%root%\bin\7z\7z.exe" x "%root%\%filename%" -r -aoa -bd -bb0 -y -o"%root%\bin\http.tmp" !exclude!>>"%logfile%" 2>&1
 set result=%errorlevel%
-ping -n 3 localhost >nul 2>&1
+call :echo Waiting...
+ping -n 10 localhost >nul 2>&1
 goto :eof
 :rename
 call :echo Renaming subfolders...
-for /d %%i in ("%root%\bin\http.tmp\Apache*") do rename "%%i" http >nul 2>&1
+rename "%root%\bin\http.tmp\Apache24" http >nul 2>&1
 set result=%errorlevel%
 goto :eof
 :move

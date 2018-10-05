@@ -7,7 +7,7 @@ USE `mars40`;
 DROP TABLE IF EXISTS `bpdbjobs_report`;
 CREATE TABLE `bpdbjobs_report` (
 	`masterserver` VARCHAR(64) NOT NULL,
-	`jobid` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`jobid` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`jobtype` TINYINT(3) UNSIGNED NOT NULL,
 	`state` TINYINT(3) UNSIGNED NOT NULL,
 	`status` SMALLINT(5) UNSIGNED NULL DEFAULT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE `bpdbjobs_report` (
 	`filestobewritten` MEDIUMINT(8) UNSIGNED NULL DEFAULT NULL,
 	`filelistcount` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`trycount` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`parentjob` MEDIUMINT(8) UNSIGNED NULL DEFAULT NULL,
+	`parentjob` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`kbpersec` MEDIUMINT(8) UNSIGNED NULL DEFAULT NULL,
 	`copy` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`robot` VARCHAR(32) NULL DEFAULT NULL,
@@ -2878,7 +2878,6 @@ REPLACE INTO `core_links` (`source`, `field`, `ord`, `target`, `filter`, `operat
 	('nbu_vault_vaults', 'profiles', 1, 'nbu_vault_profiles', 'vault', '=', '%name%', '2017-07-24 16:01:34', '2017-07-24 16:01:34', NULL);
 
 REPLACE INTO `core_reports` (`ord`, `name`, `category`, `title`, `created`, `updated`, `obsoleted`) VALUES
-INSERT INTO `core_reports` (`ord`, `name`, `category`, `title`, `created`, `updated`, `obsoleted`) VALUES
 	(1, 'nbu_policies', 'NBU Reports', 'Policies', '2017-02-13 10:31:58', '2017-04-12 12:28:38', NULL),
 	(2, 'nbu_schedules', 'NBU Reports', 'Schedules', '2017-03-20 08:55:23', '2017-04-12 12:28:41', NULL),
 	(3, 'nbu_clients_distinct', 'NBU Reports', 'Clients', '2017-02-13 10:06:41', '2017-12-15 10:19:44', NULL),

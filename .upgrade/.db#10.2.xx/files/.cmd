@@ -46,7 +46,8 @@ call :echo Extracting archive %filename%...
 set exclude=-x^^!*.ini -x^^!*.jar -x^^!*.lib -x^^!*.pdb -x^^!*.pl -x^^!*\data\test\ -x^^!*\include\ -x^^!*\lib\debug\ -x^^!*\share\*.sql"
 "%root%\bin\7z\7z.exe" x "%root%\%filename%" -r -aoa -bd -bb0 -y -o"%root%\bin\db.tmp" !exclude!>>"%logfile%" 2>&1
 set result=%errorlevel%
-ping -n 3 localhost >nul 2>&1
+call :echo Waiting...
+ping -n 10 localhost >nul 2>&1
 goto :eof
 :rename
 call :echo Renaming subfolders...

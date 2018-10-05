@@ -3,6 +3,7 @@ MARS 4.1 Change Log
 
 30.08.2018 version 4.1 build #5
 •	Added bpplclients and bpimagelist. 
+•	Extended JOBID from MediumInt to Int.
 
 15.08.2018 version 4.1 build #4
 •	Introduced Backup Window Start Time. 
