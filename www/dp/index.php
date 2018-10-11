@@ -106,13 +106,15 @@ class application {
 		list( $host, $port ) = explode( ':', sprintf( '%s:%s', $this->config[ 'MYSQL_HOST' ], MYSQL_PORT ) );
 		$username = empty( $_COOKIE[ USERNAME ] ) ? USERNAME_DEFAULT : $_COOKIE[ USERNAME ] ;
 		$pwd = empty( $_COOKIE[ PWD ] ) ? PWD_DEFAULT : $_COOKIE[ PWD ] ;
-		if ( !mod_mysql( ) ) {throw new exception( MYSQL_NO_SUPPORT );}
-		if ( !mod_mysqli( ) ) {
-			$this->database = new mysql_database( sprintf( '%s:%s', $host, $port ),	$username, $pwd );
-			$this->database->select_database( $this->config[ 'MYSQL_DB' ] );
-		} else {
-			$this->database = new mysqli_database( $host, $username, $pwd, $this->config[ 'MYSQL_DB' ], $port );
-		}
+		if ( !mod_mysqli( ) ) {throw new exception( MYSQL_NO_SUPPORT );}
+		$this->database = new mysqli_database( $host, $username, $pwd, $this->config[ 'MYSQL_DB' ], $port );
+#		if ( !mod_mysql( ) ) {throw new exception( MYSQL_NO_SUPPORT );}
+#		if ( !mod_mysqli( ) ) {
+#			$this->database = new mysql_database( sprintf( '%s:%s', $host, $port ),	$username, $pwd );
+#			$this->database->select_database( $this->config[ 'MYSQL_DB' ] );
+#		} else {
+#			$this->database = new mysqli_database( $host, $username, $pwd, $this->config[ 'MYSQL_DB' ], $port );
+#		}
 	}
 	
 	function get_duration() {

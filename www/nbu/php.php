@@ -847,7 +847,8 @@ try {
 			if ( isset( $post[ 'action' ] ) ) {
 				if ( $post[ 'action' ] == 'help' ) {
 					$xml = simplexml_load_file( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'help-texts.xml' );
-					$result = $xml->$post[ 'id' ] ? $xml->$post[ 'id' ]->asXML( ) : 'Error retrieving help text for #' . $post[ 'id' ];
+					$item = $post[ 'id' ];
+					$result = $xml->$item ? $xml->$item->asXML( ) : 'Error retrieving help text for #' . $item;
 					echo $result;
 				}
 				if ( $post[ 'action' ] == 'upload' ) {

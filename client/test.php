@@ -4,6 +4,7 @@ require_once dirname( __FILE__ ) . '/inc/os.php';
 class streamText {
 	const MAXMEMORY		= 1024 * 1024;
 	const ERROR_FOPEN	= 'Unable to open stream.';
+	const BUFFERSIZE	= 1024;
 	
 	private $stream		= NULL;
 
@@ -48,6 +49,15 @@ class streamText {
 		return stream_get_contents( $this->stream( ) );
 	}
 	
+	public function asFormattedText( $pattern = '%s' ) {
+		$result = '';
+		rewind( $this->stream( ) );
+		while ( ( $buffer = fgets( $this->stream( ) ) ) !== false ) {
+			$result .= sprintf( $pattern, trim( $buffer ) ) . PHP_EOL;
+		}
+		return $result;
+	}
+	
 	public function saveTo( $filename ) {
 		rewind( $this->stream( ) );
 		return file_put_contents( $filename, stream_get_contents( $this->stream( ) ) );
@@ -68,7 +78,6 @@ class streamText {
 class structuredText {
 	const TEXT			= '\S+';
 	const NUMBER		= '\d+';
-	const MAXLINE		= 1024;
 	const SEPARATOR		= "\n";
 	const DELIMITER		= "\n";
 	const ERROR_PARSE	= 'Error parsing item #%d:"%s"';
@@ -111,7 +120,7 @@ class structuredText {
 		$i = 0;
 		while ( !feof( $this->source( )->stream( ) ) ) {
 			try {
-				$item = stream_get_line( $this->source( )->stream( ), static::MAXLINE, static::SEPARATOR );
+				$item = stream_get_line( $this->source( )->stream( ), streamText::BUFFERSIZE, static::SEPARATOR );
 				$result = $this->parseItem( $item );
 				if ( !$result  or count( $result ) == 0 ) throw new Exception( sprintf( static::ERROR_PARSE, $i + 1, $item ) );
 				fputcsv( $this->result( )->stream( ), $result );
@@ -124,13 +133,12 @@ class structuredText {
 	}
 
 	public function parseItem( $item ) {
-#		return explode( static::DELIMITER, $item );
 		$result = FALSE;
 		if ( preg_match( sprintf( '/%s/m', $this->pattern( ) ), $item, $match ) ) {
 			$result = array( );
 			foreach ( $match as $key => $value ) {
 				if ( !empty( $this->fields( $key ) ) ) {
-					$result[ $key ] = $this->fields( $key )[ 0 ] == static::NUMBER ? $value : sprintf( "'%s'", $value );
+					$result[ $key ] = $this->fields( $key )[ 0 ] == static::NUMBER ? trim( $value ) : sprintf( "'%s'", trim( $value ) );
 				}
 			}
 		}
@@ -148,24 +156,31 @@ class structuredCmd extends structuredText {
 	const PATH					= '';
 	const BIN					= '';
 	const ARGUMENTS				= '%s';
+	private $path				= '';
+	private $bin				= '';
 	private $arguments			= NULL;
-	private $cmdline			= NULL;
 	private $duration			= 0;
 	private $status				= array( );
 
+	public function path( $value = NULL ) { return _var( $this->path, func_get_args( ) ); }
+	public function bin( $value = NULL ) { return _var( $this->bin, func_get_args( ) ); }
 	public function arguments( $value = NULL ) { return _var( $this->arguments, func_get_args( ) ); }
-	public function cmdline( $value = NULL ) { return _var( $this->cmdline, func_get_args( ) ); }
 	public function duration( $value = NULL ) { return _var( $this->duration, func_get_args( ) ); }
 	public function status( $field = NULL, $value = NULL ) { return _arr( $this->status, func_get_args( ) ); }
 
 	public function __construct( $arguments = NULL ) {
 		parent::__construct( );
+		$this->path( static::PATH );
+		$this->bin( static::BIN );
 		$this->arguments( $arguments );
-		$cmd = escapeshellarg( static::PATH . ( empty( static::PATH ) ? '' : DIRECTORY_SEPARATOR ) . static::BIN );
-		$arguments = sprintf( ' ' . static::ARGUMENTS, is_array( $arguments ) ? implode( ' ', $arguments ) : $arguments );
-		$this->cmdline( trim( $cmd . $arguments ) );
 	}
 
+	public function cmdline( ) {
+		$cmd = escapeshellarg( $this->path( ) . ( empty( $this->path( ) ) ? '' : DIRECTORY_SEPARATOR ) . $this->bin( ) );
+		$arguments = sprintf( ' ' . static::ARGUMENTS, is_array( $this->arguments( ) ) ? implode( ' ', $this->arguments( ) ) : $this->arguments( ) );
+		return trim( $cmd . $arguments );
+	}
+	
 	public function execute( ) {
 		$result = FALSE;
 		$start_time = microtime( TRUE );
@@ -191,9 +206,32 @@ class structuredCmd extends structuredText {
 	}
 }
 
-class structuredCmd1 extends structuredCmd {
-	const PATH			= 'M:\Veritas\NetBackup\bin\admincmd';
+class nbuCmd extends structuredCmd {
+	const HOME				= '';
+	private $home			= '';
+	private $masterserver	= '';
+
+	public function home( $value = NULL ) { return _var( $this->home, func_get_args( ) ); }
+	public function masterserver( $value = NULL ) { return _var( $this->masterserver, func_get_args( ) ); }
+
+	public function __construct( $arguments = NULL ) {
+		parent::__construct( $arguments );
+		$this->home( static::HOME );
+		if ( is_object( nbu( ) ) ) {
+			is_null( nbu( )->home( ) ) || $this->home( nbu( )->home( ) );
+			is_null( nbu( )->masterserver( ) ) || $this->masterserver( nbu( )->masterserver( ) );
+		}
+		$this->path( $this->home( ) . DIRECTORY_SEPARATOR . $this->path( ) );
+	}
+	
+}
+
+class bpdbjobsCmd extends nbuCmd {
+	const PATH			= 'bin\admincmd';
 	const BIN			= 'bpdbjobs';
+}
+
+class bpdbjobsSummary extends bpdbjobsCmd {
 	const ARGUMENTS		= '-summary -l';
 	const SEPARATOR 	= "\n\n";
 	const DELIMITER 	= '\s+';
@@ -214,13 +252,111 @@ class structuredCmd1 extends structuredCmd {
 	}
 }
 
+class bpdbjobsReport extends bpdbjobsCmd {
+#	const ARGUMENTS		= '-report -most_columns -t %s';
+	const ARGUMENTS		= '-report -most_columns';
+	const SEPARATOR 	= "\n";
+	const DELIMITER 	= ',';
+
+	public function prepareFields( ) {
+		$fields = array( );
+		$fields[ 'jobid' ]				= array( static::NUMBER, '%s' );
+		$fields[ 'jobtype' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'state' ]				= array( static::NUMBER, '%s' );
+		$fields[ 'status' ]				= array( static::NUMBER, '%s' );
+		$fields[ 'policy' ]				= array( static::TEXT, '%s' );
+		$fields[ 'schedule' ]			= array( static::TEXT, '%s' );
+		$fields[ 'client' ]				= array( static::TEXT, '%s' );
+		$fields[ 'server' ]				= array( static::TEXT, '%s' );
+		$fields[ 'started' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'elapsed' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'ended' ]				= array( static::NUMBER, '%s' );
+		$fields[ 'stunit' ]				= array( static::TEXT, '%s' );
+		$fields[ 'tries' ]				= array( static::NUMBER, '%s' );
+		$fields[ 'operation' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'kbytes' ]				= array( static::NUMBER, '%s' );
+		$fields[ 'files' ]				= array( static::NUMBER, '%s' );
+		$fields[ 'pathlastwritten' ]	= array( static::TEXT, '%s' );
+		$fields[ 'percent' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'jobpid' ]				= array( static::NUMBER, '%s' );
+		$fields[ 'owner' ]				= array( static::TEXT, '%s' );
+		$fields[ 'subtype' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'policytype' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'scheduletype' ]		= array( static::NUMBER, '%s' );
+		$fields[ 'priority' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'group' ]				= array( static::TEXT, '%s' );
+		$fields[ 'masterserver' ]		= array( static::TEXT, '%s' );
+		$fields[ 'retentionlevel' ]		= array( static::NUMBER, '%s' );
+		$fields[ 'retentionperiod' ]	= array( static::NUMBER, '%s' );
+		$fields[ 'compression' ]		= array( static::NUMBER, '%s' );
+		$fields[ 'kbytestobewritten' ]	= array( static::NUMBER, '%s' );
+		$fields[ 'filestobewritten' ]	= array( static::NUMBER, '%s' );
+		$fields[ 'filelistcount' ]		= array( static::NUMBER, '%s' );
+		$fields[ 'trycount' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'parentjob' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'kbpersec' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'copy' ]				= array( static::NUMBER, '%s' );
+		$fields[ 'robot' ]				= array( static::TEXT, '%s' );
+		$fields[ 'vault' ]				= array( static::TEXT, '%s' );
+		$fields[ 'profile' ]			= array( static::TEXT, '%s' );
+		$fields[ 'session' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'ejecttapes' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'srcstunit' ]			= array( static::TEXT, '%s' );
+		$fields[ 'srcserver' ]			= array( static::TEXT, '%s' );
+		$fields[ 'srcmedia' ]			= array( static::TEXT, '%s' );
+		$fields[ 'dstmedia' ]			= array( static::TEXT, '%s' );
+		$fields[ 'stream' ]				= array( static::NUMBER, '%s' );
+		$fields[ 'suspendable' ]		= array( static::NUMBER, '%s' );
+		$fields[ 'resumable' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'restartable' ]		= array( static::NUMBER, '%s' );
+		$fields[ 'datamovement' ]		= array( static::NUMBER, '%s' );
+		$fields[ 'snapshot' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'backupid' ]			= array( static::TEXT, '%s' );
+		$fields[ 'killable' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'controllinghost' ]	= array( static::TEXT, '%s' );
+#		$fields[ 'offhosttype' ]		= array( static::NUMBER, '%s' );
+		$fields[ 'ftusage' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'queuereason' ]		= array( static::NUMBER, '%s' );
+		$fields[ 'reasonstring' ]		= array( static::TEXT, '%s' );
+		$fields[ 'dedupratio' ]			= array( static::NUMBER, '%s' );
+		$fields[ 'accelerator' ]		= array( static::NUMBER, '%s' );
+		$fields[ 'instancedbname' ]		= array( static::TEXT, '%s' );
+		$fields[ 'rest1' ]				= array( static::NUMBER, '%s' );
+		$fields[ 'rest2' ]				= array( static::NUMBER, '%s' );
+		return $fields;
+	}
+	
+	public function parseItem( $item ) {
+		$values = str_getcsv( $item, static::DELIMITER );
+		$result = array( );
+		$i = 0;
+		foreach( $this->fields( ) as $key => $field ) {
+			$result[ $key ] = $field[ 0 ] == static::NUMBER ? trim( $values[ $i ] ) : sprintf( "'%s'", trim( $values[ $i ] ) );
+			$i++;
+		}
+		return $result;
+
+	}
+}
+
+function nbu( ) { global $nbu; return $nbu; }
+function bpdbjobsSummary( ) { return new bpdbjobsSummary; }
+function bpdbjobsReport( $days = 7 ) { return new bpdbjobsReport( date( 'm/d/Y H:i:s', time( ) - ( 60 * 60 * ( 24 * $days + 1 ) ) ) ); }
+
+$nbu = new nbuCmd( );
+
 date_default_timezone_set( 'Europe/Bratislava' );
 
-$obj = new structuredCmd1;
+nbu( )->home( 'M:\Veritas\NetBackup' );
+nbu( )->masterserver( 'test.local' );
+
+#$obj = bpdbjobsSummary( );
+$obj = bpdbjobsReport( );
 #$obj->source( )->loadFrom( 'm:\stream.txt' );
 $obj->execute( );
 $obj->parseSource( );
-echo $obj->result( )->asText( );
+echo $obj->result( )->asFormattedText( 'call test(%s);' );
+#echo $obj->result( )->asText( );
 $obj->result( )->saveTo( 'm:\result.txt' );
 die( );
 
