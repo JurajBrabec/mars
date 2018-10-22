@@ -547,7 +547,7 @@ function get_source( $source, $tower, $customer, $timeperiod, $mode ) {
 			$result .= '<table>';
 			if ( $mode == 'HTML' ) {
 				$data = get_source( $source, $tower, $customer, $timeperiod, 'data' );
-				$rows = number_format( substr_count( $data, '<tr' ), 0, ',', ' ' ) - 1;
+				$rows = number_format( substr_count( $data, '<tr' ) - 1, 0, ',', ' ' );
 				$result .= $data;
 			} else {
 				$rows = 0;
