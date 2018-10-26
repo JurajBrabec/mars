@@ -2,7 +2,7 @@
 
 /*
  * MARS 4.1 PHP CODE
- * build 4.1.13 @ 2018-04-13 04:13
+ * build 4.1.17 @ 2018-10-25 04:17
  * * rewritten from scratch
  */
 
@@ -22,24 +22,26 @@ function convert_config( ) {
 		$i = 0;
 		$modified = false;
 		while ( $i < count( $oldconfig ) ) {
-			$add = $remove = false;
+			$add = $remove = $modify = false;
 			$line = $oldconfig[ $i ];
 			if ( strpos( $line, '=' ) ) {
 				list( $key, $value ) = explode( '=', $line );
 				$key = trim( $key ); $value = trim( $value );
 				switch ( $key ) {
-//MODIFY					case 'NBU2SM9_TIME' : $value = '"..:.(0|5)"'; break;
+//MODIFY					case 'NBU2SM9_TIME' : $value = '"..:.(0|5)"' && $modify = true; break;
 				}
-				$line = sprintf( '%s=%s', str_pad( $key, 24 ), $value );
-				$line != $oldconfig[ $i ] && $modified = true && logfile( display( 'Modified line "' . $oldconfig[ $i ] . '" to "' . $line . '"' ) );
+				if ( $modify ) {
+					$line = sprintf( '%s=%s', str_pad( $key, 24 ), $value );
+					$newconfig[ ] = $line;
+					logfile( display( 'Modified line "' . $oldconfig[ $i ] . '" to "' . $line . '"' ) );
+				}
 			}
 //REMOVE			preg_match( '/^NBUJOBS_DAYS_BACK/', $line ) && $remove = true;
 			$remove && logfile( display( 'Removed line ' . $line ) ) || $newconfig[ ] = $line;
 //ADD			preg_match( '/^NBU2ESL_PATH/', $line ) && !preg_match( '/NBU2SM9_PATH/', $content ) && $add = true && $line = str_pad( 'NBU2SM9_PATH', 24 ) . '="tmp"';
-			preg_match( '/^NBUJOBS_TIME/', $line ) && !preg_match( '/NBUCLIENTS_TIME/', $content ) && $add = true && $line = str_pad( 'NBUCLIENTS_TIME', 24 ) . '="..:(00|15|30|45)"';
-			preg_match( '/^NBUPOLICIES_TIME/', $line ) && !preg_match( '/NBUIMAGES_TIME/', $content ) && $add = true && $line = str_pad( 'NBUIMAGES_TIME', 24 ) . '="..:(00|15|30|45)"';
+			preg_match( '/^NBUIMAGES_TIME/', $line ) && !preg_match( '/NBUFILES_TIME/', $content ) && $add = true && $line = str_pad( 'NBUFILES_TIME', 24 ) . '="..:(15|45)"';
 			$add && logfile( display( 'Added line ' . $line ) ) && $newconfig[ ] = $line;
-			$modified = $modified || $remove || $add;
+			$modified = $modified || $modify || $remove || $add;
 			$i++;
 		}
 		$modified && os( )->write_file( $filename, $newconfig ) && logfile( display( 'Config file successfuly converted.' ) );
@@ -57,24 +59,27 @@ function on_finish_callback( $threads, $thread ) {
 
 function handler( $object ) {
 	if ( !is_object( $object ) ) return false;
-	logfile( display( 'Report: ' . get_class( $object ) ) );
-	$sql = $object->SQL( get_class( $object ) );
-	logfile( display( 'SQLs:' . count( $sql ) ) );
-	$i = 1;
-	foreach( $sql as $s ) {
-		$result = database( )->execute_query( $s );
-		$result !=0 && logfile( display( 'SQL ' . $i . ' result:' . $result ) );
-		if ( $result == -1 ) {
-			logfile( display( ' Insert ID:' . database( )->insert_id( ) ) );
-			logfile( display( ' Rows:' . database( )->row_count( ) ) );
-			logfile( display( ' Info:' . database( )->query_info( ) ) );
-			logfile( display( ' Error:' . database( )->error( ) ) );
-			logfile( display( ' Message:' . database( )->message( ) ) );
-			logfile( display( ' Duration:' . database( )->duration( ) ) );
-			debug( 'SQL ' . $i . ': ' . $s );
+	try {
+		logfile( display( sprintf( 'Report: %s', get_class( $object ) ) ) );
+		$sql = $object->SQL( get_class( $object ) );
+		if ( $sql === false ) $sql = array( );
+		logfile( display( 'SQLs:' . count( $sql ) ) );
+		$i = 1;
+		foreach( $sql as $s ) {
+			$result = database( )->execute_query( $s );
+			$result !=0 && logfile( display( 'SQL ' . $i . ' result:' . $result ) );
+			if ( $result == -1 ) {
+				logfile( display( ' Insert ID:' . database( )->insert_id( ) ) );
+				logfile( display( ' Rows:' . database( )->row_count( ) ) );
+				logfile( display( ' Info:' . database( )->query_info( ) ) );
+				logfile( display( ' Error:' . database( )->error( ) ) );
+				logfile( display( ' Message:' . database( )->message( ) ) );
+				logfile( display( ' Duration:' . database( )->duration( ) ) );
+				debug( 'SQL ' . $i . ': ' . $s );
+			}
+			$i++;
 		}
-		$i++;
-	}
+	} catch ( exception $e ) { exception_handler( $e ); }
 	return true;
 }
 
@@ -115,6 +120,7 @@ function update( ) {
 			}
 		}
 	} catch ( exception $e ) { exception_handler( $e ); }
+	return true;
 }
 
 function nbu2sm9( ) {
@@ -155,6 +161,7 @@ function nbu2sm9( ) {
 			$file->write( implode( $ini[ 'NBU2SM9_DELIMITER' ], $NBU2SM9_TXT_FIELDS ) );
 		}
 	} catch ( exception $e ) { exception_handler( $e ); }
+	return true;
 }
 
 function nbu2esl( ) {
@@ -185,8 +192,8 @@ function nbu2esl( ) {
 			,'Backup Retention'		=> ''
 			,'Recovery Instructions'	=> ''
 			,'Comments'				=> ''
-	#		,'Ticket Postpone Time'	=> ''
-	#		,'Backup Reportable'		=> '1'
+#			,'Ticket Postpone Time'	=> ''
+#			,'Backup Reportable'		=> '1'
 		);
 		$NBU2ESL_CLIENT_TXT_FIELDS = array( 
 			'System Name'			=> ''
@@ -242,18 +249,55 @@ function nbu2esl( ) {
 			$file->write( '"' . implode( '","', $NBU2ESL_CLIENT_TXT_FIELDS ) . '"' );
 		}
 	} catch ( exception $e ) { exception_handler( $e ); }
+	return true;
+}
+
+function read_files( $interval ) {
+	global $threads;
+	try {	
+		$types = '0,13,40';
+		$sql = 'SELECT DISTINCT id.backupid FROM ( ';
+		$sql .= 'SELECT j.masterserver,j.backupid,j.started FROM bpdbjobs_report j ';
+		$sql .= sprintf( 'WHERE j.policytype IN (%s) AND j.backupid IS NOT NULL ', $types );
+		$sql .= 'AND j.jobid<>j.parentjob ';
+		$sql .= sprintf( 'AND j.started>unix_timestamp(NOW()-INTERVAL %s HOUR) ', $interval );
+		$sql .= 'UNION ALL ';
+		$sql .= 'SELECT i.masterserver,i.backupid,i.backup_time AS started FROM bpimagelist i ';
+		$sql .= sprintf( 'WHERE i.client_type IN (%s) AND i.backupid IS NOT NULL ', $types );
+		$sql .= sprintf( 'AND i.backup_time>unix_timestamp(NOW()-INTERVAL %s HOUR) ', $interval );
+		$sql .= ') id ';
+		$sql .= 'LEFT JOIN bpflist_backupid f ON (f.masterserver=id.masterserver AND f.backupid=id.backupid) ';
+		$sql .= 'WHERE f.backupid IS NULL ';
+		$sql .= 'ORDER BY id.started;';
+		logfile( display( 'Backup ID`s:' . database( )->execute_query( $sql ) ) );
+		foreach( database( )->rows( ) as $row ) {
+			bpflist_backupid( $row[ 'backupid' ] )->execute( $threads );
+//			try { handler( bpflist_backupid( $row[ 'backupid' ] )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
+		}
+		$threads->execute( );
+	} catch ( exception $e ) { exception_handler( $e ); }
+	return true;
+}
+
+function due( $optitem, $iniitem = '' ) {
+	global $opt, $ini, $time;
+	$match = $iniitem == '' ? true : preg_match( '/' . $ini[ $iniitem ] . '/', $time );
+	return ( empty( $opt ) && $match ) || isset( $opt[ $optitem ] );
 }
 
 function exception_handler( $e ) {
 	$message = sprintf( 'Exception: "%s"', $e->getMessage( ) );
 	logfile( timestamp( display( $message ) ) );
+	return true;
 }
+
 function shutdown_function( ) {
 	$e = error_get_last( );
 	if ( empty( $e ) ) return true;
 	$message = sprintf( 'Exiting with %s [%s] "%s" in "%s" on line #%s', 
 		array_search( $e[ 'type' ], get_defined_constants( ) ), $e[ 'type' ], $e[ 'message' ], $e[ 'file' ], $e[ 'line' ] );
 	logfile( timestamp( $message ) );
+	return true;
 }
 
 error_reporting( E_ALL );
@@ -261,7 +305,7 @@ register_shutdown_function( 'shutdown_function' );
 set_exception_handler( 'exception_handler' );
 display( '------' );
 try {
-	if ( !os( )->php( '5.3' ) ) throw new exception( sprintf( os::PHP_UNSUPPORTED, os::php( ) ) );
+	if ( !os( )->php( '7.2' ) ) throw new exception( sprintf( os::PHP_UNSUPPORTED, os::php( ) ) );
 	$lock = new lock_file( os( )->path( 'mars.lock' ) );
 	logfile( new log_file( os( )->path( array( 'log', 'mars.log' ) ) ) )->max_size( 10 * 1000 * 1000 );
 	debug( new debug_log_file( os( )->path( array( 'log', 'mars.debug.log' ) ) ) )->max_size( 10 * 1000 * 1000 );
@@ -269,7 +313,7 @@ try {
 	$ini = array_change_key_case( parse_ini_file( os( )->path( 'config.ini' ), FALSE ), CASE_UPPER );
 	date_default_timezone_set( $ini[ 'TIME_ZONE' ] );
 	debug( )->enabled( $ini[ 'DEBUG' ] );
-	$opts = array( 'esl', 'clients', 'images', 'jobs', 'policies', 'retlevel', 'sm9', 'summary', 'update', 'vault', 'hours::', 'days::', 'time::'  );
+	$opts = array( 'esl', 'clients', 'files', 'images', 'jobs', 'policies', 'retlevel', 'sm9', 'summary', 'update', 'vault', 'hours::', 'days::', 'time::'  );
 	$opt = array_change_key_case( array_map( 'strtoupper', getopt( '', $opts ) ), CASE_UPPER );
 	if ( isset( $opt[ 'TIME' ] ) ) { $time = $opt[ 'TIME' ]; unset( $opt[ 'TIME' ] ); }
 	empty( $time ) && $time = date( 'H:i' );
@@ -302,17 +346,20 @@ try {
 	nbu( )->tmp( os( )->path( 'tmp' ) );
 	if ( $lock->lock( true ) ) {
 		empty( $opt ) || logfile( display( 'Executing ' . implode( ',', array_keys( $opt ) ) ) );
-		( empty( $opt ) || isset( $opt[ 'UPDATE' ] ) ) && update( );
-		try { handler( bpdbjobs_summary( )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
-		( ( empty( $opt ) && preg_match( '/' . $ini[ 'NBUCLIENTS_TIME' ] . '/', $time ) ) || isset( $opt[ 'CLIENTS' ] ) ) && bpplclients( )->execute( $threads );
-		( ( empty( $opt ) && preg_match( '/' . $ini[ 'NBUIMAGES_TIME' ] . '/', $time ) ) || isset( $opt[ 'IMAGES' ] ) ) && bpimagelist_hoursago( $hours )->execute( $threads );
-		( ( empty( $opt ) && preg_match( '/' . $ini[ 'NBUJOBS_TIME' ] . '/', $time ) ) || isset( $opt[ 'JOBS' ] ) ) && bpdbjobs_report( $days )->execute( $threads );
-		( ( empty( $opt ) && preg_match( '/' . $ini[ 'NBUPOLICIES_TIME' ] . '/', $time ) ) || isset( $opt[ 'POLICIES' ] ) ) && bppllist_policies( )->execute( $threads );
-		$threads->execute( );
-		try { ( ( empty( $opt ) && preg_match( '/' . $ini[ 'NBUVAULT_TIME' ] . '/', $time ) ) || isset( $opt[ 'VAULT' ] ) ) && handler( vault_xml( os( )->path( array ( $ini[ 'NBU_DATA_HOME' ], 'db', 'vault' ) ) )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
-		try { ( ( empty( $opt ) && preg_match( '/' . $ini[ 'NBURETLEVEL_TIME' ] . '/', $time ) ) || isset( $opt[ 'RETLEVEL' ] ) ) && handler( bpretlevel( )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
-		( ( empty( $opt ) && preg_match( '/' . $ini[ 'NBU2ESL_TIME' ] . '/', $time ) ) || isset( $opt[ 'ESL' ] ) ) && nbu2esl( );
-		( ( empty( $opt ) && preg_match( '/' . $ini[ 'NBU2SM9_TIME' ] . '/', $time ) ) || isset( $opt[ 'SM9' ] ) ) && nbu2sm9( );
+		if ( due( 'UPDATE' ) ) update( );
+		try { 
+			handler( bpdbjobs_summary( )->execute( ) );
+			if ( due( 'POLICIES', 'NBUPOLICIES_TIME' ) ) bppllist_policies( )->execute( $threads );
+			if ( due( 'CLIENTS', 'NBUCLIENTS_TIME' ) ) bpplclients( )->execute( $threads );
+			if ( due( 'JOBS', 'NBUJOBS_TIME' ) ) bpdbjobs_report( $days )->execute( $threads );
+			if ( due( 'IMAGES', 'NBUIMAGES_TIME' ) ) bpimagelist_hoursago( $hours )->execute( $threads );
+			$threads->execute( );
+			if ( due( 'FILES', 'NBUFILES_TIME' ) ) read_files( $hours );
+			if ( due( 'VAULT', 'NBUVAULT_TIME' ) ) try { handler( vault_xml( os( )->path( array ( $ini[ 'NBU_DATA_HOME' ], 'db', 'vault' ) ) )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
+			if ( due( 'RETLEVEL', 'NBURETLEVEL_TIME' ) ) try { handler( bpretlevel( )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
+			if ( due( 'ESL', 'NBU2ESL_TIME' ) ) nbu2esl( );
+			if ( due( 'SM9', 'NBU2SM9_TIME' ) ) nbu2sm9( );
+		} catch ( exception $e ) { exception_handler( $e ); }
 		$lock->lock( false );
 	} else {
 		logfile( display( 'Another instance in progress.' ) );

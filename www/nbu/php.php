@@ -54,6 +54,7 @@ function update( ) {
 		echo sprintf( 'Removing update package "%s.zip".', $name ) . PHP_EOL;
 		unlink( $file );
 	}
+	return true;
 }
 
 function scheduler( $starttime ) {
@@ -862,6 +863,7 @@ try {
 						die( sprintf( 'Error: File "%s" is not a valid package.', $file ) ); 
 					if ( !move_uploaded_file( $_FILES[  'file' ][ 'tmp_name' ], dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'upload' . DIRECTORY_SEPARATOR . $file ) ) 
 						die( sprintf( 'Error moving package "%s".', $file ) );
+					update( );
 					echo sprintf( 'Upload of package "%s" was successful.', $file );
 				}
 				if ( $post[ 'action' ] == 'session-store' ) {

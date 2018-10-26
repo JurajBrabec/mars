@@ -70,6 +70,12 @@ function sourceRemove( event ) {
 	return found;
 }
 function sourceRefresh( name, mode ) {
+	if ( typeof name == 'object' ) {
+		name.preventDefault( );
+		$( name.target ).tooltip( 'hide' )
+		var name = $( name.target ).closest( 'div.panel' ).attr( 'id' );
+		var mode = 'data';
+	}
 	var source = sources.find( 
 		function( i ){ return i.name == name; } );
 	$( 'div#reports-container' ).find( 'div#' + name ).addClass( 'loading' ).find( 'span.badge.rows' ).text( 'Loading...' );
@@ -87,7 +93,7 @@ function sourceRefresh( name, mode ) {
 		    	source: JSON.stringify( source )
 		    }
 		} )
-		.always( function( ) { stopTrack( ); $( 'div#reports-container' ).find( 'div#' + name ).removeClass( 'loading' ); } )
+		.always( function( ) { stopTrack( ); $( 'div#reports-container' ).find( 'div#' + this.source ).removeClass( 'loading' ); } )
 		.done( function( data ){ sourceFill( this.source, this.mode, data ); } )
 		.fail( ajaxError )
 	} );
@@ -123,7 +129,15 @@ function sourceFill( name, mode, data ) {
 				.empty( ) 
 				.append( description )
 				.append( $( '<span/>', { 'class':'filters' } ) )
-				.append( $( '<span/>', { 'class':'sorts' } ) );
+				.append( $( '<span/>', { 'class':'sorts' } ) )
+				.append( ' ' )
+				.append( $( '<button/>', { type: 'button', 
+					id: 'refreshData',
+					'class':'helpTooltip btn btn-hover btn-sm btn-info', 
+					onclick: 'sourceRefresh(event)' } )
+					.append( $( '<span/>', { 'class': 'glyphicon glyphicon-list-alt' } ) )
+					.append( ' Execute' ) )
+				;
 			$div.find( 'div.report' ).find( 'table' ).attr( 'class', 'table-hover text-nowrap' );
 			var $div = $source.find( 'div.footer' );
 			$div.attr( 'class', 'panel-footer' );
@@ -139,10 +153,11 @@ function sourceFill( name, mode, data ) {
 			$div.find( 'span.rows' ).empty( ).append( $pages );
 			sourceShow( name, 'filters' );
 			sourceShow( name, 'sorts' );
-			sourceRefresh( name, 'data' );
+//			sourceRefresh( name, 'data' );
 			break;
 		case 'data':
 			var $source = $container.find( 'div' + href );
+			$source.find( 'button#refreshData' ).hide( )
 			$source.find( 'div.report' ).find( 'table' ).empty( ).append( data );
 			var rows = 0;
 			var links = { };
@@ -287,6 +302,7 @@ function sourceShow( name, target ) {
 		.append( '+' )
 		.addClass( 'btn-primary' );
 	$div.append( $item );
+	$( 'div#' + source.name ).find( 'button#refreshData' ).show( )
 }
 function sourcePage( event, page ) {
 	event.preventDefault( );
@@ -321,7 +337,7 @@ function sourceLink( event ) {
 	}
 	var field = source.fields[ fieldIndex ].name;
 	var target = sourceAdd( $td.data( 'link' ) );
-	sourceRefresh( target.name, 'no-data' );
+	$container.find( 'div' + '#' + target.name ).length == 0 && sourceRefresh( target.name, 'no-data' );
 	$.each( source.links, function( i, item ) {
 		if( item.field == field && item.target == target.name ) {
 			var value = item.value;

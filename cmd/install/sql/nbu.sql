@@ -75,7 +75,7 @@ CREATE TABLE `bpdbjobs_report` (
 	INDEX `client` (`client`),
 	INDEX `policy` (`policy`),
 	INDEX `policy_schedule` (`policy`, `schedule`),
-	INDEX `parentjob` (`parentjob`),
+	INDEX `masterserver_parentjob` (`masterserver`,`parentjob`),
 	INDEX `jobtype` (`jobtype`),
 	INDEX `state` (`state`),
 	INDEX `subtype` (`subtype`)
@@ -100,6 +100,49 @@ CREATE TABLE `bpdbjobs_summary` (
 	PRIMARY KEY (`masterserver`)
 )
 COMMENT='bpdbjobs -summary'
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+;
+
+CREATE TABLE `bpflist_backupid` (
+	`masterserver` VARCHAR(64) NOT NULL,
+	`image_version` TINYINT(3) UNSIGNED NOT NULL,
+	`client_type` TINYINT(3) UNSIGNED NOT NULL,
+	`start_time` INT(10) UNSIGNED NOT NULL,
+	`timestamp` INT(10) UNSIGNED NOT NULL,
+	`schedule_type` TINYINT(3) UNSIGNED NOT NULL,
+	`client` VARCHAR(64) NOT NULL,
+	`policy_name` VARCHAR(64) NOT NULL,
+	`backupid` VARCHAR(64) NOT NULL,
+	`peer_name` VARCHAR(8) NOT NULL,
+	`sw_version` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
+	`lines` TINYINT(3) UNSIGNED NOT NULL,
+	`options` TINYINT(3) UNSIGNED NOT NULL,
+	`user_name` VARCHAR(8) NOT NULL,
+	`group_name` VARCHAR(8) NOT NULL,
+	`raw_partition_id` TINYINT(3) UNSIGNED NOT NULL,
+	`jobid` INT(10) UNSIGNED NOT NULL,
+	`keyword` VARCHAR(8) NULL DEFAULT NULL,
+	`file_number` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`compressed_size` TINYINT(3) UNSIGNED NOT NULL,
+	`path_length` TINYINT(3) UNSIGNED NOT NULL,
+	`data_length` TINYINT(3) UNSIGNED NOT NULL,
+	`block` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`in_image` TINYINT(3) UNSIGNED NOT NULL,
+	`raw_size` INT(10) UNSIGNED NOT NULL,
+	`gb` INT(10) UNSIGNED NOT NULL,
+	`device_number` MEDIUMINT(8) NOT NULL,
+	`path` VARCHAR(64) NOT NULL,
+	`directory_bits` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`owner` VARCHAR(32) NOT NULL,
+	`group` VARCHAR(32) NOT NULL,
+	`bytes` INT(10) UNSIGNED NOT NULL,
+	`access_time` INT(10) UNSIGNED NOT NULL,
+	`modification_time` INT(10) UNSIGNED NOT NULL,
+	`inode_time` INT(10) UNSIGNED NOT NULL,
+	PRIMARY KEY (`masterserver`, `backupid`, `file_number`)
+)
+COMMENT='bpflist -l -backupid'
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
@@ -419,10 +462,11 @@ ENGINE=InnoDB
 
 DROP TABLE IF EXISTS `nbu_policy_tower_customer`;
 CREATE TABLE `nbu_policy_tower_customer` (
+	`masterserver` VARCHAR(64) NOT NULL,
 	`policy` VARCHAR(64) NOT NULL,
 	`tower` VARCHAR(32) NULL DEFAULT NULL,
 	`customer` VARCHAR(64) NULL DEFAULT NULL,
-	PRIMARY KEY (`policy`)
+	PRIMARY KEY (`masterserver`,`policy`)
 )
 COMMENT='Policy-Tower-Customer inter-table'
 COLLATE='utf8_general_ci'
@@ -559,13 +603,13 @@ BEGIN
 	END;
 	SET @start=NOW();
 	ALTER EVENT nbu_event DISABLE;
-	INSERT INTO nbu_policy_tower_customer (policy,tower,customer)
-		SELECT p.name,t.name,c.name FROM bppllist_policies p
+	INSERT INTO nbu_policy_tower_customer (masterserver,policy,tower,customer)
+		SELECT p.masterserver,p.name,t.name,c.name FROM bppllist_policies p
 			LEFT JOIN config_towers t ON (p.name REGEXP t.policyname AND t.obsoleted IS NULL)
 			LEFT JOIN config_customers c ON (p.name REGEXP c.policyname AND c.obsoleted IS NULL)
 	ON DUPLICATE KEY UPDATE tower=VALUES(tower),customer=VALUES(customer);
-	INSERT INTO nbu_policy_tower_customer (policy,tower,customer)
-		SELECT j.policy,t.name,c.name FROM (SELECT DISTINCT j.policy FROM bpdbjobs_report j WHERE j.policy IS NOT NULL) j
+	INSERT INTO nbu_policy_tower_customer (masterserver,policy,tower,customer)
+		SELECT j.masterserver,j.policy,t.name,c.name FROM (SELECT DISTINCT j.masterserver,j.policy FROM bpdbjobs_report j WHERE j.policy IS NOT NULL) j
 			LEFT JOIN config_towers t ON (j.policy REGEXP t.policyname AND t.obsoleted IS NULL)
 			LEFT JOIN config_customers c ON (j.policy REGEXP c.policyname AND c.obsoleted IS NULL)
 		ON DUPLICATE KEY UPDATE tower=VALUES(tower),customer=VALUES(customer);
@@ -635,7 +679,7 @@ BEGIN
 	RENAME TABLE bpretlevel TO drop_table,temp_table TO bpretlevel;
 	DROP TABLE drop_table;
 	CREATE TABLE temp_table LIKE nbu_policy_tower_customer;
-	INSERT INTO temp_table SELECT * FROM nbu_policy_tower_customer ORDER BY policy;
+	INSERT INTO temp_table SELECT * FROM nbu_policy_tower_customer ORDER BY masterserver,policy;
 	RENAME TABLE nbu_policy_tower_customer TO drop_table,temp_table TO nbu_policy_tower_customer;
 	DROP TABLE drop_table;
 	CREATE TABLE temp_table LIKE vault_xml;
@@ -655,6 +699,10 @@ BEGIN
 	INSERT INTO temp_table SELECT * FROM bpdbjobs_report WHERE started>=UNIX_TIMESTAMP(NOW()-INTERVAL @months MONTH) ORDER BY masterserver,jobid;
 	RENAME TABLE bpdbjobs_report TO drop_table,temp_table TO bpdbjobs_report;
 	DROP TABLE drop_table;
+	CREATE TABLE temp_table LIKE bpflist_backupid;
+	INSERT INTO temp_table SELECT f.* FROM bpflist_backupid f WHERE EXISTS (SELECT j.backupid FROM bpdbjobs_report j WHERE j.masterserver=f.masterserver AND j.backupid=f.backupid) ORDER BY masterserver,backupid;
+	RENAME TABLE bpflist_backupid TO drop_table,temp_table TO bpflist_backupid;
+	DROP TABLE drop_table;
 	ALTER EVENT nbu_event ENABLE;
 	REPLACE INTO config_settings (name,value) VALUES ('maintenance',TIMESTAMPDIFF(SECOND,@start,NOW()));
 END //
@@ -665,19 +713,19 @@ DROP VIEW IF EXISTS `nbu_filtered_jobs`;
 CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_filtered_jobs` AS 
 SELECT 
 	j.masterserver,j.jobid,j.parentjob,
-	IF(j.jobid=j.parentjob,(SELECT COUNT(r.jobid) FROM bpdbjobs_report r WHERE r.parentjob=j.jobid)-1,NULL) AS childjobs,
+	IF(j.jobid=j.parentjob,(SELECT COUNT(r.jobid) FROM bpdbjobs_report r WHERE r.masterserver=j.masterserver AND r.parentjob=j.jobid)-1,NULL) AS childjobs,
 	j.jobtype,j.subtype,j.state,j.operation,
 	j.status,j.percent,
-	tc.tower,tc.customer,
+	ptc.tower,ptc.customer,
 	j.policy,j.policytype,j.schedule,j.scheduletype,
 	j.client,j.server,
 	j.started,j.elapsed,j.ended,
-	j.stunit,j.priority,j.tries,j.kbytes,j.files,j.owner,j.group,
+	j.backupid,j.stunit,j.priority,j.tries,j.kbytes,j.files,j.owner,j.group,
 	j.retentionlevel,j.retentionperiod,j.restartable,j.kbpersec
 	FROM bpdbjobs_report j FORCE KEY (started)
-		LEFT JOIN nbu_policy_tower_customer tc ON (tc.policy=j.policy)
-	WHERE IFNULL(tc.tower,'')=IFNULL(f_tower(),IFNULL(tc.tower,''))
-	AND IFNULL (tc.customer,'')=IFNULL(f_customer(),IFNULL(tc.customer,''))
+		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=j.masterserver AND ptc.policy=j.policy)
+	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
 	AND j.started BETWEEN f_from() AND f_to()
 	ORDER BY j.jobid 
 ;
@@ -697,7 +745,7 @@ SELECT
 	nbu_code('scheduletype',b.scheduletype) AS scheduletype,
 	b.client,
 	b.server,from_unixtime(b.started) AS started,sec_to_time(b.elapsed) AS elapsed,from_unixtime(b.ended) AS ended,
-	b.stunit,b.priority,b.tries,b.kbytes,b.files,b.owner,b.group,
+	b.backupid,b.stunit,b.priority,b.tries,b.kbytes,b.files,b.owner,b.group,
 	b.retentionlevel,b.retentionperiod,b.restartable,b.kbpersec
 	FROM nbu_filtered_jobs b
 ;
@@ -719,7 +767,7 @@ SELECT
 	b.server,
 	DATE(FROM_UNIXTIME(b.started-TIME_TO_SEC(s.value))) AS bw_day,
 	FROM_UNIXTIME(b.started) AS started,SEC_TO_TIME(b.elapsed) AS elapsed,FROM_UNIXTIME(b.ended) AS ended,
-	b.stunit,b.priority,b.tries,b.kbytes,b.files,b.owner,b.group,
+	b.backupid,b.stunit,b.priority,b.tries,b.kbytes,b.files,b.owner,b.group,
 	b.retentionlevel,b.retentionperiod,b.restartable,b.kbpersec
 	FROM nbu_filtered_jobs b
 	LEFT JOIN config_settings s ON (s.name='bw_start')
@@ -867,18 +915,18 @@ DROP VIEW IF EXISTS `nbu_clients`;
 CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_clients` AS 
 SELECT
 	c.masterserver,
-	tc.tower,tc.customer,
+	ptc.tower,ptc.customer,
 	IF(p.policytype IN (4,6,7,8,11,15,16,17,18,19,25,35),'INTEG','FS') as type,
 	c.policyname,c.name,c.architecture,c.os,
 	COUNT(j.jobid) AS jobs,
 	SUM(if(j.status>1,1,0)) AS failures,
 	ROUND(SUM(j.kbytes)/1048576,1) AS gbytes
 	FROM bppllist_clients c
-		LEFT JOIN nbu_policy_tower_customer tc ON (tc.policy=c.policyname)
+		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=c.masterserver AND ptc.policy=c.policyname)
 		LEFT JOIN bppllist_policies p ON (p.masterserver=c.masterserver AND p.name=c.policyname AND p.obsoleted IS NULL)
 		LEFT JOIN bpdbjobs_report j ON (j.masterserver=c.masterserver AND j.policy=c.policyname AND j.client=c.name AND j.started BETWEEN f_from() AND f_to())
-	WHERE IFNULL(tc.tower,'')=IFNULL(f_tower(),IFNULL(tc.tower,''))
-	AND IFNULL (tc.customer,'')=IFNULL(f_customer(),IFNULL(tc.customer,''))
+	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
 	AND c.obsoleted IS NULL 
 	AND c.policyname NOT REGEXP 'dummy|template'
 	GROUP BY c.masterserver,c.policyname,c.name
@@ -889,22 +937,43 @@ DROP VIEW IF EXISTS `nbu_clients_distinct`;
 CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_clients_distinct` AS 
 SELECT DISTINCT
 	c.masterserver,
-	tc.tower,tc.customer,
+	ptc.tower,ptc.customer,
 	IF(p.policytype IN (4,6,7,8,11,15,16,17,18,19,25,35),'INTEG','FS') as type,
 	c.name,c.architecture,c.os,
 	COUNT(j.jobid) AS jobs,
 	SUM(if(j.status>1,1,0)) AS failures,
 	ROUND(SUM(j.kbytes)/1048576,1) AS gbytes
 	FROM bppllist_clients c
-		LEFT JOIN nbu_policy_tower_customer tc ON (tc.policy=c.policyname)
+		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=c.masterserver AND ptc.policy=c.policyname)
 		LEFT JOIN bppllist_policies p ON (p.masterserver=c.masterserver AND p.name=c.policyname AND p.obsoleted IS NULL)
 		LEFT JOIN bpdbjobs_report j ON (j.masterserver=c.masterserver AND j.policy=c.policyname AND j.client=c.name AND j.started BETWEEN f_from() AND f_to())
-	WHERE IFNULL(tc.tower,'')=IFNULL(f_tower(),IFNULL(tc.tower,''))
-	AND IFNULL (tc.customer,'')=IFNULL(f_customer(),IFNULL(tc.customer,''))
+	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
 	AND c.obsoleted IS NULL 
 	AND c.policyname NOT REGEXP 'dummy|template'
 	GROUP BY c.masterserver,c.name,type
 	ORDER BY c.masterserver,c.name,type 
+;
+
+DROP VIEW IF EXISTS `nbu_flist`;
+CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_flist` AS 
+SELECT 
+	f.masterserver,
+	ptc.tower,ptc.customer,
+	f.`client`,f.path,
+	nbu_code('policytype',f.client_type) AS client_type,
+	nbu_code('scheduletype',f.schedule_type) AS schedule_type,
+	f.policy_name,
+	FROM_UNIXTIME(f.`timestamp`) AS `timestamp`,
+	f.backupid,f.file_number,f.in_image,f.`owner`,f.`group`,
+	FROM_UNIXTIME(NULLIF(f.access_time,0)) AS access_time,
+	FROM_UNIXTIME(NULLIF(f.modification_time,0)) AS modification_time,
+	FROM_UNIXTIME(NULLIF(f.inode_time,0)) AS inode_time
+	FROM bpflist_backupid f
+		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=f.masterserver AND ptc.policy=f.policy_name)
+	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
+	ORDER BY f.masterserver,f.backupid,f.file_number
 ;
 
 DROP VIEW IF EXISTS `nbu_schedules`;
@@ -965,7 +1034,7 @@ SELECT
 DROP VIEW IF EXISTS `nbu_imagelist`;
 CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_imagelist` AS 
 SELECT 
-	i.masterserver,i.backupid,i.jobid,tc.tower,tc.customer,i.name AS client,
+	i.masterserver,i.backupid,i.jobid,ptc.tower,ptc.customer,i.name AS client,
 	IF(i.client_type IN (4,6,7,8,11,15,16,17,18,19,25,35),'INTEG','FS') as type,
 	nbu_code('policytype',i.client_type) AS policytype,
 	i.policy_name AS policyname,i.sched_label AS schedulename,
@@ -984,9 +1053,9 @@ SELECT
 	i.slp_version,i.ir_enabled,i.client_charset,i.indexing_status
 	FROM bpimagelist i
 		LEFT JOIN config_settings s ON (s.name='bw_start')
-		LEFT JOIN nbu_policy_tower_customer tc ON (tc.policy=i.policy_name)
-	WHERE IFNULL(tc.tower,'')=IFNULL(f_tower(),IFNULL(tc.tower,''))
-	AND IFNULL (tc.customer,'')=IFNULL(f_customer(),IFNULL(tc.customer,''))
+		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=i.masterserver AND ptc.policy=i.policy_name)
+	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
 	AND i.backup_time BETWEEN f_from() AND f_to() 
 ;
 
@@ -1048,31 +1117,29 @@ SELECT
 
 DROP VIEW IF EXISTS `nbu_esl`;
 CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_esl` AS 
-select 
-p.masterserver,p.name as policy,s.backuptype,
-concat(p.name,' (',s.name,')') as name,
-trim(',' from p.res) as res,
-s.freq_days,s.retentionlevel,
-s.sun_start,s.sun_hours,
-s.mon_start,s.mon_hours,
-s.tue_start,s.tue_hours,
-s.wed_start,s.wed_hours,
-s.thu_start,s.thu_hours,
-s.fri_start,s.fri_hours,
-s.sat_start,s.sat_hours
-from nbu_policies p
-left join nbu_schedules s on s.masterserver=p.masterserver and s.policyname=p.name and s.freq_days<>84
-where p.name not regexp 'DUMMY|Template' and p.clients>0 and p.jobs>0
-order by 1,2 
+SELECT p.masterserver,p.name AS policy,s.backuptype,
+	CONCAT(p.name,' (',s.name,')') AS name,
+	TRIM(',' FROM p.res) AS res,
+	s.freq_days,s.retentionlevel,
+	s.sun_start,s.sun_hours,
+	s.mon_start,s.mon_hours,
+	s.tue_start,s.tue_hours,
+	s.wed_start,s.wed_hours,
+	s.thu_start,s.thu_hours,
+	s.fri_start,s.fri_hours,
+	s.sat_start,s.sat_hours
+	FROM nbu_policies p
+		LEFT JOIN nbu_schedules s ON (s.masterserver=p.masterserver AND s.policyname=p.name AND s.freq_days<>84)
+	WHERE p.name NOT regexp 'DUMMY|Template' AND p.clients>0 AND p.jobs>0
+	ORDER BY 1,2 
 ;
 
 DROP VIEW IF EXISTS `nbu_esl_client`;
 CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_esl_client` AS 
-select 
-e.masterserver,e.name,c.name as client 
-from nbu_esl e
-left join nbu_clients c on c.masterserver=e.masterserver and e.policy=c.policyname
-order by 1,2,3 
+SELECT e.masterserver,e.name,c.name as client 
+	FROM nbu_esl e
+		LEFT JOIN nbu_clients c ON (c.masterserver=e.masterserver and e.policy=c.policyname)
+	ORDER BY 1,2,3 
 ;
 
 DROP VIEW IF EXISTS `nbu_overview_jobs`;
@@ -1123,26 +1190,26 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_ove
 	SELECT
 	j.customer,
 	(SELECT COUNT(DISTINCT c.name) FROM bppllist_clients c
-		LEFT JOIN nbu_policy_tower_customer tc ON (tc.policy=c.policyname)
-		WHERE tc.customer=j.customer
-		AND IFNULL(tc.tower,'')=IFNULL(f_tower(),IFNULL(tc.tower,''))
-		AND IFNULL (tc.customer,'')=IFNULL(f_customer(),IFNULL(tc.customer,''))
+		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=c.masterserver AND ptc.policy=c.policyname)
+		WHERE ptc.customer=j.customer
+		AND IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+		AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
 		AND c.obsoleted IS NULL 
 	) AS clients,
 	(SELECT COUNT(DISTINCT c.name) FROM bppllist_clients c
-		LEFT JOIN nbu_policy_tower_customer tc ON (tc.policy=c.policyname)
-		LEFT JOIN bppllist_policies p ON ((p.name=c.policyname) AND (p.policytype IN (4,6,7,8,11,15,16,17,18,19,25,35)) AND (p.obsoleted IS NULL))
-		WHERE tc.customer=j.customer
-		AND IFNULL(tc.tower,'')=IFNULL(f_tower(),IFNULL(tc.tower,''))
-		AND IFNULL (tc.customer,'')=IFNULL(f_customer(),IFNULL(tc.customer,''))
+		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=c.masterserver AND ptc.policy=c.policyname)
+		LEFT JOIN bppllist_policies p ON (p.masterserver=c.masterserver AND p.name=c.policyname AND p.policytype IN (4,6,7,8,11,15,16,17,18,19,25,35) AND p.obsoleted IS NULL)
+		WHERE ptc.customer=j.customer
+		AND IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+		AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
 		AND p.name IS NOT NULL
 		AND c.obsoleted IS NULL 
 	) AS integ_clients,
 	(SELECT COUNT(DISTINCT p.name) FROM bppllist_policies p
-		LEFT JOIN nbu_policy_tower_customer tc ON (tc.policy=p.name)
-		WHERE tc.customer=j.customer
-		AND IFNULL(tc.tower,'')=IFNULL(f_tower(),IFNULL(tc.tower,''))
-		AND IFNULL (tc.customer,'')=IFNULL(f_customer(),IFNULL(tc.customer,''))
+		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=p.masterserver AND ptc.policy=p.name)
+		WHERE ptc.customer=j.customer
+		AND IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+		AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
 		AND p.obsoleted IS NULL 
 	) AS policies,
 	SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0,1,0)) AS bsrjobs,
@@ -1158,7 +1225,7 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_ove
 DROP VIEW IF EXISTS `nbu_consecutive_failures`;
 CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_consecutive_failures` AS 
 SELECT masterserver,tower,customer,client,policy,
-	IF(ISNULL((SELECT c.name FROM bppllist_clients c WHERE c.name=j1.client AND c.policyname=j1.policy AND c.obsoleted IS NULL)),'N','Y') AS existing,
+	IF(ISNULL((SELECT c.name FROM bppllist_clients c WHERE c.masterserver=j1.masterserver AND c.name=j1.client AND c.policyname=j1.policy AND c.obsoleted IS NULL)),'N','Y') AS existing,
 	schedule,FROM_UNIXTIME(lastfailure) AS lastfailure,
 	(SELECT COUNT(*) FROM bpdbjobs_report j2 WHERE j2.masterserver=j1.masterserver AND j2.started BETWEEN f_from() AND f_to() AND j2.client=j1.client AND j2.status>1 AND j2.started>j1.lastsuccess AND j2.policy=j1.policy AND IFNULL(j2.schedule,'')=IFNULL(j1.schedule,'')) AS failures
 	FROM 
@@ -1244,7 +1311,7 @@ order by v.vault_name
 DROP VIEW IF EXISTS `nbu_audit`;
 CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_audit` AS 
 SELECT 
-	tc.tower,tc.customer,
+	ptc.tower,ptc.customer,
 	n.masterserver,n.name AS client,
 	p.policytype AS pt,nbu_code('policytype',p.policytype) AS policytype,p.name AS policy,
 	s.name as schedule,ROUND(s.frequency/86400,0) AS freq,
@@ -1252,16 +1319,16 @@ SELECT
 	v.profile_name AS vault,
 	(SELECT rl.period FROM bpretlevel rl WHERE rl.masterserver=s.masterserver AND rl.level=v.retention) AS vault_ret
 	FROM bppllist_clients n
-		LEFT JOIN bppllist_policies p ON (p.name=n.policyname AND p.obsoleted IS NULL)
-		LEFT JOIN nbu_policy_tower_customer tc ON (tc.policy=p.name)
-		LEFT JOIN bppllist_schedules s ON (s.policyname=n.policyname AND s.obsoleted IS NULL)
-		LEFT JOIN vault_item_xml vi ON (vi.type='CLIENT' AND vi.value=n.name AND vi.obsoleted IS NULL)
-		LEFT JOIN vault_xml v ON (v.masterserver=vi.masterserver AND v.profile_name=vi.profile AND v.obsoleted IS NULL)
+		LEFT JOIN bppllist_policies p ON (p.masterserver=n.masterserver AND p.name=n.policyname AND p.obsoleted IS NULL)
+		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=p.masterserver AND ptc.policy=p.name)
+		LEFT JOIN bppllist_schedules s ON (s.masterserver=n.masterserver AND s.policyname=n.policyname AND s.obsoleted IS NULL)
+		LEFT JOIN vault_item_xml vi ON (vi.masterserver=n.masterserver AND vi.type='CLIENT' AND vi.value=n.name AND vi.obsoleted IS NULL)
+		LEFT JOIN vault_xml v ON (v.masterserver=n.masterserver AND v.profile_name=vi.profile AND v.obsoleted IS NULL)
 	WHERE n.obsoleted IS NULL
 	AND p.active=0
-	AND IFNULL(tc.tower,'')=IFNULL(f_tower(),IFNULL(tc.tower,''))
-	AND IFNULL (tc.customer,'')=IFNULL(f_customer(),IFNULL(tc.customer,''))
-	ORDER BY tc.tower,tc.customer,n.name,p.name,s.name,v.profile_name 
+	AND IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
+	ORDER BY ptc.tower,ptc.customer,n.name,p.name,s.name,v.profile_name 
 ;
 
 DROP VIEW IF EXISTS `nbu_tickets`;
@@ -1286,7 +1353,7 @@ SELECT
 	j.schedule,
 	nbu_code('scheduletype',j.scheduletype) AS scheduletype
 	FROM bpdbjobs_report j
-	LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.policy=j.policy)
+	LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=j.masterserver AND ptc.policy=j.policy)
 	WHERE j.ended > UNIX_TIMESTAMP(NOW()- INTERVAL 16 DAY)
 	AND ((j.status>1 AND j.tries>0) OR (j.status=196))
 	ORDER BY j.ended 
@@ -2372,6 +2439,75 @@ INSERT INTO `nbu_codes` (`field`, `code`, `description`) VALUES
 	('subtype', 5, 'DB staging');
 
 REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `description`, `created`, `updated`, `obsoleted`) VALUES
+	('audit_complete', 1, 'DATA_CENTER', 'DATA_CENTER', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:08:54', NULL),
+	('audit_complete', 2, 'CUSTOMER_NAME', 'CUSTOMER_NAME', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:09:41', NULL),
+	('audit_complete', 3, 'DEVICE_ID', 'DEVICE_ID', 'STRING', NULL, NULL, '2018-01-18 13:15:25', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 4, 'HOST_NAME', 'HOST_NAME', 'STRING', NULL, NULL, '2018-01-18 13:15:59', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 5, 'RLIs', 'RLIs', 'NUMBER', NULL, NULL, '2018-01-18 13:15:59', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 6, 'BACKUP_RLI_ID', 'BACKUP_RLI_ID', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 7, 'BACKUP_RLI_MRT', 'BACKUP_RLI_MRT', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 8, 'SOURCE', 'SOURCE', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 9, 'STATUS', 'STATUS', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 10, 'COMMENT', 'COMMENT', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 11, 'LISTS', 'LISTS', 'NUMBER', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 12, 'OWNER', 'OWNER', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 13, 'HOST', 'HOST', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 14, 'LIST', 'LIST', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 15, 'CUSTOMER', 'CUSTOMER', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 16, 'RETENTION', 'RETENTION', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 17, 'PROTECTION', 'PROTECTION', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_missing', 1, 'DATA_CENTER', 'DATA_CENTER', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:08:54', NULL),
+	('audit_missing', 2, 'CUSTOMER_NAME', 'CUSTOMER_NAME', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:09:41', NULL),
+	('audit_missing', 3, 'DEVICE_ID', 'DEVICE_ID', 'STRING', NULL, NULL, '2018-01-18 13:15:25', '2018-01-18 13:18:26', NULL),
+	('audit_missing', 4, 'HOST_NAME', 'HOST_NAME', 'STRING', NULL, NULL, '2018-01-18 13:15:59', '2018-01-18 13:18:26', NULL),
+	('audit_missing', 5, 'RLIs', 'RLIs', 'NUMBER', NULL, NULL, '2018-01-18 13:15:59', '2018-01-18 13:18:26', NULL),
+	('audit_missing', 6, 'BACKUP_RLI_ID', 'BACKUP_RLI_ID', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:18:26', NULL),
+	('audit_missing', 7, 'BACKUP_RLI_MRT', 'BACKUP_RLI_MRT', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_missing', 8, 'SOURCE', 'SOURCE', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_missing', 9, 'STATUS', 'STATUS', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_missing', 10, 'COMMENT', 'COMMENT', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 1, 'DATA_CENTER', 'DATA_CENTER', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:08:54', NULL),
+	('audit_partial', 2, 'CUSTOMER_NAME', 'CUSTOMER_NAME', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:09:41', NULL),
+	('audit_partial', 3, 'DEVICE_ID', 'DEVICE_ID', 'STRING', NULL, NULL, '2018-01-18 13:15:25', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 4, 'HOST_NAME', 'HOST_NAME', 'STRING', NULL, NULL, '2018-01-18 13:15:59', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 5, 'RLIs', 'RLIs', 'NUMBER', NULL, NULL, '2018-01-18 13:15:59', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 6, 'BACKUP_RLI_ID', 'BACKUP_RLI_ID', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 7, 'BACKUP_RLI_MRT', 'BACKUP_RLI_MRT', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 8, 'SOURCE', 'SOURCE', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 9, 'STATUS', 'STATUS', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 10, 'COMMENT', 'COMMENT', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 11, 'LISTS', 'LISTS', 'NUMBER', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 12, 'OWNER', 'OWNER', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 13, 'HOST', 'HOST', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 14, 'LIST', 'LIST', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 15, 'CUSTOMER', 'CUSTOMER', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 16, 'RETENTION', 'RETENTION', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 17, 'PROTECTION', 'PROTECTION', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 1, 'DATA_CENTER', 'DATA_CENTER', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:08:54', NULL),
+	('audit_qrs', 2, 'CUSTOMER_NAME', 'CUSTOMER_NAME', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:09:41', NULL),
+	('audit_qrs', 3, 'RESERVATION_ID', 'RESERVATION_ID', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:09:41', NULL),
+	('audit_qrs', 4, 'RESERVATION_STATUS', 'RESERVATION_STATUS', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:09:41', NULL),
+	('audit_qrs', 5, 'BACKUP_RLI_ID', 'BACKUP_RLI_ID', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 6, 'BACKUP_RLI_STATUS', 'BACKUP_RLI_STATUS', 'STRING', NULL, NULL, '2018-01-18 13:13:32', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 7, 'BACKUP_RLI_STATE', 'BACKUP_RLI_STATE', 'STRING', NULL, NULL, '2018-01-18 13:13:49', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 8, 'BACKUP_RLI_MRT', 'BACKUP_RLI_MRT', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 9, 'SERVER_RLI_ID', 'SERVER_RLI_ID', 'STRING', NULL, NULL, '2018-01-18 13:14:28', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 10, 'SERVER_RLI_STATUS', 'SERVER_RLI_STATUS', 'STRING', NULL, NULL, '2018-01-18 13:14:49', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 11, 'SERVER_RLI_STATE', 'SERVER_RLI_STATE', 'STRING', NULL, NULL, '2018-01-18 13:15:01', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 12, 'SERVER_RLI_MRT', 'SERVER_RLI_MRT', 'STRING', NULL, NULL, '2018-01-18 13:15:13', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 13, 'DEVICE_ID', 'DEVICE_ID', 'STRING', NULL, NULL, '2018-01-18 13:15:25', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 14, 'DEVICE_PHYSICAL_NAME', 'DEVICE_PHYSICAL_NAME', 'STRING', NULL, NULL, '2018-01-18 13:15:38', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 15, 'HOST_NAME', 'HOST_NAME', 'STRING', NULL, NULL, '2018-01-18 13:15:59', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 16, 'DEVICE_STATUS', 'DEVICE_STATUS', 'STRING', NULL, NULL, '2018-01-18 13:16:18', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 17, 'DEVICE_STATE', 'DEVICE_STATE', 'STRING', NULL, NULL, '2018-01-18 13:16:28', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 18, 'SERVER_TYPE', 'SERVER_TYPE', 'STRING', NULL, NULL, '2018-01-18 13:16:42', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 19, 'OS', 'OS', 'STRING', NULL, NULL, '2018-01-18 13:16:51', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 20, 'OS_TYPE', 'OS_TYPE', 'STRING', NULL, NULL, '2018-01-18 13:16:58', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 21, 'OS_VERSION', 'OS_VERSION', 'STRING', NULL, NULL, '2018-01-18 13:17:09', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 22, 'DEVICE_MRT', 'DEVICE_MRT', 'STRING', NULL, NULL, '2018-01-18 13:17:19', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 23, 'VLAN_ID', 'VLAN_ID', 'STRING', NULL, NULL, '2018-01-18 13:17:28', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 24, 'VLAN_STATUS', 'VLAN_STATUS', 'STRING', NULL, NULL, '2018-01-18 13:17:36', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 25, 'VLAN_ASSIGNED_CUSTOMER', 'VLAN_ASSIGNED_CUSTOMER', 'STRING', NULL, NULL, '2018-01-18 13:17:51', '2018-01-18 13:18:26', NULL),
 	('nbu_audit', 1, 'tower', 'Tower', 'STRING', NULL, NULL, '2017-10-09 14:57:39', '2017-10-09 14:57:39', NULL),
 	('nbu_audit', 2, 'customer', 'Customer', 'STRING', NULL, NULL, '2017-10-09 14:56:21', '2017-10-09 14:57:31', NULL),
 	('nbu_audit', 3, 'masterserver', 'Master server', 'STRING', NULL, NULL, '2017-10-09 14:57:56', '2017-10-09 14:57:56', NULL),
@@ -2417,17 +2553,18 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_bsr_jobs', 19, 'started', 'Started', 'DATE', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:21:39', NULL),
 	('nbu_bsr_jobs', 20, 'elapsed', 'Elapsed', 'STRING', NULL, NULL, '2017-03-22 12:10:49', '2017-10-18 11:12:24', NULL),
 	('nbu_bsr_jobs', 21, 'ended', 'Ended', 'DATE', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:21:43', NULL),
-	('nbu_bsr_jobs', 22, 'stunit', 'ST Unit', 'STRING', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:21:44', NULL),
-	('nbu_bsr_jobs', 23, 'priority', 'Prio', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:21:46', NULL),
-	('nbu_bsr_jobs', 24, 'tries', 'Tries', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:21:47', NULL),
-	('nbu_bsr_jobs', 25, 'kbytes', 'kB', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:21:49', NULL),
-	('nbu_bsr_jobs', 26, 'files', 'Files', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:21:51', NULL),
-	('nbu_bsr_jobs', 27, 'owner', 'Owner', 'STRING', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:21:53', NULL),
-	('nbu_bsr_jobs', 28, 'group', 'Group', 'STRING', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:21:55', NULL),
-	('nbu_bsr_jobs', 29, 'retentionlevel', 'RL', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:21:57', NULL),
-	('nbu_bsr_jobs', 30, 'retentionperiod', 'RP', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:21:59', NULL),
-	('nbu_bsr_jobs', 31, 'restartable', 'Restart', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:22:01', NULL),
-	('nbu_bsr_jobs', 32, 'kbpersec', 'kB/s', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:22:03', NULL),
+	('nbu_bsr_jobs', 22, 'backupid', 'Backup ID', 'STRING', 'nbu_flist', 'Show objects for backup ID %backupid%', '2017-03-22 12:10:49', '2017-05-11 14:21:43', NULL),
+	('nbu_bsr_jobs', 23, 'stunit', 'ST Unit', 'STRING', NULL, NULL, '2017-03-22 12:10:49', '2018-10-26 13:31:07', NULL),
+	('nbu_bsr_jobs', 24, 'priority', 'Prio', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2018-10-26 13:31:09', NULL),
+	('nbu_bsr_jobs', 25, 'tries', 'Tries', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2018-10-26 13:31:11', NULL),
+	('nbu_bsr_jobs', 26, 'kbytes', 'kB', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2018-10-26 13:31:13', NULL),
+	('nbu_bsr_jobs', 27, 'files', 'Files', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2018-10-26 13:31:15', NULL),
+	('nbu_bsr_jobs', 28, 'owner', 'Owner', 'STRING', NULL, NULL, '2017-03-22 12:10:49', '2018-10-26 13:31:17', NULL),
+	('nbu_bsr_jobs', 29, 'group', 'Group', 'STRING', NULL, NULL, '2017-03-22 12:10:49', '2018-10-26 13:31:19', NULL),
+	('nbu_bsr_jobs', 30, 'retentionlevel', 'RL', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2018-10-26 13:31:22', NULL),
+	('nbu_bsr_jobs', 31, 'retentionperiod', 'RP', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2018-10-26 13:31:25', NULL),
+	('nbu_bsr_jobs', 32, 'restartable', 'Restart', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2018-10-26 13:31:26', NULL),
+	('nbu_bsr_jobs', 33, 'kbpersec', 'kB/s', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2018-10-26 13:31:28', NULL),
 	('nbu_bsr_job_results', 1, 'customer', 'Customer', 'STRING', NULL, NULL, '2018-04-27 14:24:06', '2018-04-27 14:26:21', NULL),
 	('nbu_bsr_job_results', 2, 'client', 'Client name', 'STRING', NULL, NULL, '2018-04-27 14:24:18', '2018-04-27 14:26:03', NULL),
 	('nbu_bsr_job_results', 3, 'policy', 'Policy name', 'STRING', NULL, NULL, '2018-04-27 14:24:26', '2018-04-27 14:26:18', NULL),
@@ -2480,6 +2617,23 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_consecutive_failures', 7, 'schedule', 'Schedule', 'STRING', NULL, NULL, '2017-08-31 15:37:38', '2017-10-18 12:58:37', NULL),
 	('nbu_consecutive_failures', 8, 'lastfailure', 'Last failure', 'DATE', NULL, NULL, '2017-08-31 15:37:38', '2017-10-18 12:58:37', NULL),
 	('nbu_consecutive_failures', 9, 'failures', 'Failures', 'NUMBER', 'nbu_jobs', 'Show failed jobs', '2017-08-31 15:38:29', '2017-10-18 12:59:48', NULL),
+	('nbu_flist', 1, 'masterserver', 'Master server', 'STRING', NULL, NULL, '2018-10-26 13:05:26', '2018-10-26 13:05:26', NULL),
+	('nbu_flist', 2, 'tower', 'Tower', 'STRING', NULL, NULL, '2018-10-26 13:06:11', '2018-10-26 13:06:11', NULL),
+	('nbu_flist', 3, 'customer', 'Customer', 'STRING', NULL, NULL, '2018-10-26 13:06:25', '2018-10-26 13:06:25', NULL),
+	('nbu_flist', 4, 'client', 'Client name', 'STRING', NULL, NULL, '2018-10-26 13:06:48', '2018-10-26 13:06:48', NULL),
+	('nbu_flist', 5, 'path', 'Object name', 'STRING', NULL, NULL, '2018-10-26 13:07:03', '2018-10-26 13:07:03', NULL),
+	('nbu_flist', 6, 'client_type', 'Client type', 'STRING', NULL, NULL, '2018-10-26 13:07:32', '2018-10-26 13:07:32', NULL),
+	('nbu_flist', 7, 'schedule_type', 'Schedule type', 'STRING', NULL, NULL, '2018-10-26 13:07:48', '2018-10-26 13:07:48', NULL),
+	('nbu_flist', 8, 'policy_name', 'Policy name', 'STRING', NULL, NULL, '2018-10-26 13:08:07', '2018-10-26 13:08:07', NULL),
+	('nbu_flist', 9, 'timestamp', 'Timestamp', 'DATE', NULL, NULL, '2018-10-26 13:08:30', '2018-10-26 13:08:30', NULL),
+	('nbu_flist', 10, 'backupid', 'Backup ID', 'STRING', NULL, NULL, '2018-10-26 13:08:44', '2018-10-26 13:08:44', NULL),
+	('nbu_flist', 11, 'file_number', 'File number', 'NUMBER', NULL, NULL, '2018-10-26 13:09:34', '2018-10-26 13:09:34', NULL),
+	('nbu_flist', 12, 'in_image', 'In image', 'NUMBER', NULL, NULL, '2018-10-26 13:09:57', '2018-10-26 13:09:57', NULL),
+	('nbu_flist', 13, 'owner', 'Owner', 'STRING', NULL, NULL, '2018-10-26 13:10:14', '2018-10-26 13:10:14', NULL),
+	('nbu_flist', 14, 'group', 'Group', 'STRING', NULL, NULL, '2018-10-26 13:10:24', '2018-10-26 13:10:24', NULL),
+	('nbu_flist', 15, 'access_time', 'Accessed', 'DATE', NULL, NULL, '2018-10-26 13:10:45', '2018-10-26 13:10:45', NULL),
+	('nbu_flist', 16, 'modification_time', 'Modified', 'DATE', NULL, NULL, '2018-10-26 13:10:55', '2018-10-26 13:22:23', NULL),
+	('nbu_flist', 17, 'inode_time', 'iNode', 'DATE', NULL, NULL, '2018-10-26 13:11:08', '2018-10-26 13:11:08', NULL),
 	('nbu_gbsr', 1, 'jobs', 'Jobs', 'NUMBER', 'nbu_bsr_jobs', 'Show jobs', '2017-03-22 12:21:26', '2017-04-12 15:11:30', NULL),
 	('nbu_gbsr', 2, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed jobs', '2017-03-22 12:21:37', '2017-04-12 15:11:34', NULL),
 	('nbu_gbsr_client', 1, 'client', 'Client name', 'STRING', NULL, NULL, '2017-03-22 15:08:37', '2017-03-22 15:17:53', NULL),
@@ -2516,16 +2670,16 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_imagelist', 8, 'scheduletype', 'Schedule type', 'STRING', NULL, NULL, '2018-08-30 14:59:46', '2018-09-03 14:36:03', NULL),
 	('nbu_imagelist', 9, 'policyname', 'Policy name', 'STRING', NULL, NULL, '2018-08-30 14:59:17', '2018-09-03 14:36:05', NULL),
 	('nbu_imagelist', 10, 'schedulename', 'Schedule name', 'STRING', NULL, NULL, '2018-08-30 14:59:58', '2018-09-03 14:36:08', NULL),
-	('nbu_imagelist', 11, 'fragments', 'Frags', 'NUMBER', 'nbu_imagelist_frags', 'Show %fragments% image fragments for %backupid%', '2018-08-30 15:02:30', '2018-09-03 14:36:11', NULL),
-	('nbu_imagelist', 12, 'snap_time', 'Snapshot', 'DATE', NULL, NULL, '2018-08-30 15:03:27', '2018-09-03 14:36:13', NULL),
-	('nbu_imagelist', 13, 'bw_day', 'Backup day', 'DATE', NULL, NULL, '2018-08-30 15:00:47', '2018-09-03 14:36:18', NULL),
-	('nbu_imagelist', 14, 'started', 'Started', 'DATE', NULL, NULL, '2018-08-30 15:00:56', '2018-09-03 14:36:21', NULL),
-	('nbu_imagelist', 15, 'elapsed', 'Elaped', 'TIME', NULL, NULL, '2018-08-30 15:01:06', '2018-09-03 14:36:22', NULL),
-	('nbu_imagelist', 16, 'retention', 'Retention', 'STRING', NULL, NULL, '2018-08-30 15:00:25', '2018-09-03 14:36:38', NULL),
-	('nbu_imagelist', 17, 'expiration', 'Expiration', 'DATE', NULL, NULL, '2018-08-30 15:01:18', '2018-09-03 14:36:42', NULL),
-	('nbu_imagelist', 18, 'kbytes', 'kB', 'NUMBER', NULL, NULL, '2018-08-30 15:02:10', '2018-09-03 14:36:44', NULL),
-	('nbu_imagelist', 19, 'files', 'Files', 'NUMBER', NULL, NULL, '2018-08-30 15:02:19', '2018-09-03 14:36:49', NULL),
-	('nbu_imagelist', 20, 'backupid', 'Backup ID', 'STRING', NULL, NULL, '2018-08-30 14:58:46', '2018-09-03 14:35:52', NULL),
+	('nbu_imagelist', 11, 'backupid', 'Backup ID', 'STRING', 'nbu_flist', 'Show objects for backup ID %backupid%', '2018-08-30 14:58:46', '2018-10-26 13:32:05', NULL),
+	('nbu_imagelist', 12, 'fragments', 'Frags', 'NUMBER', 'nbu_imagelist_frags', 'Show %fragments% image fragments for %backupid%', '2018-08-30 15:02:30', '2018-10-26 13:32:08', NULL),
+	('nbu_imagelist', 13, 'snap_time', 'Snapshot', 'DATE', NULL, NULL, '2018-08-30 15:03:27', '2018-10-26 13:32:09', NULL),
+	('nbu_imagelist', 14, 'bw_day', 'Backup day', 'DATE', NULL, NULL, '2018-08-30 15:00:47', '2018-10-26 13:32:10', NULL),
+	('nbu_imagelist', 15, 'started', 'Started', 'DATE', NULL, NULL, '2018-08-30 15:00:56', '2018-10-26 13:32:12', NULL),
+	('nbu_imagelist', 16, 'elapsed', 'Elaped', 'TIME', NULL, NULL, '2018-08-30 15:01:06', '2018-10-26 13:32:13', NULL),
+	('nbu_imagelist', 17, 'retention', 'Retention', 'STRING', NULL, NULL, '2018-08-30 15:00:25', '2018-10-26 13:32:15', NULL),
+	('nbu_imagelist', 18, 'expiration', 'Expiration', 'DATE', NULL, NULL, '2018-08-30 15:01:18', '2018-10-26 13:32:17', NULL),
+	('nbu_imagelist', 19, 'kbytes', 'kB', 'NUMBER', NULL, NULL, '2018-08-30 15:02:10', '2018-10-26 13:32:19', NULL),
+	('nbu_imagelist', 20, 'files', 'Files', 'NUMBER', NULL, NULL, '2018-08-30 15:02:19', '2018-10-26 13:32:26', NULL),
 	('nbu_imagelist_frags', 1, 'masterserver', 'Master server', 'STRING', NULL, NULL, '2018-08-30 15:17:43', '2018-08-30 15:17:43', NULL),
 	('nbu_imagelist_frags', 2, 'backupid', 'Backup ID', 'STRING', NULL, NULL, '2018-08-30 15:17:57', '2018-08-30 15:17:57', NULL),
 	('nbu_imagelist_frags', 3, 'fragment_number', 'Frag#', 'NUMBER', NULL, NULL, '2018-08-30 15:18:39', '2018-08-30 15:19:07', NULL),
@@ -2564,17 +2718,18 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_jobs', 19, 'started', 'Started', 'DATE', NULL, NULL, '2017-02-13 10:38:41', '2017-05-11 14:23:39', NULL),
 	('nbu_jobs', 20, 'elapsed', 'Elapsed', 'STRING', NULL, NULL, '2017-02-13 10:39:05', '2017-10-18 11:13:36', NULL),
 	('nbu_jobs', 21, 'ended', 'Ended', 'DATE', NULL, NULL, '2017-02-13 10:39:14', '2017-05-11 14:23:42', NULL),
-	('nbu_jobs', 22, 'stunit', 'ST Unit', 'STRING', NULL, NULL, '2017-03-22 09:04:19', '2017-05-11 14:24:05', NULL),
-	('nbu_jobs', 23, 'priority', 'Prio', 'NUMBER', NULL, NULL, '2017-03-22 09:04:31', '2017-05-11 14:24:07', NULL),
-	('nbu_jobs', 24, 'tries', 'Tries', 'NUMBER', NULL, NULL, '2017-03-22 09:04:46', '2017-05-11 14:24:08', NULL),
-	('nbu_jobs', 25, 'kbytes', 'kB', 'NUMBER', NULL, NULL, '2017-03-22 09:04:56', '2017-05-11 14:24:10', NULL),
-	('nbu_jobs', 26, 'files', 'Files', 'NUMBER', NULL, NULL, '2017-03-22 09:05:13', '2017-05-11 14:24:12', NULL),
-	('nbu_jobs', 27, 'owner', 'Owner', 'STRING', NULL, NULL, '2017-03-22 09:05:22', '2017-05-11 14:24:13', NULL),
-	('nbu_jobs', 28, 'group', 'Group', 'STRING', NULL, NULL, '2017-03-22 09:05:32', '2017-05-11 14:24:17', NULL),
-	('nbu_jobs', 29, 'retentionlevel', 'RL', 'NUMBER', NULL, NULL, '2017-03-22 09:05:49', '2017-05-11 14:24:28', NULL),
-	('nbu_jobs', 30, 'retentionperiod', 'RP', 'NUMBER', NULL, NULL, '2017-03-22 09:06:01', '2017-05-11 14:24:30', NULL),
-	('nbu_jobs', 31, 'restartable', 'Restart', 'NUMBER', NULL, NULL, '2017-03-22 09:06:21', '2017-05-11 14:24:32', NULL),
-	('nbu_jobs', 32, 'kbpersec', 'kB/s', 'NUMBER', NULL, NULL, '2017-03-22 09:06:38', '2017-05-11 14:24:34', NULL),
+	('nbu_jobs', 22, 'backupid', 'Backup ID', 'STRING', 'nbu_flist', 'Show objects for backup ID %backupid%', '2017-03-22 09:04:19', '2018-10-26 13:24:26', NULL),
+	('nbu_jobs', 23, 'stunit', 'ST Unit', 'STRING', NULL, NULL, '2017-03-22 09:04:19', '2018-10-25 10:34:30', NULL),
+	('nbu_jobs', 24, 'priority', 'Prio', 'NUMBER', NULL, NULL, '2017-03-22 09:04:31', '2018-10-25 10:34:33', NULL),
+	('nbu_jobs', 25, 'tries', 'Tries', 'NUMBER', NULL, NULL, '2017-03-22 09:04:46', '2018-10-25 10:34:36', NULL),
+	('nbu_jobs', 26, 'kbytes', 'kB', 'NUMBER', NULL, NULL, '2017-03-22 09:04:56', '2018-10-25 10:34:38', NULL),
+	('nbu_jobs', 27, 'files', 'Files', 'NUMBER', NULL, NULL, '2017-03-22 09:05:13', '2018-10-25 10:34:40', NULL),
+	('nbu_jobs', 28, 'owner', 'Owner', 'STRING', NULL, NULL, '2017-03-22 09:05:22', '2018-10-25 10:34:43', NULL),
+	('nbu_jobs', 29, 'group', 'Group', 'STRING', NULL, NULL, '2017-03-22 09:05:32', '2018-10-25 10:34:45', NULL),
+	('nbu_jobs', 30, 'retentionlevel', 'RL', 'NUMBER', NULL, NULL, '2017-03-22 09:05:49', '2018-10-25 10:34:47', NULL),
+	('nbu_jobs', 31, 'retentionperiod', 'RP', 'NUMBER', NULL, NULL, '2017-03-22 09:06:01', '2018-10-25 10:34:49', NULL),
+	('nbu_jobs', 32, 'restartable', 'Restart', 'NUMBER', NULL, NULL, '2017-03-22 09:06:21', '2018-10-25 10:34:51', NULL),
+	('nbu_jobs', 33, 'kbpersec', 'kB/s', 'NUMBER', NULL, NULL, '2017-03-22 09:06:38', '2018-10-25 10:34:53', NULL),
 	('nbu_overview_clients', 1, 'customer', 'Customer', 'STRING', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 10:55:58', NULL),
 	('nbu_overview_clients', 2, 'name', 'Host name', 'STRING', NULL, NULL, '2017-06-13 10:06:45', '2017-12-15 09:42:09', NULL),
 	('nbu_overview_clients', 3, 'architecture', 'Architecture', 'STRING', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 10:56:00', NULL),
@@ -2727,6 +2882,11 @@ REPLACE INTO `core_filters` (`report`, `ord`, `source`, `field`, `operator`, `va
 	('nbu_consecutive_failures', 1, 'nbu_consecutive_failures', 'failures', '>', '1', '2017-08-31 15:40:04', '2017-08-31 15:44:48', '2017-08-31 15:44:46');
 
 REPLACE INTO `core_formats` (`report`, `ord`, `source`, `field`, `operator`, `value`, `style`, `description`, `fields`, `created`, `updated`, `obsoleted`) VALUES
+	('audit_(partial|missing|complete)', 1, 'audit_(partial|missing|complete)', 'status', '=', 'OK', 'background-color: palegreen; color: green;', 'OK', NULL, '2018-01-18 14:18:56', '2018-01-18 14:19:36', NULL),
+	('audit_(partial|missing|complete)', 2, 'audit_(partial|missing|complete)', 'status', '=', 'EXCEPTION', 'background-color: greenyellow; color: green;', 'Exception', NULL, '2018-01-18 14:20:23', '2018-01-18 14:21:13', NULL),
+	('audit_(partial|missing|complete)', 3, 'audit_(partial|missing|complete)', 'status', '=', 'WRONG', 'background-color: gold; color: brown;', 'Wrong protection', NULL, '2018-01-18 14:20:23', '2018-01-18 14:24:49', NULL),
+	('audit_(partial|missing|complete)', 4, 'audit_(partial|missing|complete)', 'status', '=', 'MISSING', 'background-color: lightpink; color: red;', 'Missing', NULL, '2018-01-18 14:20:23', '2018-01-18 14:22:12', NULL),
+	('audit_qrs', 1, 'audit_qrs', 'data_center', '!=', NULL, 'background-color: palegreen; color: green;', 'QRS', NULL, '2018-01-18 14:23:54', '2018-01-18 14:32:55', NULL),
 	('nbu_(audit|clients|policies|schedules)', 4, 'nbu_(audit|clients|policies|schedules)', 'customer', '=', NULL, 'background-color: lightpink; color: red;', 'No customer', NULL, '2017-03-16 12:44:24', '2017-10-09 15:05:29', NULL),
 	('nbu_(audit|clients|policies|schedules)', 5, 'nbu_(audit|clients|policies|schedules)', 'tower', '=', NULL, 'background-color: pink; color: red;', 'No tower', NULL, '2017-04-27 13:50:18', '2017-10-09 15:05:29', NULL),
 	('nbu_(bsr_)?jobs', 1, 'nbu_(bsr_)?jobs', 'status', '=', '0', 'background-color: lightgreen; color: green;', 'Success', NULL, '2017-03-22 12:18:38', '2017-04-12 09:15:10', NULL),
@@ -2762,6 +2922,9 @@ REPLACE INTO `core_formats` (`report`, `ord`, `source`, `field`, `operator`, `va
 	('nbu_consecutive_failures', 4, 'nbu_consecutive_failures', 'failures', '>', '6', 'background-color: lightpink; color: red;', 'Less than 10 failures', NULL, '2017-08-31 15:43:22', '2017-08-31 15:47:02', NULL),
 	('nbu_consecutive_failures', 5, 'nbu_consecutive_failures', 'failures', '>', '9', 'background-color: salmon; color: darkred;', 'More than 10 failures', NULL, '2017-08-31 15:44:04', '2017-08-31 15:47:04', NULL),
 	('nbu_consecutive_failures', 6, 'nbu_consecutive_failures', 'existing', '=', 'N', 'background-color: silver; color: black;', 'Non-existing client/policy', NULL, '2017-08-31 15:44:04', '2017-10-20 09:44:04', NULL),
+	('nbu_flist', 1, 'nbu_flist', 'client_type', 'regexp', 'win|ux|vmw', 'background-color: lightgreen; color: green;', 'FS backup objects', NULL, '2018-10-26 13:14:14', '2018-10-26 13:33:53', NULL),
+	('nbu_flist', 2, 'nbu_flist', 'client_type', 'not regexp', 'win|ux|vmw', 'background-color: lightblue; color: blue;', 'INTEG backup objects', NULL, '2018-10-26 13:14:55', '2018-10-26 13:34:02', NULL),
+	('nbu_flist', 3, 'nbu_flist', 'schedule_type', 'regexp', 'full', 'font-weight:bold;', 'Full backup objects', NULL, '2018-10-26 13:14:55', '2018-10-26 13:15:02', NULL),
 	('nbu_gimages', 7, 'nbu_gimages', 'media', 'regexp', '^@', 'background-color: honeydew; font-style: italic;', 'Virtual tape', 'media', '2018-08-30 15:26:50', '2018-09-05 10:53:56', NULL),
 	('nbu_gimages', 8, 'nbu_gimages', 'media', 'regexp', '^\\w', 'background-color: lightcyan; color: black;', 'Physical tape', 'media', '2018-08-30 15:26:50', '2018-09-05 10:53:51', NULL),
 	('nbu_imagelist$', 5, 'nbu_imagelist$', 'fragments', '=', '0', 'background-color:silver ;color: gray;font-weight: lighter;', 'No fragments', NULL, '2018-09-03 14:22:34', '2018-09-05 10:32:34', NULL),
@@ -2781,6 +2944,8 @@ REPLACE INTO `core_formats` (`report`, `ord`, `source`, `field`, `operator`, `va
 	('nbu_vault_vaults', 2, 'nbu_vault_vaults', 'profiles', '>', '0', 'background-color: lightblue; color: blue;', 'With profiles', NULL, '2017-07-26 09:45:54', '2017-07-26 09:56:10', NULL);
 
 REPLACE INTO `core_links` (`source`, `field`, `ord`, `target`, `filter`, `operator`, `value`, `created`, `updated`, `obsoleted`) VALUES
+	('nbu((_bsr)?_jobs|_imagelist)', 'backupid', 1, 'nbu_flist', 'masterserver', '=', '%masterserver%', '2017-03-20 15:38:43', '2018-10-26 13:37:14', NULL),
+	('nbu((_bsr)?_jobs|_imagelist)', 'backupid', 2, 'nbu_flist', 'backupid', '=', '%backupid%', '2017-03-20 15:38:43', '2018-10-26 13:35:48', NULL),
 	('nbu(_bsr)?_jobs', 'childjobs', 1, 'nbu_jobs', 'parentjob', '=', '%parentjob%', '2017-03-20 15:36:14', '2017-04-10 15:06:36', NULL),
 	('nbu(_bsr)?_jobs', 'policy', 1, 'nbu_policies', 'name', '=', '%policy%', '2017-03-20 15:37:51', '2017-04-10 15:06:37', NULL),
 	('nbu(_bsr)?_jobs', 'schedule', 1, 'nbu_schedules', 'policyname', '=', '%policy%', '2017-03-20 15:38:11', '2017-04-10 15:06:38', NULL),
@@ -2890,12 +3055,13 @@ REPLACE INTO `core_reports` (`ord`, `name`, `category`, `title`, `created`, `upd
 	(9, 'nbu_gimages', 'NBU Reports', 'Images per client', '2018-08-30 14:03:59', '2018-09-05 10:29:08', NULL),
 	(10, 'nbu_imagelist', 'NBU Reports', 'Image list', '2018-08-30 14:06:09', '2018-09-05 10:28:14', NULL),
 	(11, 'nbu_imagelist_frags', 'NBU Reports', 'Image fragments', '2018-08-30 14:06:49', '2018-09-05 10:28:15', NULL),
-	(12, '---', 'NBU Reports', ' ', '2018-08-30 14:07:11', '2018-09-05 10:28:16', NULL),
-	(13, 'nbu_overview_jobs', 'NBU Reports', 'Jobs overview', '2017-06-01 15:18:00', '2018-09-05 10:28:19', NULL),
-	(14, 'nbu_overview_customers', 'NBU Reports', 'Customers overview', '2017-06-13 10:47:39', '2018-09-05 10:28:20', NULL),
-	(15, 'nbu_overview_clients', 'NBU Reports', 'Clients overview', '2017-06-01 15:18:00', '2018-09-05 10:28:23', NULL),
-	(16, 'nbu_bsr_jobs', NULL, 'BSR Job list', '2017-03-20 08:56:19', '2018-09-05 10:28:27', NULL),
-	(17, 'nbu_codes', NULL, 'Codes', '2017-05-12 13:06:47', '2018-09-05 10:28:30', NULL),
+	(12, 'nbu_flist', 'NBU Reports', 'Backup/Image objects', '2018-08-30 14:06:49', '2018-09-05 10:28:15', NULL),
+	(13, '---', 'NBU Reports', ' ', '2018-08-30 14:07:11', '2018-10-26 13:02:17', NULL),
+	(14, 'nbu_overview_jobs', 'NBU Reports', 'Jobs overview', '2017-06-01 15:18:00', '2018-10-26 13:02:19', NULL),
+	(15, 'nbu_overview_customers', 'NBU Reports', 'Customers overview', '2017-06-13 10:47:39', '2018-10-26 13:02:21', NULL),
+	(16, 'nbu_overview_clients', 'NBU Reports', 'Clients overview', '2017-06-01 15:18:00', '2018-10-26 13:02:23', NULL),
+	(17, 'nbu_bsr_jobs', NULL, 'BSR Job list', '2017-03-20 08:56:19', '2018-10-26 13:02:25', NULL),
+	(18, 'nbu_codes', NULL, 'Codes', '2017-05-12 13:06:47', '2018-10-26 13:02:29', NULL),
 	(20, 'nbu_bsr', 'BSR', 'Daily BSR', '2017-03-20 08:57:55', '2018-01-04 10:34:49', NULL),
 	(21, 'nbu_bsr_client', 'BSR', 'Daily BSR per client', '2017-03-20 08:58:13', '2018-01-04 10:22:31', NULL),
 	(22, 'nbu_bsr_customer', 'BSR', 'Daily BSR per customer', '2017-03-20 08:58:13', '2018-01-04 10:22:31', NULL),
@@ -2918,12 +3084,21 @@ REPLACE INTO `core_reports` (`ord`, `name`, `category`, `title`, `created`, `upd
 	(44, 'nbu_vault_clients', 'Vaults', 'Clients', '2017-07-25 09:34:05', '2018-01-04 10:21:24', NULL),
 	(45, 'nbu_vault_classes', 'Vaults', 'Classes', '2017-07-25 09:34:05', '2018-01-04 10:21:32', NULL),
 	(46, 'nbu_vault_schedules', 'Vaults', 'Schedules', '2017-07-25 09:34:45', '2018-01-04 10:21:35', NULL),
-	(50, 'nbu_audit', 'Audits', 'Configuration audit', '2017-10-09 14:55:29', '2018-01-04 10:21:10', NULL);
+	(50, 'nbu_audit', 'Audits', 'Configuration audit', '2017-10-09 14:55:29', '2018-01-04 10:21:10', NULL),
+	(90, '---', 'Audits', '', '2018-01-18 13:01:58', '2018-01-18 13:08:03', NULL),
+	(91, 'audit_qrs', 'Audits', 'QRS', '2018-01-18 13:01:58', '2018-01-18 13:08:03', NULL),
+	(92, 'audit_missing', 'Audits', 'Missing hosts', '2018-01-18 13:01:58', '2018-01-18 13:08:03', NULL),
+	(93, 'audit_partial', 'Audits', 'Partial hosts', '2018-01-18 13:01:58', '2018-01-18 13:08:03', NULL),
+	(94, 'audit_complete', 'Audits', 'Complete hosts', '2018-01-18 13:01:58', '2018-01-18 13:08:03', NULL);
 
 REPLACE INTO `core_sorts` (`report`, `ord`, `source`, `field`, `sort`, `created`, `updated`, `obsoleted`) VALUES
 	('nbu_(bsr_)?jobs', 1, 'nbu_(bsr_)?jobs', 'jobid', 'DESC', '2017-08-28 15:15:57', '2017-08-28 15:20:31', NULL);
 
 REPLACE INTO `core_sources` (`report`, `ord`, `name`, `title`, `description`, `fields`, `link`, `pivot`, `tower`, `customer`, `timeperiod`, `limit`, `created`, `updated`, `obsoleted`) VALUES
+	('audit_complete', 1, 'audit_complete', 'Complete hosts', 'QRS fully complete servers/RLIs', NULL, NULL, NULL, 0, 0, 0, 10, '2018-01-18 13:04:22', '2018-01-18 13:08:19', NULL),
+	('audit_missing', 1, 'audit_missing', 'Missing hosts', 'QRS completely missing servers/RLIs', NULL, NULL, NULL, 0, 0, 0, 10, '2018-01-18 13:04:22', '2018-01-18 13:08:19', NULL),
+	('audit_partial', 1, 'audit_partial', 'Partial hosts', 'QRS partially completed servers/RLIs', NULL, NULL, NULL, 0, 0, 0, 10, '2018-01-18 13:04:22', '2018-01-18 13:08:19', NULL),
+	('audit_qrs', 1, 'audit_qrs', 'QRS', 'QRS servers/RLIs', NULL, NULL, NULL, 0, 0, 0, 10, '2018-01-18 13:04:22', '2018-01-18 13:08:19', NULL),
 	('nbu_audit', 1, 'nbu_audit', 'Configuration audit', 'List of clients with policies, schedules and vault profiles', NULL, NULL, NULL, 0, 0, 0, 10, '2017-10-09 14:55:59', '2017-10-09 15:06:33', NULL),
 	('nbu_bsr', 1, 'nbu_bsr', 'BSR', 'Daily BSR per day', NULL, NULL, NULL, 1, 1, 1, 7, '2017-03-22 12:20:38', '2017-05-12 13:27:04', NULL),
 	('nbu_bsr_all', 1, 'nbu_bsr', 'BSR', 'Daily BSR per day', NULL, NULL, NULL, 1, 1, 1, 7, '2017-03-22 15:32:54', '2017-05-12 13:27:06', NULL),
@@ -2940,6 +3115,7 @@ REPLACE INTO `core_sources` (`report`, `ord`, `name`, `title`, `description`, `f
 	('nbu_clients_distinct', 1, 'nbu_clients_distinct', 'Clients', 'List of clients', NULL, NULL, NULL, 1, 1, 1, 10, '2017-02-13 10:09:51', '2017-12-15 10:19:16', NULL),
 	('nbu_codes', 1, 'nbu_codes', 'Codes', 'List of codes', NULL, NULL, NULL, 0, 0, 0, 25, '2017-05-12 13:07:10', '2017-06-13 11:26:10', NULL),
 	('nbu_consecutive_failures', 1, 'nbu_consecutive_failures', 'Consecutive failures', 'List of consecutive failures', NULL, NULL, NULL, 1, 1, 1, 10, '2017-08-31 15:30:54', '2017-08-31 15:31:17', NULL),
+	('nbu_flist', 1, 'nbu_flist', 'Backup/Image objects', 'List of objects for client/backup ID', NULL, NULL, NULL, 1, 1, 1, 10, '2018-10-26 13:03:57', '2018-10-26 13:04:38', NULL),
 	('nbu_gbsr', 1, 'nbu_gbsr', 'BSR', 'Global BSR', NULL, NULL, NULL, 1, 1, 1, 10, '2018-01-04 10:27:31', '2018-01-04 10:28:45', NULL),
 	('nbu_gbsr_client', 1, 'nbu_gbsr_client', 'BSR per client', 'Global BSR per client', NULL, NULL, NULL, 1, 1, 1, 10, '2018-01-04 10:28:41', '2018-01-04 10:28:41', NULL),
 	('nbu_gbsr_customer', 1, 'nbu_gbsr_customer', 'BSR per customer', 'Global BSR per customer', NULL, NULL, NULL, 1, 1, 1, 10, '2018-01-04 10:28:41', '2018-01-04 10:28:41', NULL),

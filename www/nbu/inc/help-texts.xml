@@ -15,6 +15,7 @@
 	<liCustomer>Click here to select a specific <b>Customer</b> or all customers.</liCustomer>
 	<liTimePeriod>Click here to select a specific <b>Time period</b>.</liTimePeriod>
 	<remove>Click here to remove the report.</remove>
+	<refreshData>Click here to load or refresh the data based on current conditions and sorts.</refreshData>
 	<pagination>Click here to toggle <b>pagination</b> i.e. to show all rows at once, or show 10 rows per page.</pagination>
 	<prevpage>Click here to go to <b>previous</b> page.</prevpage>
 	<nextpage>Click here to go to <b>next</b> page.</nextpage>

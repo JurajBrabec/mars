@@ -64,7 +64,7 @@ goto :eof
 
 :vcredist
 call :echo Installing Microsoft Visual C++ Redistributable Components...
-start /wait /d "%root%\bin" vcredist_x86.exe /repair /passive /norestart
+start /wait /d "%root%\bin" vc_redist.x64.exe /repair /passive /norestart
 if %errorlevel% gtr 0 call :echo Error %errorlevel% installing Microsoft Visual C++ Redistributable Components.
 goto :eof
 

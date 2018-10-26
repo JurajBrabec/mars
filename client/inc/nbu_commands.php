@@ -2,7 +2,7 @@
 
 /*
  * MARS 4.0 PHP CODE
- * build 4.0.0.0 @ 2016-09-11 00:00
+ * build 4.1.17 @ 2018-10-25 04:17
  * * rewritten from scratch
  */
 
@@ -95,6 +95,162 @@ class bpplclients extends nbu {
 		return $result;
 	}
 	
+}
+
+### BPFLIST
+
+class bpflist_backupid extends nbu {
+	const WIN_BIN				= 'admincmd\\bpflist';
+	const ARGUMENTS				= '-l -backupid %s';
+	const VALID_EXITCODES		= '0,227';
+
+	const IMAGE_VERSION			= 'image_version';
+	const CLIENT_TYPE			= 'client_type';
+	const START_TIME			= 'start_time';
+	const TIMESTAMP				= 'timestamp';
+	const SCHEDULE_TYPE			= 'schedule_type';
+	const CLIENT				= 'client';
+	const POLICY_NAME			= 'policy_name';
+	const BACKUPID				= 'backupid';
+	const PEER_NAME				= 'peer_name';
+	const LINES					= 'lines';
+	const OPTIONS				= 'options';
+	const USER_NAME				= 'user_name';
+	const GROUP_NAME			= 'group_name';
+	const RAW_PARTITION_ID		= 'raw_partition_id';
+	const JOBID					= 'jobid';
+
+	const FILE_NUMBER			= 'file_number';
+	const COMPRESSED_SIZE		= 'compressed_size';
+	const PATH_LENGTH			= 'path_length';
+	const DATA_LENGTH			= 'data_length';
+	const BLOCK					= 'block';
+	const IN_IMAGE				= 'in_image';
+	const RAW_SIZE				= 'raw_size';
+	const GB					= 'gb';
+	const DEVICE_NUMBER			= 'device_number';
+	const PATH					= 'path';
+	const DIRECTORY_BITS		= 'directory_bits';
+	const OWNER					= 'owner';
+	const GROUP					= 'group';
+	const BYTES					= 'bytes';
+	const ACCESS_TIME			= 'access_time';
+	const MODIFICATION_TIME		= 'modification_time';
+	const INODE_TIME			= 'inode_time';
+	const PARSING_EXCEPTION		= 'Parsing error (%s).';
+
+	private $files				= array( );
+	private $files_row			= array( );
+
+	public function files( $field = NULL, $value = NULL) { return _arr( $this->files, func_get_args( ) ); }
+	public function files_row( $field = NULL, $value = NULL) { return _arr( $this->files_row, func_get_args( ) ); }
+
+	protected function setup( ) {
+		parent::setup( );
+		$this->ignore_lines( NULL, 'no entity was found' );
+	}
+
+	public static function pattern( ) {
+		$pattern = array(
+			text::P( static::IMAGE_VERSION, text::CSV ),
+			text::P( static::CLIENT_TYPE, text::CSV ),
+			text::P( static::START_TIME, text::CSV ),
+			text::P( static::TIMESTAMP, text::CSV ),
+			text::P( static::SCHEDULE_TYPE, text::CSV ),
+			text::P( static::CLIENT, text::CSV ),
+			text::P( static::POLICY_NAME, text::CSV ),
+			text::P( static::BACKUPID, text::CSV ),
+			text::P( static::PEER_NAME, text::CSV ),
+			text::P( static::LINES, text::CSV ),
+			text::P( static::OPTIONS, text::CSV ),
+			text::P( static::USER_NAME, text::CSV ),
+			text::P( static::GROUP_NAME, text::CSV ),
+			text::P( static::RAW_PARTITION_ID, text::CSV ),
+			text::P( static::JOBID, text::CSV ),
+			text::P( static::FILE_NUMBER, text::CSV ),
+			text::P( static::COMPRESSED_SIZE, text::CSV ),
+			text::P( static::PATH_LENGTH, text::CSV ),
+			text::P( static::DATA_LENGTH, text::CSV ),
+			text::P( static::BLOCK, text::CSV ),
+			text::P( static::IN_IMAGE, text::CSV ),
+			text::P( static::RAW_SIZE, text::CSV ),
+			text::P( static::GB, text::CSV ),
+			text::P( static::DEVICE_NUMBER, text::CSV ),
+			text::P( static::PATH, text::CSV ),
+			text::P( static::DIRECTORY_BITS, text::CSV ),
+			text::P( static::OWNER, text::CSV ),
+			text::P( static::GROUP, text::CSV ),
+			text::P( static::BYTES, text::CSV ),
+			text::P( static::ACCESS_TIME, text::CSV ),
+			text::P( static::MODIFICATION_TIME, text::CSV ),
+			text::P( static::INODE_TIME, text::CSV )
+		);
+		return sprintf( static::PATTERN, implode( text::SPACES, $pattern ) );
+	}
+	
+	protected function parse_split( $split ) {
+		$split = str_replace( '*NULL*', '', $split );
+		$split = str_replace( '*ANY*', 'ANY', $split );
+		$pattern = '^FILES (\S+) (\S+) +(\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) +(\S+) (\S+) (\S+) (\S+) (\S+) (\S+)';
+		$row = array( );
+		if ( preg_match( sprintf( '/%s/', $pattern ), $split, $match ) ) {
+			array_shift( $match );
+			foreach ( $this->fields( ) as $name => $type ) {
+				$row[ $name ] = field::validate( isset( $match[ $name ] ) ? $match[ $name ] : $this->add_fields( $name ), $type );
+			}
+			list(
+				$row[ static::IMAGE_VERSION ],
+				$row[ static::CLIENT_TYPE ],
+				$row[ static::START_TIME ],
+				$row[ static::TIMESTAMP ],
+				$row[ static::SCHEDULE_TYPE ],
+				$row[ static::CLIENT ],
+				$row[ static::POLICY_NAME ],
+				$row[ static::BACKUPID ],
+				$row[ static::PEER_NAME ],
+				$row[ static::LINES ],
+				$row[ static::OPTIONS ],
+				$row[ static::USER_NAME ],
+				$row[ static::GROUP_NAME ],
+				$row[ static::RAW_PARTITION_ID ],
+				$row[ static::JOBID ]
+			) = $match;
+			$this->files_row( $row );
+			$row = array( );
+		} else {
+			$pattern = '^(\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\/[^\/]*\/?) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+)';
+			if ( preg_match( sprintf( '/%s/', $pattern ), $split, $match ) ) {
+				array_shift( $match );
+				$row = $this->files_row( );
+				list(
+					$row[ static::FILE_NUMBER ],
+					$row[ static::COMPRESSED_SIZE ],
+					$row[ static::PATH_LENGTH ],
+					$row[ static::DATA_LENGTH ],
+					$row[ static::BLOCK ],
+					$row[ static::IN_IMAGE ],
+					$row[ static::RAW_SIZE ],
+					$row[ static::GB ],
+					$row[ static::DEVICE_NUMBER ],
+					$row[ static::PATH ],
+					$row[ static::DIRECTORY_BITS ],
+					$row[ static::OWNER ],
+					$row[ static::GROUP ],
+					$row[ static::BYTES ],
+					$row[ static::ACCESS_TIME ],
+					$row[ static::MODIFICATION_TIME ],
+					$row[ static::INODE_TIME ]
+				) = $match;
+			} else { throw new exception( sprintf( static::PARSING_EXCEPTION, $this->arguments( ) ) ); }
+		}
+		unset( $match );
+		return $row;
+	}
+
+	protected function parse_rows( ) {
+		parent::parse_rows( );
+		foreach ( $this->rows( ) as $row ) $this->files( sprintf( '%s_%s', $row[ static::BACKUPID ], $row[ static::FILE_NUMBER ] ), $row );
+	}
 }
 
 ### BPIMAGELIST
@@ -1109,7 +1265,7 @@ class vault_xml extends text {
 	public function parse( ) {
 		foreach( $this->items( $this->rows( ), 'VAULT_MGR', 1 ) as $vault_mgr )
 			foreach( $this->items( $vault_mgr, 'ROBOT', 0 ) as $robot )
-				foreach( $this->items( $robot, 'VAULT', 0 ) as $vault ) {
+				foreach( $this->items( $robot, 'VAULT', 0 ) as $vault ) try {
 					foreach( $this->items( $vault, 'PROFILE', 0 ) as $profile ) {
 						foreach( $this->items( $profile, 'SELECTION', 1 ) as $selection ) {
 							foreach( $this->items( $selection, 'IMAGE_PROPERTIES_FILTERS', 1 ) as $ipf ) {
@@ -1141,6 +1297,8 @@ class vault_xml extends text {
 											foreach( $this->items( $reports, 'REPORT' ) as $report );
 					}
 					foreach( $this->items( $vault, 'MAP', 0 ) as $map );
+				} catch ( exception $e ) {
+					display( $e->getmessage( ) );
 				}
 		foreach( $this->items( $vault_mgr, 'VAULT_PREFERENCES', 0 ) as $preferences ) {
 			foreach( $this->items( $preferences, 'RETENTION_MAP', 1 ) as $map )
@@ -1182,7 +1340,7 @@ class vault_xml extends text {
 		$vault_item_sql = 'replace into vault_item_xml (`masterserver`,`profile`,`type`,`value`) values ';
 		foreach( $this->items( $this->rows( ), 'VAULT_MGR', 1 ) as $vault_mgr )
 			foreach( $this->items( $vault_mgr, 'ROBOT', 0 ) as $robot )
-				foreach( $this->items( $robot, 'VAULT', 0 ) as $vault ) {
+				foreach( $this->items( $robot, 'VAULT', 0 ) as $vault ) try {
 					foreach( $this->items( $vault, 'PROFILE', 0 ) as $profile ) {
 						foreach( $this->items( $profile, 'SELECTION', 1 ) as $selection ) {
 							foreach( $this->items( $selection, 'IMAGE_PROPERTIES_FILTERS', 1 ) as $ipf ) {
@@ -1292,6 +1450,8 @@ class vault_xml extends text {
 								$row[ 'useglobalrptsdist' ] = sprintf( 'nullif("%s","")', $reportssettings[ 'UseGlobalRptsDist' ] );
 								$vault_sql .= sprintf( '(%s),', implode( ',', $row ) ) . PHP_EOL;
 				}
+			} catch ( exception $e ) {
+				display( $e->getmessage( ) );
 			}
 			$vault_sql = substr_replace( $vault_sql, ';', strrpos( $vault_sql, ',' ), 1 );
 			$vault_item_sql = substr_replace( $vault_item_sql, ';', strrpos( $vault_item_sql, ',' ), 1 );
@@ -1342,6 +1502,7 @@ class bpretlevel extends nbu {
 #-----------------------------------
 function bpdbjobs_summary( ) { return new bpdbjobs_summary( ); }
 function bpplclients( ) { return new bpplclients( ); }
+function bpflist_backupid( $backupid ) { return new bpflist_backupid( $backupid ); }
 function bpimagelist_hoursago( $hours = 24 ) { return new bpimagelist_hoursago( $hours ); }
 function bpdbjobs_report( $days = 7 ) { return new bpdbjobs_report( date( 'm/d/Y H:i:s', time( ) - ( 60 * 60 * ( 24 * $days + 1 ) ) ) ); }
 function bppllist_policies( ) { return new bppllist_policies( ); }

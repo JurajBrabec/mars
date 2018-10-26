@@ -107,13 +107,13 @@ function adminSignedIn( ) {
 		.removeClass( 'btn-default' )
 		.addClass( config.event[ 0 ].status == 'ENABLED' ? 'btn-success' : 'btn-danger' )
 		.prop( 'title', 'Last executed ' + config.routine_duration.updated )
-		.find( 'span#duration' ).text( config.routine_duration.value );
+		.find( 'span#duration' ).text( secToTime( config.routine_duration.value ) );
 	$( 'button#nbu_maintenance' )
 		.removeAttr( 'disabled' )
 		.removeClass( 'btn-default' )
 		.addClass( 'btn-primary' )
 		.prop( 'title', 'Last executed ' + config.maintenance_duration.updated )
-		.find( 'span#duration' ).text( config.maintenance_duration.value );
+		.find( 'span#duration' ).text( secToTime( config.maintenance_duration.value ) );
 	$( 'label#uploadfile span' ).removeClass( 'disabled' );
 	$( 'label#uploadfile input' ).removeAttr( 'disabled' );
 	$( document ).on( 'change', 'input#uploadfile', function( ) {
@@ -186,10 +186,8 @@ function adminSignedIn( ) {
 			} )
 			.fail( ajaxError )
 			.done( function( result ){
-				if ( result.length>256 ) {
-					result = 'Error: Something went wrong with the upload. Wasn\'t it too big or something?';
-				}
-				showMessage( ( /^Error/.test( result ) ? 'error' : 'success' ), result );
+				$( 'div#upload' ).append( '<pre>' + result + '</pre>' );
+//				showMessage( ( /^Error/.test( result ) ? 'error' : 'success' ), '<pre>' + result + '</pre>' );
 			} )
 		} );
 	} );

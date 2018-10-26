@@ -28,7 +28,7 @@ function modalAdd( ) {
 	$( 'div#modal' ).modal( 'hide' );
 	showMessage( 'success', 'Report "' + source.title + '" ' + target + ' added' );
 	sourceShow( source.name, target );
-	sourceRefresh( source.name, 'data' );
+//	sourceRefresh( source.name, 'data' );
 }
 function modalUpdate( ) {
 	var source = sources.find( 
@@ -57,7 +57,7 @@ function modalUpdate( ) {
 	$( 'div#modal' ).modal( 'hide' );
 	showMessage( 'success', 'Report "' + source.title + '" ' + target + ' updated' );
 	sourceShow( source.name, target );
-	sourceRefresh( source.name, 'data' );
+//	sourceRefresh( source.name, 'data' );
 }
 function modalRemove( ) {
 	var source = sources.find( 
@@ -75,7 +75,7 @@ function modalRemove( ) {
 	$( 'div#modal' ).modal( 'hide' );
 	showMessage( 'info', 'Report "' + source.title + '" ' + target + ' removed' );
 	sourceShow( source.name, target );
-	sourceRefresh( source.name, 'data' );
+//	sourceRefresh( source.name, 'data' );
 }
 
 function modalShow( event ) {

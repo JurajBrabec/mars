@@ -43,7 +43,7 @@ if "%db%" equ "MARS30" (
 )
 if "%db%" equ "MARS40" (
 	set config_tables=config_customers config_reports config_schedules config_settings config_timeperiods config_towers
-	set data_tables=bpdbjobs_report bpdbjobs_summary bpimagelist bpimagelist_frags bpplclients bppllist_clients bppllist_policies bppllist_schedules bpretlevel nbu_policy_tower_customer vault_item_xml vault_xml
+	set data_tables=bpdbjobs_report bpdbjobs_summary bpflist_backupid bpimagelist bpimagelist_frags bpplclients bppllist_clients bppllist_policies bppllist_schedules bpretlevel nbu_policy_tower_customer vault_item_xml vault_xml
 )
 if "%db%" equ "MARS_BACKUP" (
 	set config_tables=
