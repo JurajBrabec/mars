@@ -28,18 +28,18 @@ function convert_config( ) {
 				list( $key, $value ) = explode( '=', $line );
 				$key = trim( $key ); $value = trim( $value );
 				switch ( $key ) {
-//MODIFY					case 'NBU2SM9_TIME' : $value = '"..:.(0|5)"' && $modify = true; break;
+//MODIFY					case '%KEY%' : $new_value = '%VALUE%'; $modify = $value <> $new_value; break;
+					case 'THREADS' : $new_value = '4'; $modify = $value <> $new_value; break;
 				}
-				if ( $modify ) {
-					$line = sprintf( '%s=%s', str_pad( $key, 24 ), $value );
+				if ( $modify ) { 
+					$line = sprintf( '%s=%s', str_pad( $key, 24 ), $new_value );
 					$newconfig[ ] = $line;
 					logfile( display( 'Modified line "' . $oldconfig[ $i ] . '" to "' . $line . '"' ) );
 				}
 			}
-//REMOVE			preg_match( '/^NBUJOBS_DAYS_BACK/', $line ) && $remove = true;
+//REMOVE			preg_match( '/^%KEY%/', $line ) && $remove = true;
 			$remove && logfile( display( 'Removed line ' . $line ) ) || $newconfig[ ] = $line;
-//ADD			preg_match( '/^NBU2ESL_PATH/', $line ) && !preg_match( '/NBU2SM9_PATH/', $content ) && $add = true && $line = str_pad( 'NBU2SM9_PATH', 24 ) . '="tmp"';
-			preg_match( '/^NBUIMAGES_TIME/', $line ) && !preg_match( '/NBUFILES_TIME/', $content ) && $add = true && $line = str_pad( 'NBUFILES_TIME', 24 ) . '="..:(15|45)"';
+//ADD			!preg_match( '/%KEY%/', $content ) && preg_match( '/^%AFTER%/', $line ) && $add = true && $line = str_pad( '%KEY%', 24 ) . '="%VALUE%"';
 			$add && logfile( display( 'Added line ' . $line ) ) && $newconfig[ ] = $line;
 			$modified = $modified || $modify || $remove || $add;
 			$i++;
@@ -319,19 +319,13 @@ try {
 	empty( $time ) && $time = date( 'H:i' );
 	if ( isset( $opt[ 'HOURS' ] ) ) { $hours = $opt[ 'HOURS' ]; unset( $opt[ 'HOURS' ] ); }
 	if ( empty( $hours ) ) switch( $time ) {
-		case '00:45':
-		case '12:45': $hours = 12; break;
-		case '06:45':
-		case '18:45': $hours = 24; break;
-		case '03:45':
-		case '09:45':
-		case '15:45':
-		case '21:45': $hours = 6; break;
+		case '12:45': $hours = 24; break;
+		case '06:45': $hours = 12; break;
+		case '18:45': $hours = 6; break;
 		default : $hours = 2; break;
 	}
 	if ( isset( $opt[ 'DAYS' ] ) ) { $days = $opt[ 'DAYS' ]; unset( $opt[ 'DAYS' ] ); }
 	if ( empty( $days ) ) switch( $time ) {
-		case '00:15':
 		case '12:15': $days = 7; break;
 		case '06:15':
 		case '18:15': $days = 3; break;

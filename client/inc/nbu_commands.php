@@ -147,7 +147,7 @@ class bpflist_backupid extends nbu {
 
 	protected function setup( ) {
 		parent::setup( );
-		$this->ignore_lines( NULL, 'no entity was found' );
+//		$this->ignore_lines( NULL, 'no entity was found' );
 	}
 
 	public static function pattern( ) {
@@ -191,9 +191,47 @@ class bpflist_backupid extends nbu {
 	protected function parse_split( $split ) {
 		$split = str_replace( '*NULL*', '', $split );
 		$split = str_replace( '*ANY*', 'ANY', $split );
-		$pattern = '^FILES (\S+) (\S+) +(\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) +(\S+) (\S+) (\S+) (\S+) (\S+) (\S+)';
 		$row = array( );
+		$pattern = 'no entity was found';
 		if ( preg_match( sprintf( '/%s/', $pattern ), $split, $match ) ) {
+			foreach ( $this->fields( ) as $name => $type ) {
+				$row[ $name ] = field::validate( isset( $match[ $name ] ) ? $match[ $name ] : $this->add_fields( $name ), $type );
+			}
+			$row[ static::IMAGE_VERSION ] = 0;
+			$row[ static::CLIENT_TYPE ] = 0;
+			$row[ static::START_TIME ] = 0;
+			$row[ static::TIMESTAMP ] = 0;
+			$row[ static::SCHEDULE_TYPE ] = 0;
+			$row[ static::CLIENT ] = 'N/A';
+			$row[ static::POLICY_NAME ] = 'N/A';
+			$row[ static::BACKUPID ] = $this->arguments( );
+			$row[ static::PEER_NAME ] = 'N/A';
+			$row[ static::LINES ] = 0;
+			$row[ static::OPTIONS ] = 0;
+			$row[ static::USER_NAME ]= 'N/A';
+			$row[ static::GROUP_NAME ] = 'N/A';
+			$row[ static::RAW_PARTITION_ID ] = 0;
+			$row[ static::JOBID ] = 0;
+			$row[ static::FILE_NUMBER ] = 0;
+			$row[ static::COMPRESSED_SIZE ] = 0;
+			$row[ static::PATH_LENGTH ] = 0;
+			$row[ static::DATA_LENGTH ] = 0;
+			$row[ static::BLOCK ] = 0;
+			$row[ static::IN_IMAGE ] = 0;
+			$row[ static::RAW_SIZE ] = 0;
+			$row[ static::GB ] = 0;
+			$row[ static::DEVICE_NUMBER ] = 0;
+			$row[ static::PATH ] = $pattern;
+			$row[ static::DIRECTORY_BITS ] = 0;
+			$row[ static::OWNER ] = 'N/A';
+			$row[ static::GROUP ] = 'N/A';
+			$row[ static::BYTES ] = 0;
+			$row[ static::ACCESS_TIME ] = 0;
+			$row[ static::MODIFICATION_TIME ] = 0;
+			$row[ static::INODE_TIME ] = 0;
+		}
+		$pattern = '^FILES (\S+) (\S+) +(\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) +(\S+) (\S+) (\S+) (\S+) (\S+) (\S+)';
+		if ( $row == array( ) and preg_match( sprintf( '/%s/', $pattern ), $split, $match ) ) {
 			array_shift( $match );
 			foreach ( $this->fields( ) as $name => $type ) {
 				$row[ $name ] = field::validate( isset( $match[ $name ] ) ? $match[ $name ] : $this->add_fields( $name ), $type );
@@ -216,9 +254,9 @@ class bpflist_backupid extends nbu {
 				$row[ static::JOBID ]
 			) = $match;
 			$this->files_row( $row );
-			$row = array( );
-		} else {
-			$pattern = '^(\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\/[^\/]*\/?) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+)';
+		}
+		$pattern = '^(\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\/[^\/]*\/?) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+)';
+		if ( $row == array( ) ) {
 			if ( preg_match( sprintf( '/%s/', $pattern ), $split, $match ) ) {
 				array_shift( $match );
 				$row = $this->files_row( );

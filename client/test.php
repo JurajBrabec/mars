@@ -311,7 +311,7 @@ function nbu_test( $multi_thread = 0 ) {
 #	$t = vault_xml( 'm:\\Veritas\\NetBackup\\db\\vault' );
 #	$t = bpplclients( );
 #	$t = bpimagelist_hoursago( 24 );
-	$t = bpflist_backupid( '' );
+	$t = bpflist_backupid( 'test_0' );
     if ( $multi_thread == 0 ) {
 		$t->execute( );
 		nbu_process( $t );

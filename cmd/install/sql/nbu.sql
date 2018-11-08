@@ -77,6 +77,7 @@ CREATE TABLE `bpdbjobs_report` (
 	INDEX `policy_schedule` (`policy`, `schedule`),
 	INDEX `masterserver_parentjob` (`masterserver`,`parentjob`),
 	INDEX `jobtype` (`jobtype`),
+	INDEX `backupid` (`backupid`),
 	INDEX `state` (`state`),
 	INDEX `subtype` (`subtype`)
 )
@@ -700,7 +701,10 @@ BEGIN
 	RENAME TABLE bpdbjobs_report TO drop_table,temp_table TO bpdbjobs_report;
 	DROP TABLE drop_table;
 	CREATE TABLE temp_table LIKE bpflist_backupid;
-	INSERT INTO temp_table SELECT f.* FROM bpflist_backupid f WHERE EXISTS (SELECT j.backupid FROM bpdbjobs_report j WHERE j.masterserver=f.masterserver AND j.backupid=f.backupid) ORDER BY masterserver,backupid;
+	INSERT INTO temp_table SELECT f.* FROM bpflist_backupid f 
+		WHERE EXISTS (SELECT j.backupid FROM bpdbjobs_report j WHERE j.masterserver=f.masterserver AND j.backupid=f.backupid) 
+		OR EXISTS (SELECT i.backupid FROM bpimagelist i WHERE i.masterserver=f.masterserver AND i.backupid=f.backupid) 
+		ORDER BY f.masterserver,f.backupid;
 	RENAME TABLE bpflist_backupid TO drop_table,temp_table TO bpflist_backupid;
 	DROP TABLE drop_table;
 	ALTER EVENT nbu_event ENABLE;
