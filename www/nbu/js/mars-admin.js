@@ -58,7 +58,9 @@ function adminSignIn( ) {
 	}
 	$( 'button#signin' ).attr( 'onclick', 'adminSignInClick(event)' );
 	$( 'div#logon' ).modal( 'show' ).draggable( );
-	$( 'input#username' ).focus( ); 
+	$( 'input#username' ).focus( );
+	isCookie( 'username' ) && $( 'input#username' ).val( getCookie( 'username' ) );
+	isCookie( 'password' ) && $( 'input#password' ).val( window.atob( getCookie( 'password' ) ) );
 }
 
 function adminSignInClick( event ) {
@@ -68,6 +70,8 @@ function adminSignInClick( event ) {
 //	var sql = 'select * from mysql.user where user="' + config.username + '" and password=password("' + config.password + '");';
 	var sql = 'select count(*) from config_customers;';
 	$( 'button#signin' ).focus( ).prop( 'disabled', true ); 
+	setCookie( 'username', config.username, 7 );
+	setCookie( 'password', window.btoa( config.password ), 7 );
 	startTrack( function( ) {
 		$.ajax( {
 		    url:  'php.php',
@@ -171,6 +175,7 @@ function adminSignedIn( ) {
 		} );
 	} );
 	$( document ).on( 'click', 'button#upload', function( ) {
+		$( 'label#upload button' ).attr( 'disabled', 'disabled' );
 		var file = $( 'label#uploadfile input' )[ 0 ].files[ 0 ];
 		var data = new FormData( );
 		data.append( 'action', 'upload' );
@@ -186,8 +191,10 @@ function adminSignedIn( ) {
 			} )
 			.fail( ajaxError )
 			.done( function( result ){
+				result = result.replace( new RegExp( '(succes[a-z]+)', 'g' ), '<span class="btn-success">$1</span>' ) ;
+				result = result.replace( new RegExp( '(error)', 'g' ), '<span class="btn-warning">$1</span>' ) ;
+				result = result.replace( new RegExp( '(fail[a-z]+)', 'g' ), '<span class="btn-error">$1</span>' ) ;
 				$( 'div#upload' ).append( '<pre>' + result + '</pre>' );
-//				showMessage( ( /^Error/.test( result ) ? 'error' : 'success' ), '<pre>' + result + '</pre>' );
 			} )
 		} );
 	} );
@@ -283,8 +290,10 @@ function adminModal( event ) {
 	$body.append( $( '<input/>', { 'id': 'source', 'type': 'hidden' } ).val( name ) );
 	switch ( name ) {
 		case 'towers':
-			var modalname = typeof row == 'undefined' ? '' : row.name;
-			var modalpolicyname = typeof row == 'undefined' ? '' : row.policyname;
+//			var modalname = typeof row == 'undefined' ? '' : row.name;
+//			var modalpolicyname = typeof row == 'undefined' ? '' : row.policyname;
+			var modalname = typeof row == 'undefined' ? getCookie( 'name' ) : row.name;
+			var modalpolicyname = typeof row == 'undefined' ? getCookie( 'policyname' ) : row.policyname;
 			var table = 'config_towers';
 			var fields = 'name,policyname';
 			var values = '"%name","%policyname"';
@@ -294,8 +303,10 @@ function adminModal( event ) {
 			$body.append( addControl( 'Policy', 'glyphicon-eye-open', 'text', 'modal-pattern', 'Policy name pattern', modalpolicyname ) );
 			break;
 		case 'customers':
-			var modalname = typeof row == 'undefined' ? '' : row.name;
-			var modalpolicyname = typeof row == 'undefined' ? '' : row.policyname;
+//			var modalname = typeof row == 'undefined' ? '' : row.name;
+//			var modalpolicyname = typeof row == 'undefined' ? '' : row.policyname;
+			var modalname = typeof row == 'undefined' ? getCookie( 'name' ) : row.name;
+			var modalpolicyname = typeof row == 'undefined' ? getCookie( 'policyname' ) : row.policyname;
 			var table = 'config_customers';
 			var fields = 'name,policyname';
 			var values = '"%name","%policyname"';
@@ -305,9 +316,12 @@ function adminModal( event ) {
 			$body.append( addControl( 'Policy', 'glyphicon-eye-open', 'text', 'modal-pattern', 'Policy name pattern', modalpolicyname ) );
 			break;
 		case 'timeperiods':
-			var modalord = typeof row == 'undefined' ? '' : row.ord;
-			var modalname = typeof row == 'undefined' ? '' :  row.name;
-			var modalvalue = typeof row == 'undefined' ? '' : row.value;
+//			var modalord = typeof row == 'undefined' ? '' : row.ord;
+//			var modalname = typeof row == 'undefined' ? '' :  row.name;
+//			var modalvalue = typeof row == 'undefined' ? '' : row.value;
+			var modalord = typeof row == 'undefined' ? getCookie( 'ord' ) : row.ord;
+			var modalname = typeof row == 'undefined' ? getCookie( 'name' ) : row.name;
+			var modalvalue = typeof row == 'undefined' ? getCookie( 'value' ) : row.value;
 			var table = 'config_timeperiods';
 			var fields = 'ord,name,value';
 			var values = '"%ord","%name","%value"';
@@ -319,10 +333,14 @@ function adminModal( event ) {
 			break;
 		case 'userreports':
 			var modalsources = typeof row == 'undefined' ? '' : row.sources;
-			var modaltitle = typeof row == 'undefined' ? '' : row.title;
-			var modaltower = typeof row == 'undefined' ? '' : row.tower;
-			var modalcustomer = typeof row == 'undefined' ? '' : row.customer;
-			var modaltimeperiod = typeof row == 'undefined' ? '' : row.timeperiod;
+//			var modaltitle = typeof row == 'undefined' ? '' : row.title;
+//			var modaltower = typeof row == 'undefined' ? '' : row.tower;
+//			var modalcustomer = typeof row == 'undefined' ? '' : row.customer;
+//			var modaltimeperiod = typeof row == 'undefined' ? '' : row.timeperiod;
+			var modaltitle = typeof row == 'undefined' ? getCookie( 'title' ) : row.title;
+			var modaltower = typeof row == 'undefined' ? getCookie( 'tower' ) : row.tower;
+			var modalcustomer = typeof row == 'undefined' ? getCookie( 'customer' ) : row.customer;
+			var modaltimeperiod = typeof row == 'undefined' ? getCookie( 'timeperiod' ) : row.timeperiod;
 			var table = 'config_reports';
 			var fields = 'title,name,tower,customer,timeperiod,sources';
 			var values = '"%title","%name",nullif("%tower",""),nullif("%customer",""),nullif("%timeperiod",""),"%sources"';
@@ -336,15 +354,24 @@ function adminModal( event ) {
 			break;
 		case 'scheduledreports':
 			var modalsources = typeof row == 'undefined' ? '' : row.sources;
-			var modaldate = typeof row == 'undefined' ? '' : row.date;
-			var modaltime = typeof row == 'undefined' ? '' : row.time;
-			var modaltitle = typeof row == 'undefined' ? '' : row.title;
-			var modaltower = typeof row == 'undefined' ? '' : row.tower;
-			var modalcustomer = typeof row == 'undefined' ? '' : row.customer;
-			var modaltimeperiod = typeof row == 'undefined' ? '' : row.timeperiod;
-			var modalmode = typeof row == 'undefined' ? '' : row.mode;
-			var modalto = typeof row == 'undefined' ? '' : row.to;
-			var modalcc = typeof row == 'undefined' ? '' : row.cc;
+//			var modaldate = typeof row == 'undefined' ? '' : row.date;
+//			var modaltime = typeof row == 'undefined' ? '' : row.time;
+//			var modaltitle = typeof row == 'undefined' ? '' : row.title;
+//			var modaltower = typeof row == 'undefined' ? '' : row.tower;
+//			var modalcustomer = typeof row == 'undefined' ? '' : row.customer;
+//			var modaltimeperiod = typeof row == 'undefined' ? '' : row.timeperiod;
+//			var modalmode = typeof row == 'undefined' ? '' : row.mode;
+//			var modalto = typeof row == 'undefined' ? '' : row.to;
+//			var modalcc = typeof row == 'undefined' ? '' : row.cc;
+			var modaldate = typeof row == 'undefined' ? getCookie( 'date' ) : row.date;
+			var modaltime = typeof row == 'undefined' ? getCookie( 'time' ) : row.time;
+			var modaltitle = typeof row == 'undefined' ? getCookie( 'title' ) : row.title;
+			var modaltower = typeof row == 'undefined' ? getCookie( 'tower' ) : row.tower;
+			var modalcustomer = typeof row == 'undefined' ? getCookie( 'customer' ) : row.customer;
+			var modaltimeperiod = typeof row == 'undefined' ? getCookie( 'timeperiod' ) : row.timeperiod;
+			var modalmode = typeof row == 'undefined' ? getCookie( 'mode' ) : row.mode;
+			var modalto = typeof row == 'undefined' ? getCookie( 'to' ) : row.to;
+			var modalcc = typeof row == 'undefined' ? getCookie( 'cc' ) : row.cc;
 			var table = 'config_schedules';
 			var fields = '`date`,`time`,title,name,tower,customer,timeperiod,mode,`to`,cc,sources';
 			var values = 'nullif("%date",""),"%time","%title","%name",nullif("%tower",""),nullif("%customer",""),nullif("%timeperiod",""),"%mode","%to",nullif("%cc",""),"%sources"';
@@ -420,6 +447,8 @@ function adminAction( action ) {
 			if ( action == 'add' && !( modalname = validate( $( 'input#modal-name' ), { rows:config[ name ], field:'name' }, 'Name "' + modalname + '" already exists.' ) ) ) return false;
 			if ( !( modalpolicyname = validate( $( 'input#modal-pattern' ), '', 'Policy name pattern can\'t be empty.' ) ) ) return false;
 			modalpolicyname = modalpolicyname.replace( /\\/g, '\\\\' );
+			setCookie( 'name', modalname );			
+			setCookie( 'policyname', modalpolicyname );
 			var sql = sql
 				.replace( /%name/g, modalname )
 				.replace( /%policyname/g, modalpolicyname );
@@ -433,6 +462,9 @@ function adminAction( action ) {
 			if ( action == 'add' && !( modalname = validate( $( 'input#modal-name' ), { rows:config[ name ], field:'name' }, 'Name "' + modalname + '" already exists.' ) ) ) return false;
 			if ( !( modalvalue = validate( $( 'input#modal-value' ), '', 'Code can\'t be empty.' ) ) ) return false;
 			if ( !( modalvalue = validate( $( 'input#modal-value' ), /(H|D|W|M|N|Y)((\+|\-)\d)?::(H|D|W|M|N|Y)((\+|\-)\d)?/g, 'Invalid code format.' ) ) ) return false;
+			setCookie( 'ord', modalord );			
+			setCookie( 'name', modalname );
+			setCookie( 'value', modalvalue );
 			var sql = sql
 				.replace( /%ord/g, modalord )
 				.replace( /%name/g, modalname )
@@ -447,6 +479,10 @@ function adminAction( action ) {
 			var modalcustomer = $( 'select#modal-customer option:selected' ).text( );
 			var modaltimeperiod = $( 'select#modal-timeperiod option:selected' ).text( );
 			var modalsources = $( 'input#modal-sources' ).val( ).replace( /\"/g, '\\"' );
+			setCookie( 'title', modaltitle );			
+			setCookie( 'tower', modalmode );
+			setCookie( 'customer', modalmode );
+			setCookie( 'timeperiod', modalmode );
 			sql = sql
 				.replace( /%name/g, modalname )
 				.replace( /%title/g, modaltitle )
@@ -472,6 +508,15 @@ function adminAction( action ) {
 			if ( !( modaltime = validate( $( 'input#modal-time' ), '', 'Time pattern can\'t be empty.' ) ) ) return false;
 			var modalsources = $( 'input#modal-sources' ).val( ).replace( /\"/g, '\\"' );
 			var modaltime = modaltime.replace( /\\/g, '\\\\' );
+			setCookie( 'date', modaldate );
+			setCookie( 'time', modaltime );
+			setCookie( 'title', modaltitle );			
+			setCookie( 'tower', modalmode );
+			setCookie( 'customer', modalmode );
+			setCookie( 'timeperiod', modalmode );
+			setCookie( 'mode', modalmode );
+			setCookie( 'to', modalto );
+			setCookie( 'cc', modalcc );
 			var sql = sql
 				.replace( /%date/g, modaldate )
 				.replace( /%timeperiod/g, modaltimeperiod )
@@ -486,7 +531,7 @@ function adminAction( action ) {
 				.replace( /%sources/g, modalsources );
 			break;
 	}
-	$( 'button#' + action ).focus( ).prop( 'disabled', true ); 
+	$( 'button#' + action ).focus( ).prop( 'disabled', true );
 	startTrack( function( ) {
 		$.ajax( {
 		    url:  'php.php',

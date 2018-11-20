@@ -15,32 +15,39 @@ for /f %%i in ('dir /b files\php-*.zip') do set filename=%%i
 for /f "tokens=2 delims=-" %%i in ("%filename%") do set build=%%i
 set "logfile=%root%\logs\update_php_%build%.log"
 if exist %logfile% del /q %logfile%
+if "%1" equ "WEBINTERFACE" set webinterface=1
 if "%scheduler%" equ "1" goto :begin
 tasklist | findstr php.exe >nul 2>&1
 if "%errorlevel%" equ "0" set scheduler=1
 :begin
 call :echo MARS PHP update %build% part#1 starting...
 if "%scheduler%" equ "1" call :echo (started from scheduler)
+if "%webinterface%" equ "1" call :echo (started from web interface)
 call :echo Copying file(s)...
 for /f %%i in ("%~dp0.") do set postupdate=%%~nxi.cmd
-xcopy /e /i /y files "%root%">>nul 2>&1
+xcopy /e /i /y files "%root%\tmp">>nul 2>&1
 if "%errorlevel%" neq "0" goto :error
 :finish
-ren "%root%\.cmd" %postupdate%>>nul 2>&1
-if "%scheduler%" neq "1" (
-	call :echo Starting post-update script %postupdate%...
-	start /b /wait cmd /c "%root%\%postupdate%" 2>&1
-	call :echo Post-update script %postupdate% finished. E:%errorlevel%
-	if "%errorlevel%" neq "0" goto :error
-	del /q "%root%\%postupdate%" >nul 2>&1
-) else (
-	echo %postupdate%>>"%root%\.updates"
+if exist "%root%\tmp\%postupdate%" ( 
+	del /q /f "%root%\tmp\%postupdate%" > nul 2>&1
+) else ( 
+	echo %postupdate%>>"%root%\tmp\.updates" 
 )
+ren "%root%\tmp\.cmd" %postupdate%>>nul 2>&1
+if "%scheduler%" equ "1" goto :success
+if "%webinterface%" equ "1" goto :success
+call :echo Starting post-update script %postupdate%...
+start /b /wait cmd /c "%root%\tmp\%postupdate%" 2>&1
+call :echo Post-update script %postupdate% finished. E:%errorlevel%
+if "%errorlevel%" neq "0" goto :error
+del /q "%root%\tmp\%postupdate%" >nul 2>&1
+
+:success
 call :echo MARS PHP update %build% part#1 successful.
 goto :end
 
 :error
-call :echo Error %errorlevel%. MARS PHP update %build% NOT successful.
+call :echo Error %errorlevel%. MARS PHP update %build% failed.
 goto :end
 
 :echo

@@ -15,6 +15,9 @@ function modalAdd( ) {
 			if ( !arrayDuplicate( source.filters, item ) ) {
 				source.filters.push( item );
 			}
+			setSookie( 'field', field );
+			setCookie( 'operator', operator );
+			setCookie( 'value', value );
 			break;
 		case 'sorts':
 			var field = $( '#modal-field' ).val( );
@@ -23,6 +26,8 @@ function modalAdd( ) {
 			if ( !arrayDuplicate( source.sorts, item ) ) {
 				source.sorts.push( item );
 			}
+			setCookie( 'field', field );
+			setCookie( 'sort', sort );
 			break;
 	}
 	$( 'div#modal' ).modal( 'hide' );
@@ -44,6 +49,9 @@ function modalUpdate( ) {
 			if ( !arrayDuplicate( source.filters, item ) ) {
 				source.filters[ id ] = item;
 			}
+			setCookie( 'field', field );
+			setCookie( 'operator', operator );
+			setCookie( 'value', value );
 			break;
 		case 'sorts':
 			var field = $( '#modal-field' ).val( );
@@ -52,6 +60,8 @@ function modalUpdate( ) {
 			if ( !arrayDuplicate( source.sorts, item ) ) {
 				source.sorts[ id ] = item;
 			}
+			setCookie( 'field', field );
+			setCookie( 'sort', sort );
 			break;
 	}
 	$( 'div#modal' ).modal( 'hide' );
@@ -126,7 +136,9 @@ function modalShow( event ) {
 			} );
 			if ( id === 'add' ) {
 				$( '#modal-title' ).text( 'Add new filter' );
-				$( '#modal-value').val( '' );
+				isCookie( 'field' ) && $( '#modal-field' ).val( getCookie( 'field' ) );
+				isCookie( 'operator' ) && $( '#modal-operator' ).val( getCookie( 'operator' ) );
+				isCookie( 'value' ) && $( '#modal-value' ).val( getCookie( 'value' ) );
 			} else {
 				$( '#modal-title' ).text( 'Modify filter #' + id );
 				$( '#modal-field' ).val( arrayGet( source.fields, $button.find( '.field' ).text( ) ) ); 
@@ -161,6 +173,8 @@ function modalShow( event ) {
 			} );
 			if ( id === 'add' ) {
 				$( '#modal-title' ).text( 'Add new sort' );
+				isCookie( 'field' ) && $( '#modal-field' ).val( getCookie( 'field' ) );
+				isCookie( 'sort' ) && $( '#modal-sort' ).val( getCookie( 'sort' ) );
 			} else {
 				$( '#modal-title' ).text( 'Modify sort #' + id );
 				$( '#modal-field' ).val( arrayGet( source.fields, $button.find( '.field' ).text( ) ) ); 
@@ -206,6 +220,7 @@ function modalSave( ) {
 		userreport.sorts = item.sorts;
 		userreports.push( userreport );
 	} );
+	setCookie( 'title', title );
 	startTrack( function( ) {
 		$.ajax( {
 		    url:  'php.php',
@@ -233,6 +248,10 @@ function modalSend( ) {
 	var mode = $( 'input[name=modal-mode]:checked' ).val( );
 	var cc = validate( $( 'input#modal-cc' ) );
 	$( 'button#modal-send' ).text( 'Sending...' ).focus( ).prop( 'disabled', true ); 
+	setCookie( 'title', title );
+	setCookie( 'mode', mode );
+	setCookie( 'to', to );
+	setCookie( 'cc', cc );
 	startTrack( function( ) {
 		$.ajax( {
 		    url:  'php.php',
@@ -279,6 +298,12 @@ function modalSchedule( ) {
 		scheduledreport.sorts = item.sorts;
 		scheduledreports.push( scheduledreport );
 	} );
+	setCookie( 'date', date );
+	setCookie( 'time', time );
+	setCookie( 'title', title );
+	setCookie( 'mode', mode );
+	setCookie( 'to', to );
+	setCookie( 'cc', cc );
 	startTrack( function( ) {
 		$.ajax( {
 		    url:  'php.php',
@@ -336,6 +361,7 @@ function modalShowAlt( event ) {
 	var $body = $( 'div#modal' ).find( 'div.modal-body' ).empty( );
 	var $footer = $( 'div#modal' ).find( 'div.modal-footer' ).empty( );
 	var id = event.relatedTarget.id;
+//	var name = getCookie( 'name' );
 	var name = '';
 	$.each( sources, function( i, item ){ 
 		name += ( name == '' ? '' : ' and ' ) + item.title; 
@@ -346,11 +372,11 @@ function modalShowAlt( event ) {
 		.append( $( '<span/>' ).addClass( 'glyphicon glyphicon-remove' ) )
 		.append( ' Close' )
 	);
-	var to = ''; 
-	var cc = '';
-	var date = '';
-	var time = '';
-	var mode = 'HTML';
+	var to = getCookie( 'to' ); 
+	var cc = getCookie( 'cc' );
+	var date = getCookie( 'date' );
+	var time = getCookie( 'time' );
+	var mode = getCookie( 'mode', 'HTML' );
 	switch ( id ) {
 		case 'save':
 			$( '#modal-title' ).text( 'Save report(s)' );
@@ -381,7 +407,7 @@ function modalShowAlt( event ) {
 			$body.append( addControl( 'Cc', 'glyphicon-envelope', 'mail', 'modal-cc', 'Recipient list', cc ) );
 			$body.append( addRadio( 'Mode', 'modal-mode', [ 'HTML', 'CSV' ], mode ) );
 			$body.append( addControl( 'Date', 'glyphicon-calendar', 'text', 'modal-date', 'Date pattern', date ) );
-			$body.append( addControl( 'Time', 'glyphicon-time', 'text', 'modal-time', 'Time pattern', date ) );
+			$body.append( addControl( 'Time', 'glyphicon-time', 'text', 'modal-time', 'Time pattern', time ) );
 			$footer.append( $( '<button/>', { 'id': 'modal-schedule', 'type':'button', 'class': 'helpTooltip btn btn-success', 'onclick': 'modalSchedule( )' } )
 				.append( $( '<span/>' ).addClass( 'glyphicon glyphicon-time' ) )
 				.append( ' Schedule' ) );

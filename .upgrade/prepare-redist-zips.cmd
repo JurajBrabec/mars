@@ -12,7 +12,7 @@ if not exist "!folder!\cmd" goto :setup
 set "root=%folder%"
 if "%root:~-1%"=="\" set root=%root:~0,-1%
 :begin
-for /f %%i in ('dir /b *.zip') do "%root%\bin\7z\7z.exe" d -r %%i *.pdb *.h
+for /f %%i in ('dir /b *.zip') do "%root%\bin\7z\7z.exe" d -r %%i *.pdb *.h *.lib *.sql *.pl data include manual lib extras sasl2
 :end
 popd
 exit /b %errorlevel%

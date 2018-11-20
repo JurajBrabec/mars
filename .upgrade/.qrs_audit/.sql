@@ -238,6 +238,7 @@ ALTER EVENT event_audit DISABLE;
 set @@group_concat_max_len=4096;
 
 truncate table audit;
+select concat(now(),'1/7') as message from dual;
 insert into audit (
 		DATA_CENTER,CUSTOMER_NAME,DEVICE_ID,HOST_NAME,RLIs,BACKUP_RLI_ID,BACKUP_RLI_MRT,
 		STORAGE,TYPE,PROTECTION_DP,PROTECTION_NBU,SOURCE,STATUS,COMMENT)
@@ -254,10 +255,12 @@ insert into audit (
 		group by d.DEVICE_ID,q.BACKUP_RLI_ID
 		order by d.DEVICE_ID,q.BACKUP_RLI_ID;
 
+select concat(now(),'2/7') as message from dual;
 drop table if exists audit_nbu;
 create table audit_nbu like audit;
 #UPDATE for NBU enabled sites
 if (table_exists('mars40')) then
+	select concat(now(),'3/7') as message from dual;
 	insert into audit_nbu (
 			DATA_CENTER,CUSTOMER_NAME,DEVICE_ID,HOST_NAME,RLIs,BACKUP_RLI_ID,BACKUP_RLI_MRT,
 			STORAGE,TYPE,PROTECTION_NBU,STATUS,COMMENT,
@@ -283,11 +286,12 @@ if (table_exists('mars40')) then
 			group by a.DEVICE_ID,a.BACKUP_RLI_ID
 			order by a.DEVICE_ID,a.BACKUP_RLI_ID;
 end if;
-
+select concat(now(),'4/7') as message from dual;
 drop table if exists audit_dp;
 create table audit_dp like audit;
 #UPDATE for DP enabled sites
 if (table_exists('mars30')) then 
+	select concat(now(),'5/7') as message from dual;
 	insert into audit_dp (
 			DATA_CENTER,CUSTOMER_NAME,DEVICE_ID,HOST_NAME,RLIs,BACKUP_RLI_ID,BACKUP_RLI_MRT,
 			STORAGE,TYPE,PROTECTION_DP,STATUS,COMMENT,
@@ -314,10 +318,9 @@ if (table_exists('mars30')) then
 			group by a.DEVICE_ID,a.BACKUP_RLI_ID
 			order by a.DEVICE_ID,a.BACKUP_RLI_ID;
 end if;
-
+select concat(now(),'6/7') as message from dual;
 drop table if exists audit_final;
 create table audit_final like audit;
-
 insert into audit_final (
 	DATA_CENTER,CUSTOMER_NAME,DEVICE_ID,HOST_NAME,RLIs,BACKUP_RLI_ID,BACKUP_RLI_MRT,
 	STORAGE,TYPE,PROTECTION_DP,PROTECTION_NBU,SOURCE,STATUS,COMMENT,
@@ -339,7 +342,7 @@ select
 		left join audit_dp d on (d.DEVICE_ID=a.DEVICE_ID and d.BACKUP_RLI_ID=a.BACKUP_RLI_ID)
 		left join audit_nbu n on (n.DEVICE_ID=a.DEVICE_ID and n.BACKUP_RLI_ID=a.BACKUP_RLI_ID)
 	order by a.DEVICE_ID,a.BACKUP_RLI_ID;
-
+select concat(now(),'7/7') as message from dual;
 drop table audit_dp;
 drop table audit_nbu;
 drop table audit;

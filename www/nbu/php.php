@@ -36,7 +36,7 @@ function update( ) {
 			$zip->close( );
 			if( file_exists( sprintf( '%s/%s/.cmd', $path, $name ) ) ) {
 				echo sprintf( 'Executing "%s/.cmd" file.', $name );
-				$result = exec( sprintf( '%s/%s/.cmd 2>&1', $path, $name ), $output, $errorlevel );
+				$result = exec( sprintf( '%s/%s/.cmd WEBINTERFACE 2>&1', $path, $name ), $output, $errorlevel );
 				echo sprintf( ' E:%s', $errorlevel ) . PHP_EOL;
 				echo '<-OUTPUT->: ' . PHP_EOL;
 				echo implode( PHP_EOL, $output );

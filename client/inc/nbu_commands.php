@@ -1227,9 +1227,11 @@ class vault_xml extends text {
 	const NO_ITEMS_EXCEPTION 		= 'VAULT: no "%s" child item found.';
 	const MORE_ITEMS_EXCEPTION		= 'VAULT: more than %s "%s" child items found (%s).';
 	const MISSING_ITEMS_EXCEPTION	= 'VAULT: items(s) missing in "%s": %s';
-	private $home				= NULL;
+	private $home					= NULL;
+	private $updated				= '';
 	
 	public function home( $value = NULL ) { return _var( $this->home, func_get_args( ) ); }
+	public function updated( $value = NULL ) { return _var( $this->updated, func_get_args( ) ); }
 	
 	public function __construct( $home ) {
 		if ( !file_exists( $home ) ) throw new exception( sprintf( static::FILE_NOT_EXISTS_EXCEPTION, $home ) );
@@ -1239,6 +1241,7 @@ class vault_xml extends text {
 	}
 	
 	public function setup( ) {
+		$this->updated( date( 'Y-m-d H:i:s' ) );
 		$fields = array( );
 		$fields[ 'VAULT_MGR' ] = array( 'VaultConfigVersion', 'ROBOT', 'VAULT_PREFERENCES' );
 		$fields[ 'VAULT_PREFERENCES' ] = array( 'EjectNotificationEmail','LastMod','MGOImageSelectDays','NotificationEmail','SortOnExpiryDate','RETENTION_MAP','REPORTS', 'ALIASES' );
@@ -1374,8 +1377,8 @@ class vault_xml extends text {
 	`customerid`,`vault_id`,`vault_lastmod`,`vault_name`,`offsitevolumegroup`,`robotvolumegroup`,`vaultcontainers`,`vaultseed`,`vendor`,`profile_id`,`profile_lastmod`,`profile_name`,`endday`,`endhour`,`startday`,`starthour`,
 	`ipf_enabled`,`clientfilter`,`backuptypefilter`,`mediaserverfilter`,`classfilter`,`schedulefilter`,`retentionlevelfilter`,`ilf_enabled`,`sourcevolgroupfilter`,`volumepoolfilter`,`basicdiskfilter`,`diskgroupfilter`,
 	`duplication_skip`,`duppriority`,`multiplex`,`sharedrobots`,`sortorder`,`altreadhost`,`backupserver`,`readdrives`,`writedrives`,`fail`,`primary`,`retention`,`sharegroup`,`stgunit`,`volpool`,`catalogbackup_skip`,
-	`eject_skip`,`ejectmode`,`eject_ene`,`suspend`,`suspendmode`,`userbtorvaultprefene`,`imfile`,`mode`,`useglobalrptsdist`) values ';
-		$vault_item_sql = 'replace into vault_item_xml (`masterserver`,`profile`,`type`,`value`) values ';
+	`eject_skip`,`ejectmode`,`eject_ene`,`suspend`,`suspendmode`,`userbtorvaultprefene`,`imfile`,`mode`,`useglobalrptsdist`,`updated`,`obsoleted`) values ';
+		$vault_item_sql = 'replace into vault_item_xml (`masterserver`,`profile`,`type`,`value`,`updated`,`obsoleted`) values ';
 		foreach( $this->items( $this->rows( ), 'VAULT_MGR', 1 ) as $vault_mgr )
 			foreach( $this->items( $vault_mgr, 'ROBOT', 0 ) as $robot )
 				foreach( $this->items( $robot, 'VAULT', 0 ) as $vault ) try {
@@ -1384,15 +1387,15 @@ class vault_xml extends text {
 							foreach( $this->items( $selection, 'IMAGE_PROPERTIES_FILTERS', 1 ) as $ipf ) {
 								foreach ( $this->items( $ipf, 'CLIENT_FILTER', 1 ) as $clientfilter )
 									foreach ( $this->items( $clientfilter, 'CLIENT' ) as $client )
-										$vault_item_sql .= sprintf( '("%s","%s","%s","%s")', $masterserver, $profile[ 'Name' ], 'CLIENT', $client[ 0 ] ) . ',' . PHP_EOL;
+										$vault_item_sql .= sprintf( '("%s","%s","%s","%s","%s",null)', $masterserver, $profile[ 'Name' ], 'CLIENT', $client[ 0 ], $this->updated( ) ) . ',' . PHP_EOL;
 								foreach ( $this->items( $ipf, 'BACKUP_TYPE_FILTER', 1 ) as $btf );
 								foreach ( $this->items( $ipf, 'MEDIA_SERVER_FILTER', 1 ) as $mediaserverfilter );
 								foreach ( $this->items( $ipf, 'CLASS_FILTER', 1 ) as $classfilter )
 									foreach ( $this->items( $classfilter, 'CLASS' ) as $class )
-										$vault_item_sql .= sprintf( '("%s","%s","%s","%s")', $masterserver, $profile[ 'Name' ], 'CLASS', $class[ 0 ] ) . ',' . PHP_EOL;
+										$vault_item_sql .= sprintf( '("%s","%s","%s","%s","%s",null)', $masterserver, $profile[ 'Name' ], 'CLASS', $class[ 0 ], $this->updated( ) ) . ',' . PHP_EOL;
 								foreach ( $this->items( $ipf, 'SCHEDULE_FILTER', 1 ) as $schedulefilter )
 									foreach ( $this->items( $schedulefilter, 'SCHEDULE' ) as $schedule )
-										$vault_item_sql .= sprintf( '("%s","%s","%s","%s")', $masterserver, $profile[ 'Name' ], 'SCHEDULE', $schedule[ 0 ] ) . ',' . PHP_EOL;
+										$vault_item_sql .= sprintf( '("%s","%s","%s","%s","%s",null)', $masterserver, $profile[ 'Name' ], 'SCHEDULE', $schedule[ 0 ], $this->updated( ) ) . ',' . PHP_EOL;
 									foreach ( $this->items( $ipf, 'RETENTION_LEVEL_FILTER', 1 ) as $retentionlevelfilter );
 							}
 							foreach( $this->items( $selection, 'IMAGE_LOCATION_FILTERS', 1 ) as $ilf ) {
@@ -1486,14 +1489,17 @@ class vault_xml extends text {
 								$row[ 'imfile' ] = sprintf( 'nullif("%s","")', $reportssettings[ 'IMFile' ] );
 								$row[ 'mode' ] = sprintf( 'nullif("%s","")', $reportssettings[ 'Mode' ] );
 								$row[ 'useglobalrptsdist' ] = sprintf( 'nullif("%s","")', $reportssettings[ 'UseGlobalRptsDist' ] );
-								$vault_sql .= sprintf( '(%s),', implode( ',', $row ) ) . PHP_EOL;
+								$vault_sql .= sprintf( '(%s,"%s",null),', implode( ',', $row ), $this->updated( ) ) . PHP_EOL;
 				}
 			} catch ( exception $e ) {
 				display( $e->getmessage( ) );
 			}
 			$vault_sql = substr_replace( $vault_sql, ';', strrpos( $vault_sql, ',' ), 1 );
+			$vault_sql_cleanup = sprintf( "update vault_xml set obsoleted=updated where obsoleted is null and updated<'%s';", $this->updated( ) );
 			$vault_item_sql = substr_replace( $vault_item_sql, ';', strrpos( $vault_item_sql, ',' ), 1 );
-			return array( $vault_sql, $vault_item_sql );
+			$vault_item_sql_cleanup = sprintf( "update vault_item_xml set obsoleted=updated where obsoleted is null and updated<'%s';", $this->updated( ) );
+
+			return array( $vault_sql, $vault_sql_cleanup, $vault_item_sql, $vault_item_sql_cleanup );
 	}
 }
 

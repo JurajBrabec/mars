@@ -23,9 +23,9 @@ var operators = [
 var _browser = {};
 
 detectBrowser( );
-if ( _browser.msie && _browser.version < 9 ) {
+if ( _browser.msie && _browser.version < 10 ) {
 	var message = '<h3>This page requires <a href="https://jquery.com/browser-support/">JQuery 3.2</a></h2>';
-	message += '<h5>To meet JQuery prerequisites, please upgrade <b>Internet Explorer</b> to version <b>9</b> or higher,';
+	message += '<h5>To meet JQuery prerequisites, please upgrade <b>Internet Explorer</b> to version <b>10</b> or higher,';
 	message += ' or use any other supported browser.</h5>';
 	document.body.innerHTML = message;
 }
@@ -284,8 +284,29 @@ function secToTime( time ) {
 	if ( minutes != "00" ) { result += minutes + ":"; }
     if ( seconds < 10 ) { seconds = "0" + seconds; }
 	if ( seconds != "00" ) { result += seconds; }
-	if ( result == "" ) { result = "0 sec" };
+	if ( result == "" ) { result = "0"; }
+	if ( sec_num < 60 ) { result += " sec."; }
     return result;
+}
+
+function isCookie( name ) {
+	var result = typeof $.cookie( name ) !== 'undefined';
+	return result;
+}
+
+function getCookie( name, val ) {
+	val = typeof val !== 'undefined' ? val : '';
+	var result = isCookie( name ) ? $.cookie( name ) : val;
+	return result;
+}
+
+function setCookie( name, value, expiry ) {
+	if ( typeof expiry !== 'undefined' ) {
+		var result = $.cookie( name, value, { expires: expiry } );
+	} else {
+		var result = $.cookie( name, value );
+	}
+	return result;
 }
 
 jQuery.loadScript = function ( url, callback ) {

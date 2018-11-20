@@ -32,7 +32,7 @@ if "%errorlevel%" neq "0" goto :error
 call :echo MARS %build% successful.
 goto :eof
 :error
-call :echo Error %errorlevel%. MARS %build% NOT successful.
+call :echo Error %errorlevel%. MARS %build% failed.
 goto :eof
 
 :echo

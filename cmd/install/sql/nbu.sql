@@ -1314,7 +1314,7 @@ order by v.vault_name
 
 DROP VIEW IF EXISTS `nbu_audit`;
 CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_audit` AS 
-SELECT 
+SELECT DISTINCT
 	ptc.tower,ptc.customer,
 	n.masterserver,n.name AS client,
 	p.policytype AS pt,nbu_code('policytype',p.policytype) AS policytype,p.name AS policy,
@@ -1326,8 +1326,13 @@ SELECT
 		LEFT JOIN bppllist_policies p ON (p.masterserver=n.masterserver AND p.name=n.policyname AND p.obsoleted IS NULL)
 		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=p.masterserver AND ptc.policy=p.name)
 		LEFT JOIN bppllist_schedules s ON (s.masterserver=n.masterserver AND s.policyname=n.policyname AND s.obsoleted IS NULL)
-		LEFT JOIN vault_item_xml vi ON (vi.masterserver=n.masterserver AND vi.type='CLIENT' AND vi.value=n.name AND vi.obsoleted IS NULL)
-		LEFT JOIN vault_xml v ON (v.masterserver=n.masterserver AND v.profile_name=vi.profile AND v.obsoleted IS NULL)
+		LEFT JOIN (
+			SELECT v1.masterserver,v1.vault_name,v1.profile_name,v1.retention,vi1.VALUE AS CLIENT,v1.schedulefilter,vi2.VALUE AS schedule
+				FROM vault_xml v1
+				LEFT JOIN vault_item_xml vi1 ON (vi1.masterserver=v1.masterserver AND vi1.PROFILE=v1.profile_name AND vi1.type='CLIENT' AND vi1.obsoleted IS NULL)
+				LEFT JOIN vault_item_xml vi2 ON (vi2.masterserver=v1.masterserver AND vi2.PROFILE=v1.profile_name AND v1.schedulefilter='INCLUDE' AND vi2.type='SCHEDULE' AND vi2.obsoleted IS NULL)
+				WHERE v1.obsoleted IS NULL
+		) v ON (v.masterserver=n.masterserver AND v.CLIENT=n.NAME AND (v.schedulefilter='INCLUDE_ALL' OR v.SCHEDULE=s.name))
 	WHERE n.obsoleted IS NULL
 	AND p.active=0
 	AND IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))

@@ -43,7 +43,7 @@ rem if "%result%" equ "0" call :service start db
 rem if "%result%" equ "0" call :service start http
 if "%result%" equ "0" call :sql
 if "%result%" equ "0" goto :finish
-call :echo Error %result%. MARS update #%build% NOT successful.
+call :echo Error %result%. MARS update #%build% failed.
 set errorlevel=%result%
 goto :eof
 :finish

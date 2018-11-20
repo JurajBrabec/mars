@@ -10,7 +10,7 @@ echo Do not run this file directly.
 goto :end
 :setup
 for /f "tokens=4 delims=/ " %%i in ('%root%\bin\http\bin\httpd.exe -v ^|findstr version') do set prevversion=%%i
-for /f %%i in ('dir /b "%root%\httpd-*.zip"') do set filename=%%i
+for /f %%i in ('dir /b "httpd-*.zip"') do set filename=%%i
 for /f "tokens=2 delims=-" %%i in ("%filename%") do set build=%%i
 set "logfile=%root%\logs\update_http_%build%.log"
 :begin
@@ -27,10 +27,10 @@ if "%result%" equ "0" (
 	if %errorlevel% gtr 0 set result=%errorlevel%
 )
 if "%result%" equ "0" goto :finish
-call :echo Error %result%. MARS HTTP (Apache) update %build% NOT successful.
+call :echo Error %result%. MARS HTTP (Apache) update %build% failed.
 goto :end
 :finish
-del /q "%root%\%filename%" >nul 2>&1
+del /q "%root%\tmp\%filename%" >nul 2>&1
 call :echo MARS HTTP (Apache) update %build% part#2 successful.
 goto :end
 
@@ -43,7 +43,7 @@ goto :eof
 :extract
 call :echo Extracting archive %filename%...
 set exclude=-x^^!readme_first.html -x^^!*.pl -x^^!*\include\ -x^^!*\lib\ -x^^!*\logs\install.log
-"%root%\bin\7z\7z.exe" x "%root%\%filename%" -r -aoa -bd -bb0 -y -o"%root%\bin\http.tmp" !exclude!>>"%logfile%" 2>&1
+"%root%\bin\7z\7z.exe" x "%filename%" -r -aoa -bd -bb0 -y -o"%root%\bin\http.tmp" !exclude!>>"%logfile%" 2>&1
 set result=%errorlevel%
 call :echo Waiting...
 ping -n 10 localhost >nul 2>&1
@@ -65,6 +65,7 @@ goto :eof
 :vcredist
 call :echo Installing Microsoft Visual C++ Redistributable Components...
 start /wait /d "%root%\bin" vc_redist.x64.exe /repair /passive /norestart
+if %errorlevel% equ 3010 ver > nul
 if %errorlevel% gtr 0 call :echo Error %errorlevel% installing Microsoft Visual C++ Redistributable Components.
 goto :eof
 
