@@ -23,6 +23,7 @@
 	<modal-operator>Select the <b>operator</b> used in the filter.</modal-operator>
 	<modal-sort>Select the <b>field order</b>.</modal-sort>
 	<modal-value>Enter the <b>value</b>.</modal-value>
+	<modal-add>Add the filter/sort.</modal-add>
 	<modal-update>Update the filter/sort.</modal-update>
 	<modal-remove>Remove the filter/sort.</modal-remove>
 	<modal-save>Save the report(s) as <b>user report</b> now.</modal-save>

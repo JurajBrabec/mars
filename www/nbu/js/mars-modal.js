@@ -89,6 +89,7 @@ function modalRemove( ) {
 }
 
 function modalShow( event ) {
+	debugger;
 	$( 'div#modal' ).find( 'form' ).attr( 'class', 'form-inline' );
 	var $button = $( event.relatedTarget );
 	if ( typeof $button.data( 'report' ) == 'undefined' ) {

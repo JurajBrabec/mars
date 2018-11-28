@@ -23,7 +23,7 @@ var operators = [
 var _browser = {};
 
 window.onerror = function( msg, url, linenumber ) {
-    alert( 'Error occured: ' + msg + '\nURL: ' + url + '\nLine Number: ' + linenumber );
+    alert( 'Error\nMessage: ' + msg + '\nURL: ' + url + '\nLine Number: ' + linenumber );
     return true;
 }
 
