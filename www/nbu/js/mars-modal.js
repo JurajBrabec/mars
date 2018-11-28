@@ -15,7 +15,7 @@ function modalAdd( ) {
 			if ( !arrayDuplicate( source.filters, item ) ) {
 				source.filters.push( item );
 			}
-			setSookie( 'field', field );
+			setCookie( 'field', field );
 			setCookie( 'operator', operator );
 			setCookie( 'value', value );
 			break;

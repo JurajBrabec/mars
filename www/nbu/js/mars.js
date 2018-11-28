@@ -22,6 +22,11 @@ var operators = [
 ];
 var _browser = {};
 
+window.onerror = function( msg, url, linenumber ) {
+    alert( 'Error occured: ' + msg + '\nURL: ' + url + '\nLine Number: ' + linenumber );
+    return true;
+}
+
 detectBrowser( );
 if ( _browser.msie && _browser.version < 10 ) {
 	var message = '<h3>This page requires <a href="https://jquery.com/browser-support/">JQuery 3.2</a></h2>';
@@ -250,7 +255,7 @@ function validate( control, value, message ) {
 
 function setTooltip( obj ) {
 	obj.tooltip( { 
-		delay: { show: 1000, hide: 0 },
+		delay: { show: 3000, hide: 0 },
 		html: true, 
 		placement: 'auto top',
 		title: getText

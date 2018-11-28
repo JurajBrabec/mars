@@ -32,6 +32,7 @@ set errorlevel=%result%
 goto :end
 :finish
 del /q "%filename%" >nul 2>&1
+reg add HKLM\SYSTEM\CurrentControlSet\Services\MARS-DB /f /v Description /t REG_SZ /d "MARS MariaDB %build% (Win64)" >>"%logfile%" 2>&1
 call :echo MARS DB (MariaDB) update %build% part#2 successful.
 goto :end
 
