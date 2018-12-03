@@ -122,12 +122,10 @@ function adminSignedIn( ) {
 	$( 'label#uploadfile input' ).removeAttr( 'disabled' );
 	$( document ).on( 'click', 'input#uploadfile', function( ) {
 		$( 'label#uploadfile span' ).addClass( 'disabled' );
-		$( 'label#uploadfile input' ).attr( 'disabled', 'disabled' );
 	} );
 	$( document ).on( 'change', 'input#uploadfile', function( ) {
 		$( 'input#filename' ).val( '' );
 		$( 'label#uploadfile span' ).removeClass( 'disabled' );
-		$( 'label#uploadfile input' ).removeAttr( 'disabled' );
 		$( 'label#upload button' ).attr( 'disabled', 'disabled' );
 		var file = $( this )[ 0 ].files[ 0 ];
 		if ( !file.name.match( /\.zip$/i ) ) {

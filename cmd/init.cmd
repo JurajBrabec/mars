@@ -34,36 +34,39 @@ goto :end
 :files-remove
 call :echo Removing files...
 rmdir /q /s "%root%\data" >nul 2>&1
-if "%errorlevel%" equ "0" goto :files-copy
+if "%errorlevel%" equ "0" goto :data-init
 call :echo Error %errorlevel% removing files.
 goto :end
-:files-copy
-call :echo Copying files...
-mkdir "%root%\data" >nul 2>&1
-echo. >"%root%\data\init.sql"
-xcopy /e /i /k /y "%root%\bin\db\data" "%root%\data">nul 2>&1
-if "%errorlevel%" equ "0" goto :service-start
-call :echo Error %errorlevel% copying files.
+:data-init
+call :echo Initializing database...
+"%root%\bin\db\bin\mysql_install_db.exe" -d "%root%\data" >>"%logfile%" 2>&1
+echo . >>"%logfile%"
+if "%errorlevel%" equ "0" goto :data-init-finish
+call :echo Error %errorlevel% initializing database.
 goto :end
+:data-init-finish
+del /q "%root%\data\my.ini" >nul 2>&1
+rmdir /q /s "%root%\data\test" >nul 2>&1
+echo. >"%root%\data\init.sql"
 :service-start
 call "%root%\mars.cmd" start db
 if "%errorlevel%" equ "0" goto :database-create
 call :echo Error %errorlevel% starting DB service.
 goto :end
 :database-create
-call :echo Creating database...
+call :echo Creating MARS database...
 rem set zipfile="%root%\cmd\install\init.zip"
 rem "%root%\bin\7z\7z.exe" e -so %zipfile% create.sql | "%root%\bin\db\bin\mysql.exe" --user=root --password="" >>"%logfile%"
 "%root%\bin\db\bin\mysql.exe" --user=root --password="" -D mysql <"%root%\cmd\install\sql\create.sql" >>"%logfile%" 2>&1
 if "%errorlevel%" equ "0" goto :database-configure
-call :echo Error %errorlevel% creating database.
+call :echo Error %errorlevel% creating MARS database.
 goto :end
 :database-configure
-call :echo Configuring database...
+call :echo Configuring MARS database...
 rem "%root%\bin\7z\7z.exe" e -so %zipfile% config.sql | "%root%\bin\db\bin\mysql.exe" --user=root >>"%logfile%"
 "%root%\bin\db\bin\mysql.exe" -u root -D mysql <"%root%\cmd\install\sql\config.sql" >>"%logfile%" 2>&1
 if "%errorlevel%" equ "0" goto :database-nbu
-call :echo Error %errorlevel% configuring database.
+call :echo Error %errorlevel% configuring MARS database.
 goto :end
 :database-nbu
 call :echo Creating NBU database...

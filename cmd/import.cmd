@@ -12,15 +12,15 @@ goto :end
 set "logfile=%root%\logs\import.log"
 :begin
 if /i "%1" equ "mars30" (
-	call :database-import MARS30
+	call :database-import MARS30 %2
 	goto :end
 )
 if /i "%1" equ "mars40" (
-	call :database-import MARS40
+	call :database-import MARS40 %2
 	goto :end
 )
 if /i "%1" equ "mars_backup" (
-	call :database-import MARS_BACKUP
+	call :database-import MARS_BACKUP %2
 	goto :end
 )
 if "%1" equ "" (
@@ -36,6 +36,7 @@ goto :end
 
 :database-import
 set db=%1
+set table=%2
 if "%q%" neq "" goto :import-check
 :import-prompt
 echo WARING: You are about to import %db% database from dump.
@@ -58,8 +59,13 @@ del "%root%\tmp\.import" >nul 2>&1
 goto :eof
 :import_7z
 echo.>"%root%\tmp\.import"
-call :echo Importing '%db%.7z' dump ...
-"%root%\bin\7z\7z.exe" e -so "%root%\cmd\dump\%db%.7z" | "%root%\bin\db\bin\mysql.exe" --database=%db% >>"%logfile%"
+if "%table%" equ "" (
+	call :echo Importing '%db%.7z' dump ...
+	"%root%\bin\7z\7z.exe" e -so "%root%\cmd\dump\%db%.7z" | "%root%\bin\db\bin\mysql.exe" --database=%db% >>"%logfile%"
+) else (
+	call :echo Importing '%db%.7z' dump of table %table% ...
+	"%root%\bin\7z\7z.exe" e -so "%root%\cmd\dump\%db%.7z" %table.sql | "%root%\bin\db\bin\mysql.exe" --database=%db% >>"%logfile%"
+)
 call :echo Import of '%db%.7z' dump finished.
 del "%root%\tmp\.import" >nul 2>&1
 goto :eof
