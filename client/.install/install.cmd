@@ -10,6 +10,15 @@ if not exist "%root%\log" mkdir "%root%\log"
 if not exist "%root%\tmp" mkdir "%root%\tmp"
 call :echo Installing MARS 4.1 Master Server...
 if "%1" neq "" goto :%1
+set "_file=%TEMP%\marsinst.tmp"
+call :echo Checking ports %port%/3306 and processes...
+call :check-port 80
+call :check-port 3306
+if exist %_file% goto :check-ok
+call :echo Exiting.
+goto :end
+:check-ok
+del %_file% >nul
 "%root%\bin\nodejs\node.exe" "%root%\.install\js\install.js"
 if "%errorlevel%" equ "0" goto :check-ini1
 call :echo MARS installation failed (E:%errorlevel%).
@@ -36,8 +45,9 @@ call :echo XML file was not edited.
 goto :end
 :redist
 call :echo Installing Microsoft Visual C++ Redistributable Components...
-start /wait %root%\bin\VC_redist.x64.exe /install /passive /norestart
-if "%errorlevel%" equ "0" goto :task
+start /wait /d "%root%\bin" vc_redist.x64.exe /repair /passive /norestart
+if "%errorlevel%" equ "3010" ver>nul
+if "%errorlevel%" leq "0" goto :task
 call :echo Error %errorlevel% installing Microsoft Visual C++ Redistributable Components.
 goto :end
 :task
@@ -49,6 +59,17 @@ goto :end
 :finish
 call :echo Finished. You can remove "%root%\.install" folder.
 goto :end
+
+:check-port
+netstat -ano -p TCP | findstr LISTENING | findstr /c:":%1 " > %_file%
+if %errorlevel% EQU 1 goto :eof
+for /f "tokens=1,2,3,4,5" %%i in (%_file%) do set _pid=%%m
+tasklist /svc /fi "PID eq %_pid%" | findstr %_pid% > %_file%
+for /f "tokens=1,2,3" %%i in (%_file%) do set _name=%%i && set _service=%%k
+if %_pid% EQU 4 set _name=System&&set _service=HTTP/BranchCache
+call :echo Error: A process with PID %_pid% (name "%_name%" service "%_service%") is already listening on port %1.
+del %_file%
+goto :eof
 
 :echo
 echo %date% %time% %*

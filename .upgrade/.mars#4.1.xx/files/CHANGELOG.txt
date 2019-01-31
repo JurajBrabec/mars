@@ -1,6 +1,9 @@
 MARS 4.1 Change Log
 ======================
 
+29.11.2018 version 4.1 build #9
+•	Modified export/import to support individual tables
+
 15.11.2018 version 4.1 build #8
 •	Fixed NBU vault parsing error with moved clients/profiles/vaults
 •	Added cookies support to web interface input fields
