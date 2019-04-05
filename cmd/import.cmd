@@ -19,6 +19,10 @@ if /i "%1" equ "mars40" (
 	call :database-import MARS40 %2
 	goto :end
 )
+if /i "%1" equ "mars41" (
+	call :database-import MARS41 %2
+	goto :end
+)
 if /i "%1" equ "mars_backup" (
 	call :database-import MARS_BACKUP %2
 	goto :end
@@ -52,23 +56,28 @@ call :echo Error: Files '%db%.sql' or '%db%.7z' not found in folder '%root%\cmd\
 goto :eof
 :import_sql
 echo.>"%root%\tmp\.import"
-call :echo Importing '%db%.sql' dump ...
+call :echo Starting DB import of '%db%.sql' dump ...
+call :echo Importing DB %db% ...
 "%root%\bin\db\bin\mysql.exe" --database=%db% <"%root%\cmd\dump\%db%.sql" >>"%logfile%"
-call :echo Import of '%db%.sql' dump finished.
+call :echo Import of '%db%.sql' dump finished (E:%errorlevel%).
 del "%root%\tmp\.import" >nul 2>&1
 goto :eof
 :import_7z
 echo.>"%root%\tmp\.import"
+call :echo Starting DB import of '%db%.7z' dump ...
 if "%table%" equ "" (
-	call :echo Importing '%db%.7z' dump ...
-	"%root%\bin\7z\7z.exe" e -so "%root%\cmd\dump\%db%.7z" | "%root%\bin\db\bin\mysql.exe" --database=%db% >>"%logfile%"
+	for /f "tokens=6" %%i in ('"%root%\bin\7z\7z.exe" l -ba %root%\cmd\dump\%db%.7z') do call :import_7z_table %db% %%i
 ) else (
-	call :echo Importing '%db%.7z' dump of table %table% ...
-	"%root%\bin\7z\7z.exe" e -so "%root%\cmd\dump\%db%.7z" %table.sql | "%root%\bin\db\bin\mysql.exe" --database=%db% >>"%logfile%"
+	call :import_7z_table %db% %table%.sql
 )
 call :echo Import of '%db%.7z' dump finished.
 del "%root%\tmp\.import" >nul 2>&1
 goto :eof
+:import_7z_table
+call :echo Importing table %1\%2 ...
+"%root%\bin\7z\7z.exe" e -so "%root%\cmd\dump\%1.7z" %2 | "%root%\bin\db\bin\mysql.exe" --database=%1 >>"%logfile%"
+call :echo Import of table %1\%2 finished (E:%errorlevel%). 
+goto :eof 
 
 :echo
 echo %time% %*

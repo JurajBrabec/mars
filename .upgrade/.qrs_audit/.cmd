@@ -1,5 +1,5 @@
 @echo off
-REM MARS 4.1 UPDATE SCRIPT
+REM MARS 4.1 QRS AUDIT PART#1 SCRIPT
 REM (C) 2018 Juraj Brabec, DXC.technology
 REM DON'T MODIFY ANYTHING BELOW THIS LINE______________________________________________________________________________
 
@@ -12,28 +12,42 @@ if not exist "!folder!\cmd" goto :setup
 set "root=%folder%"
 if "%root:~-1%"=="\" set root=%root:~0,-1%
 set build=vpc-qrs-audit
-set "logfile=%root%\logs\update-%build%.log"
-if exist "%logfile%" del /q "%logfile%"
+set "logfile=%root%\logs\%build%.log"
+if exist %logfile% del /q %logfile%
+if "%1" equ "WEBINTERFACE" set webinterface=1
+if "%scheduler%" equ "1" goto :begin
+tasklist | findstr php.exe >nul 2>&1
+if "%errorlevel%" equ "0" set scheduler=1
 :begin
-call :echo MARS %build% starting...
-for /f %%i in (%root%\build) do call :echo Build #%%i found
-call :echo Executing SQL...
-"%root%\bin\db\bin\mysql.exe" -u root -D mysql <.sql >>"%logfile%" 2>&1
+call :echo MARS %build% part#1 starting...
+if "%scheduler%" equ "1" call :echo (started from scheduler)
+if "%webinterface%" equ "1" call :echo (started from web interface)
+call :echo Copying file(s)...
+for /f %%i in ("%~dp0.") do set postupdate=%%~nxi.cmd
+xcopy /e /i /y files "%root%\tmp">>nul 2>&1
 if "%errorlevel%" neq "0" goto :error
-call :echo Importing QRS...
-"%root%\bin\db\bin\mysql.exe" -u root -D audit <qrs.sql >>"%logfile%" 2>&1
+:finish
+if exist "%root%\tmp\%postupdate%" ( 
+	del /q /f "%root%\tmp\%postupdate%" > nul 2>&1
+) else ( 
+	echo %postupdate%>>"%root%\tmp\.updates" 
+)
+ren "%root%\tmp\.cmd" %postupdate%>>nul 2>&1
+if "%scheduler%" equ "1" goto :success
+if "%webinterface%" equ "1" goto :success
+call :echo Starting post-update script %postupdate%...
+start /b /wait cmd /c "%root%\tmp\%postupdate%" 2>&1
+call :echo Post-update script %postupdate% finished. E:%errorlevel%
 if "%errorlevel%" neq "0" goto :error
-call :echo Importing comments...
-"%root%\bin\db\bin\mysql.exe" -u root -D audit <comments.sql >>"%logfile%" 2>&1
-if "%errorlevel%" neq "0" goto :eof
-call :echo Executing audit...
-"%root%\bin\db\bin\mysql.exe" -u root -D audit --execute "call procedure_execute();" >>"%logfile%" 2>&1
-if "%errorlevel%" neq "0" goto :error
-call :echo MARS %build% successful.
-goto :eof
+del /q "%root%\tmp\%postupdate%" >nul 2>&1
+
+:success
+call :echo MARS %build% part#1 successful.
+goto :end
+
 :error
 call :echo Error %errorlevel%. MARS %build% failed.
-goto :eof
+goto :end
 
 :echo
 echo %time% %*

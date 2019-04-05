@@ -960,22 +960,22 @@ SELECT DISTINCT
 DROP VIEW IF EXISTS `nbu_flist`;
 CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_flist` AS 
 SELECT 
-	f.masterserver,
-	ptc.tower,ptc.customer,
-	f.`client`,f.path,
-	nbu_code('policytype',f.client_type) AS client_type,
-	nbu_code('scheduletype',f.schedule_type) AS schedule_type,
-	f.policy_name,
+	b.`masterserver`,
+	b.`tower`,b.`customer`,
+	b.`policy`,b.`policytype`,b.`schedule`,b.`scheduletype`,
+	b.`client`,f.`path`,
+	b.`jobid`,b.`parentjob`,
+	b.`jobtype`,b.`subtype`,b.`state`,b.`status`,
+	b.`tries`,
+	IF(b.`status`=0 OR b.`status`=1,100,0) AS `BSR`,
+	b.`bw_day`,b.`started`,b.`elapsed`,b.`ended`,
+	ROUND(b.`kbytes`/(1024*1024),1) AS `gbytes`,
 	FROM_UNIXTIME(f.`timestamp`) AS `timestamp`,
-	f.backupid,f.file_number,f.in_image,f.`owner`,f.`group`,
-	FROM_UNIXTIME(NULLIF(f.access_time,0)) AS access_time,
-	FROM_UNIXTIME(NULLIF(f.modification_time,0)) AS modification_time,
-	FROM_UNIXTIME(NULLIF(f.inode_time,0)) AS inode_time
-	FROM bpflist_backupid f
-		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=f.masterserver AND ptc.policy=f.policy_name)
-	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
-	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
-	ORDER BY f.masterserver,f.backupid,f.file_number
+	b.`retentionperiod`,
+	f.`user_name`,f.`group_name`,
+	f.`owner`,f.`group`
+	FROM `nbu_bsr_jobs` b
+	LEFT JOIN `bpflist_backupid` f ON (f.`masterserver`=b.`masterserver` AND f.`backupid`=b.`backupid` AND f.`file_number`=1)
 ;
 
 DROP VIEW IF EXISTS `nbu_schedules`;
@@ -2627,20 +2627,31 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_flist', 1, 'masterserver', 'Master server', 'STRING', NULL, NULL, '2018-10-26 13:05:26', '2018-10-26 13:05:26', NULL),
 	('nbu_flist', 2, 'tower', 'Tower', 'STRING', NULL, NULL, '2018-10-26 13:06:11', '2018-10-26 13:06:11', NULL),
 	('nbu_flist', 3, 'customer', 'Customer', 'STRING', NULL, NULL, '2018-10-26 13:06:25', '2018-10-26 13:06:25', NULL),
-	('nbu_flist', 4, 'client', 'Client name', 'STRING', NULL, NULL, '2018-10-26 13:06:48', '2018-10-26 13:06:48', NULL),
-	('nbu_flist', 5, 'path', 'Object name', 'STRING', NULL, NULL, '2018-10-26 13:07:03', '2018-10-26 13:07:03', NULL),
-	('nbu_flist', 6, 'client_type', 'Client type', 'STRING', NULL, NULL, '2018-10-26 13:07:32', '2018-10-26 13:07:32', NULL),
-	('nbu_flist', 7, 'schedule_type', 'Schedule type', 'STRING', NULL, NULL, '2018-10-26 13:07:48', '2018-10-26 13:07:48', NULL),
-	('nbu_flist', 8, 'policy_name', 'Policy name', 'STRING', NULL, NULL, '2018-10-26 13:08:07', '2018-10-26 13:08:07', NULL),
-	('nbu_flist', 9, 'timestamp', 'Timestamp', 'DATE', NULL, NULL, '2018-10-26 13:08:30', '2018-10-26 13:08:30', NULL),
-	('nbu_flist', 10, 'backupid', 'Backup ID', 'STRING', NULL, NULL, '2018-10-26 13:08:44', '2018-10-26 13:08:44', NULL),
-	('nbu_flist', 11, 'file_number', 'File number', 'NUMBER', NULL, NULL, '2018-10-26 13:09:34', '2018-10-26 13:09:34', NULL),
-	('nbu_flist', 12, 'in_image', 'In image', 'NUMBER', NULL, NULL, '2018-10-26 13:09:57', '2018-10-26 13:09:57', NULL),
-	('nbu_flist', 13, 'owner', 'Owner', 'STRING', NULL, NULL, '2018-10-26 13:10:14', '2018-10-26 13:10:14', NULL),
-	('nbu_flist', 14, 'group', 'Group', 'STRING', NULL, NULL, '2018-10-26 13:10:24', '2018-10-26 13:10:24', NULL),
-	('nbu_flist', 15, 'access_time', 'Accessed', 'DATE', NULL, NULL, '2018-10-26 13:10:45', '2018-10-26 13:10:45', NULL),
-	('nbu_flist', 16, 'modification_time', 'Modified', 'DATE', NULL, NULL, '2018-10-26 13:10:55', '2018-10-26 13:22:23', NULL),
-	('nbu_flist', 17, 'inode_time', 'iNode', 'DATE', NULL, NULL, '2018-10-26 13:11:08', '2018-10-26 13:11:08', NULL),
+	('nbu_flist', 4, 'policy', 'Client type', 'STRING', NULL, NULL, '2018-10-26 13:07:32', '2019-04-01 13:22:35', NULL),
+	('nbu_flist', 5, 'policytype', 'Schedule type', 'STRING', NULL, NULL, '2018-10-26 13:07:48', '2019-04-01 13:22:37', NULL),
+	('nbu_flist', 6, 'schedule', 'Policy name', 'STRING', NULL, NULL, '2018-10-26 13:08:07', '2019-04-01 13:22:40', NULL),
+	('nbu_flist', 7, 'scheduletype', 'Backup ID', 'STRING', NULL, NULL, '2018-10-26 13:08:44', '2019-04-01 13:22:42', NULL),
+	('nbu_flist', 8, 'client', 'Client name', 'STRING', NULL, NULL, '2018-10-26 13:06:48', '2019-04-01 13:22:50', NULL),
+	('nbu_flist', 9, 'path', 'Object name', 'STRING', NULL, NULL, '2018-10-26 13:07:03', '2019-04-01 13:22:52', NULL),
+	('nbu_flist', 10, 'jobid', 'Job ID', 'NUMBER', NULL, NULL, '2018-10-26 13:09:34', '2019-04-01 13:27:58', NULL),
+	('nbu_flist', 11, 'parentjob', 'Parent job', 'NUMBER', NULL, NULL, '2018-10-26 13:09:57', '2019-04-01 13:28:02', NULL),
+	('nbu_flist', 12, 'jobtype', 'Job type', 'STRING', NULL, NULL, '2018-10-26 13:09:57', '2019-04-01 13:25:18', NULL),
+	('nbu_flist', 13, 'subtype', 'Sub type', 'STRING', NULL, NULL, '2018-10-26 13:09:57', '2019-04-01 13:25:18', NULL),
+	('nbu_flist', 14, 'state', 'State', 'STRING', NULL, NULL, '2018-10-26 13:09:57', '2019-04-01 13:25:18', NULL),
+	('nbu_flist', 15, 'status', 'Status', 'NUMBER', NULL, NULL, '2018-10-26 13:09:57', '2019-04-01 13:25:18', NULL),
+	('nbu_flist', 16, 'tries', 'Tries', 'NUMBER', NULL, NULL, '2018-10-26 13:09:57', '2019-04-01 13:25:18', NULL),
+	('nbu_flist', 17, 'bsr', 'BSR', 'NUMBER', NULL, NULL, '2018-10-26 13:09:57', '2019-04-01 13:25:18', NULL),
+	('nbu_flist', 18, 'bw_day', 'Backup day', 'DATE', NULL, NULL, '2018-10-26 13:10:45', '2019-04-01 13:29:11', NULL),
+	('nbu_flist', 19, 'started', 'Started', 'DATE', NULL, NULL, '2018-10-26 13:10:45', '2019-04-01 13:31:17', NULL),
+	('nbu_flist', 20, 'elapsed', 'Elapsed', 'TIME', NULL, NULL, '2018-10-26 13:10:55', '2019-04-01 13:31:26', NULL),
+	('nbu_flist', 21, 'ended', 'Ended', 'DATE', NULL, NULL, '2018-10-26 13:11:08', '2019-04-01 13:31:30', NULL),
+	('nbu_flist', 22, 'gbytes', 'Written (GB)', 'FLOAT', NULL, NULL, '2018-10-26 13:08:30', '2019-04-01 13:33:19', NULL),
+	('nbu_flist', 23, 'timestamp', 'Timestamp', 'DATE', NULL, NULL, '2018-10-26 13:08:30', '2019-04-01 13:24:30', NULL),
+	('nbu_flist', 24, 'retentionperiod', 'Retention', 'NUMBER', NULL, NULL, '2018-10-26 13:08:30', '2019-04-01 13:33:19', NULL),
+	('nbu_flist', 25, 'user_name', 'User name', 'STRING', NULL, NULL, '2018-10-26 13:08:30', '2019-04-01 13:33:19', NULL),
+	('nbu_flist', 26, 'group_name', 'Group name', 'STRING', NULL, NULL, '2018-10-26 13:08:30', '2019-04-01 13:33:19', NULL),
+	('nbu_flist', 27, 'owner', 'Owner', 'STRING', NULL, NULL, '2018-10-26 13:10:14', '2019-04-01 13:26:07', NULL),
+	('nbu_flist', 28, 'group', 'Group', 'STRING', NULL, NULL, '2018-10-26 13:10:24', '2019-04-01 13:26:09', NULL),
 	('nbu_gbsr', 1, 'jobs', 'Jobs', 'NUMBER', 'nbu_bsr_jobs', 'Show jobs', '2017-03-22 12:21:26', '2017-04-12 15:11:30', NULL),
 	('nbu_gbsr', 2, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed jobs', '2017-03-22 12:21:37', '2017-04-12 15:11:34', NULL),
 	('nbu_gbsr_client', 1, 'client', 'Client name', 'STRING', NULL, NULL, '2017-03-22 15:08:37', '2017-03-22 15:17:53', NULL),

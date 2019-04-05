@@ -327,8 +327,8 @@ try {
 	if ( isset( $opt[ 'DAYS' ] ) ) { $days = $opt[ 'DAYS' ]; unset( $opt[ 'DAYS' ] ); }
 	if ( empty( $days ) ) switch( $time ) {
 		case '12:15': $days = 7; break;
-		case '06:15':
-		case '18:15': $days = 3; break;
+		case '07:15':
+		case '17:15': $days = 3; break;
 		default : $days = 1; break;
 	}
 	debug( 100, timestamp( sprintf( 'START TIME %s', $time ) ) );

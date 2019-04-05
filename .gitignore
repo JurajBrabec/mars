@@ -17,3 +17,6 @@
 
 # Upgrade directory
 !**/.upgrade
+
+# Test webinterface
+**/www/test

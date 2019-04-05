@@ -19,6 +19,10 @@ if /i "%1" equ "mars40" (
 	call :database-export MARS40 %2
 	goto :end
 )
+if /i "%1" equ "mars41" (
+	call :database-export MARS41 %2
+	goto :end
+)
 if /i "%1" equ "mars_backup" (
 	call :database-export MARS_BACKUP %2
 	goto :end
@@ -53,6 +57,11 @@ config_settings config_timeperiods config_towers ^
 bpdbjobs_report bpdbjobs_summary bpflist_backupid bpimagelist bpimagelist_frags ^
 bpplclients bppllist_clients bppllist_policies bppllist_schedules bpretlevel ^
 nbu_policy_tower_customer vault_item_xml vault_xml
+if "%db%" equ "MARS41" set tables=config_customers config_owners config_settings config_timeperiods config_towers ^
+mars_backups mars_devices mars_hosts mars_ids mars_links mars_lists ^
+mars_log mars_media mars_objects mars_status mars_strings ^
+nbu_clients nbu_files nbu_images nbu_image_frags nbu_jobs ^
+nbu_policies nbu_retlevels nbu_schedules nbu_strings nbu_vaults
 if "%db%" equ "MARS_BACKUP" set tables=
 :export-execute
 echo.>"%root%\tmp\.export"
@@ -68,12 +77,12 @@ call :echo DB export of database '%db%' finished.
 goto :eof
 
 :export-table
-call :echo Exporting %1\%2...
+call :echo Exporting table %1\%2...
 "%root%\bin\db\bin\mysqldump.exe" --no-create-info --order-by-primary --replace --flush-logs --log-error="%logfile%" %1 %2 | "%root%\bin\7z\7z.exe" u -si%2.sql "%root%\cmd\dump\%1.7z" >nul 2>&1
 goto :EOF
 
 :export-database
-call :echo Exporting %1...
+call :echo Exporting DB %1...
 "%root%\bin\db\bin\mysqldump.exe" --no-create-info --order-by-primary --replace --flush-logs --log-error="%logfile%" %1 | "%root%\bin\7z\7z.exe" u -si%1.sql "%root%\cmd\dump\%1.7z" >nul 2>&1
 goto :EOF
 
