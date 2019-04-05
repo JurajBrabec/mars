@@ -258,15 +258,17 @@ function read_files( $interval ) {
 		$types = '0,13,40';
 		$sql = 'SELECT DISTINCT id.backupid FROM ( ';
 		$sql .= 'SELECT j.masterserver,j.backupid,j.started FROM bpdbjobs_report j ';
-		$sql .= sprintf( 'WHERE j.policytype IN (%s) AND j.backupid IS NOT NULL ', $types );
+		$sql .= sprintf( 'WHERE j.policytype IN (%s) AND j.jobtype IN (0,6,22,28) AND j.state=3 AND j.backupid IS NOT NULL ', $types );
 		$sql .= 'AND j.jobid<>j.parentjob ';
+		$sql .= 'AND j.status IN (0,1) ';
 		$sql .= sprintf( 'AND j.started>unix_timestamp(NOW()-INTERVAL %s HOUR) ', $interval );
-		$sql .= 'UNION ALL ';
-		$sql .= 'SELECT i.masterserver,i.backupid,i.backup_time AS started FROM bpimagelist i ';
-		$sql .= sprintf( 'WHERE i.client_type IN (%s) AND i.backupid IS NOT NULL ', $types );
-		$sql .= sprintf( 'AND i.backup_time>unix_timestamp(NOW()-INTERVAL %s HOUR) ', $interval );
+//		$sql .= 'UNION ALL ';
+//		$sql .= 'SELECT i.masterserver,i.backupid,i.backup_time AS started FROM bpimagelist i ';
+//		$sql .= sprintf( 'WHERE i.client_type IN (%s) AND i.backupid IS NOT NULL ', $types );
+//		$sql .= sprintf( 'AND i.backup_time>unix_timestamp(NOW()-INTERVAL %s HOUR) ', $interval );
 		$sql .= ') id ';
 		$sql .= 'LEFT JOIN bpflist_backupid f ON (f.masterserver=id.masterserver AND f.backupid=id.backupid) ';
+//		$sql .= 'WHERE NULLIF(f.path,\'no entity was found\') IS NULL ';
 		$sql .= 'WHERE f.backupid IS NULL ';
 		$sql .= 'ORDER BY id.started;';
 		logfile( display( 'Backup ID`s:' . database( )->execute_query( $sql ) ) );
@@ -320,8 +322,8 @@ try {
 	if ( isset( $opt[ 'HOURS' ] ) ) { $hours = $opt[ 'HOURS' ]; unset( $opt[ 'HOURS' ] ); }
 	if ( empty( $hours ) ) switch( $time ) {
 		case '12:45': $hours = 24; break;
-		case '06:45': $hours = 12; break;
-		case '18:45': $hours = 6; break;
+		case '07:45': $hours = 12; break;
+		case '17:45': $hours = 6; break;
 		default : $hours = 2; break;
 	}
 	if ( isset( $opt[ 'DAYS' ] ) ) { $days = $opt[ 'DAYS' ]; unset( $opt[ 'DAYS' ] ); }
@@ -346,13 +348,13 @@ try {
 			if ( due( 'POLICIES', 'NBUPOLICIES_TIME' ) ) bppllist_policies( )->execute( $threads );
 			if ( due( 'CLIENTS', 'NBUCLIENTS_TIME' ) ) bpplclients( )->execute( $threads );
 			if ( due( 'JOBS', 'NBUJOBS_TIME' ) ) bpdbjobs_report( $days )->execute( $threads );
-			if ( due( 'IMAGES', 'NBUIMAGES_TIME' ) ) bpimagelist_hoursago( $hours )->execute( $threads );
 			$threads->execute( );
-			if ( due( 'FILES', 'NBUFILES_TIME' ) ) read_files( $hours );
 			if ( due( 'VAULT', 'NBUVAULT_TIME' ) ) try { handler( vault_xml( os( )->path( array ( $ini[ 'NBU_DATA_HOME' ], 'db', 'vault' ) ) )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
 			if ( due( 'RETLEVEL', 'NBURETLEVEL_TIME' ) ) try { handler( bpretlevel( )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
 			if ( due( 'ESL', 'NBU2ESL_TIME' ) ) nbu2esl( );
 			if ( due( 'SM9', 'NBU2SM9_TIME' ) ) nbu2sm9( );
+			if ( due( 'IMAGES', 'NBUIMAGES_TIME' ) ) bpimagelist_hoursago( $hours )->execute( $threads );
+			if ( due( 'FILES', 'NBUFILES_TIME' ) ) read_files( $hours );
 		} catch ( exception $e ) { exception_handler( $e ); }
 		$lock->lock( false );
 	} else {
