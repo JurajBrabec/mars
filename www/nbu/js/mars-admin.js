@@ -152,7 +152,7 @@ function adminSignedIn( ) {
 					sql: 'CALL nbu_routine();'
 				} 
 			} )
-			.always( function( ){ stopTrack( ); showMessage( 'Routine was executed.' ); } )
+			.always( function( ){ stopTrack( ); showMessage( 'success', 'Routine was executed.' ); } )
 			.fail( ajaxError )
 			.done( function( ){ 
 				$( 'button#nbu_event' ).removeAttr( 'disabled' ).removeClass( 'btn-default' ).addClass( config.event[ 0 ].status == 'ENABLED' ? 'btn-success' : 'btn-danger' );
@@ -171,7 +171,7 @@ function adminSignedIn( ) {
 					sql: 'CALL nbu_maintenance();'
 				} 
 			} )
-			.always( function( ){ stopTrack( ); showMessage( 'Maintenance was executed.' ); } )
+			.always( function( ){ stopTrack( ); showMessage( 'success', 'Maintenance was executed.' ); } )
 			.fail( ajaxError )
 			.done( function( ){ 
 				$( 'button#nbu_maintenance' ).removeAttr( 'disabled' ).removeClass( 'btn-default' ).addClass( 'btn-primary' );
@@ -193,6 +193,7 @@ function adminSignedIn( ) {
 				contentType: false,
 				processData: false
 			} )
+			.always( function( ){ stopTrack( ); showMessage( 'success', 'Package was uploaded.' ); } )
 			.fail( ajaxError )
 			.done( function( result ){
 				result = result.replace( new RegExp( '(succes[a-z]+)', 'g' ), '<span class="btn-success">$1</span>' ) ;

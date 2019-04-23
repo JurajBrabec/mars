@@ -26,20 +26,22 @@ function convert_config( ) {
 			$line = $oldconfig[ $i ];
 			if ( strpos( $line, '=' ) ) {
 				list( $key, $value ) = explode( '=', $line );
-				$key = trim( $key ); $value = trim( $value );
+				$key = trim( $key ); $value = trim( $value ); $new_value = $value;
 				switch ( $key ) {
-//MODIFY					case '%KEY%' : $new_value = '%VALUE%'; $modify = $value <> $new_value; break;
-					case 'THREADS' : $new_value = '4'; $modify = $value <> $new_value; break;
+//MODIFY					case '%KEY%' : $new_value = '%VALUE%'; break;
+					case 'NBUIMAGES_TIME' : $new_value = '"..:(15|45)"'; break;
+					case 'NBUFILES_TIME' : $new_value = '"..:(00|15|30|45)"'; break;
 				}
+				$modify = $value <> $new_value;
 				if ( $modify ) { 
 					$line = sprintf( '%s=%s', str_pad( $key, 24 ), $new_value );
-					$newconfig[ ] = $line;
 					logfile( display( 'Modified line "' . $oldconfig[ $i ] . '" to "' . $line . '"' ) );
 				}
 			}
 //REMOVE			preg_match( '/^%KEY%/', $line ) && $remove = true;
 			$remove && logfile( display( 'Removed line ' . $line ) ) || $newconfig[ ] = $line;
 //ADD			!preg_match( '/%KEY%/', $content ) && preg_match( '/^%AFTER%/', $line ) && $add = true && $line = str_pad( '%KEY%', 24 ) . '="%VALUE%"';
+			!preg_match( '/NBUSLP_TIME/', $content ) && preg_match( '/^NBUPOLICIES_TIME/', $line ) && $add = true && $line = str_pad( 'NBUSLP_TIME', 24 ) . '="..:(00|30)"';
 			$add && logfile( display( 'Added line ' . $line ) ) && $newconfig[ ] = $line;
 			$modified = $modified || $modify || $remove || $add;
 			$i++;
@@ -67,7 +69,7 @@ function handler( $object ) {
 		$i = 1;
 		foreach( $sql as $s ) {
 			$result = database( )->execute_query( $s );
-			$result !=0 && logfile( display( 'SQL ' . $i . ' result:' . $result ) );
+			debug( 100, timestamp( sprintf( 'RESULT: %s', $result ) ) );
 			if ( $result == -1 ) {
 				logfile( display( ' Insert ID:' . database( )->insert_id( ) ) );
 				logfile( display( ' Rows:' . database( )->row_count( ) ) );
@@ -254,6 +256,7 @@ function nbu2esl( ) {
 
 function read_files( $interval ) {
 	global $threads;
+	debug( 100, timestamp( sprintf( 'READ FILES HOURS %s', $interval ) ) );
 	try {	
 		$types = '0,13,40';
 		$sql = 'SELECT DISTINCT id.backupid FROM ( ';
@@ -268,7 +271,6 @@ function read_files( $interval ) {
 //		$sql .= sprintf( 'AND i.backup_time>unix_timestamp(NOW()-INTERVAL %s HOUR) ', $interval );
 		$sql .= ') id ';
 		$sql .= 'LEFT JOIN bpflist_backupid f ON (f.masterserver=id.masterserver AND f.backupid=id.backupid) ';
-//		$sql .= 'WHERE NULLIF(f.path,\'no entity was found\') IS NULL ';
 		$sql .= 'WHERE f.backupid IS NULL ';
 		$sql .= 'ORDER BY id.started;';
 		logfile( display( 'Backup ID`s:' . database( )->execute_query( $sql ) ) );
@@ -284,7 +286,8 @@ function read_files( $interval ) {
 function due( $optitem, $iniitem = '' ) {
 	global $opt, $ini, $time;
 	$match = $iniitem == '' ? true : preg_match( '/' . $ini[ $iniitem ] . '/', $time );
-	return ( empty( $opt ) && $match ) || isset( $opt[ $optitem ] );
+	$result = empty( $opt ) ? $match : isset( $opt[ $optitem ] );
+	return $result;
 }
 
 function exception_handler( $e ) {
@@ -315,51 +318,54 @@ try {
 	$ini = array_change_key_case( parse_ini_file( os( )->path( 'config.ini' ), FALSE ), CASE_UPPER );
 	date_default_timezone_set( $ini[ 'TIME_ZONE' ] );
 	debug( )->enabled( $ini[ 'DEBUG' ] );
-	$opts = array( 'esl', 'clients', 'files', 'images', 'jobs', 'policies', 'retlevel', 'sm9', 'summary', 'update', 'vault', 'hours::', 'days::', 'time::'  );
+	$opts = array( 'esl', 'clients', 'files', 'images', 'jobs', 'policies', 'retlevel', 'sm9', 'summary', 'update', 'slp', 'vault', 'hours::', 'days::', 'time::'  );
 	$opt = array_change_key_case( array_map( 'strtoupper', getopt( '', $opts ) ), CASE_UPPER );
 	if ( isset( $opt[ 'TIME' ] ) ) { $time = $opt[ 'TIME' ]; unset( $opt[ 'TIME' ] ); }
 	empty( $time ) && $time = date( 'H:i' );
 	if ( isset( $opt[ 'HOURS' ] ) ) { $hours = $opt[ 'HOURS' ]; unset( $opt[ 'HOURS' ] ); }
 	if ( empty( $hours ) ) switch( $time ) {
-		case '12:45': $hours = 24; break;
-		case '07:45': $hours = 12; break;
-		case '17:45': $hours = 6; break;
-		default : $hours = 2; break;
+		case '11:45': $hours = 7; break;
+		case '07:45': 
+		case '17:45': $hours = 3; break;
+		default : $hours = 1; break;
 	}
 	if ( isset( $opt[ 'DAYS' ] ) ) { $days = $opt[ 'DAYS' ]; unset( $opt[ 'DAYS' ] ); }
 	if ( empty( $days ) ) switch( $time ) {
-		case '12:15': $days = 7; break;
+		case '11:15': $days = 7; break;
 		case '07:15':
 		case '17:15': $days = 3; break;
 		default : $days = 1; break;
 	}
 	debug( 100, timestamp( sprintf( 'START TIME %s', $time ) ) );
+	if ( due( 'UPDATE' ) ) update( );
 	database( new mysqli_database( $ini[ 'DB_HOST' ], $ini[ 'DB_USER' ], $ini[ 'DB_PWD' ], $ini[ 'DB_NAME' ] ) );
 	$threads = new multi_thread( $ini[ 'THREADS' ] );
 	$threads->root( os( )->path( 'tmp' ) );
 	$threads->on_finish_callback( 'on_finish_callback' );
 	nbu( )->home( $ini[ 'NBU_BIN_HOME' ] );
 	nbu( )->tmp( os( )->path( 'tmp' ) );
+	handler( bpdbjobs_summary( )->execute( ) );
 	if ( $lock->lock( true ) ) {
 		empty( $opt ) || logfile( display( 'Executing ' . implode( ',', array_keys( $opt ) ) ) );
-		if ( due( 'UPDATE' ) ) update( );
 		try { 
-			handler( bpdbjobs_summary( )->execute( ) );
 			if ( due( 'POLICIES', 'NBUPOLICIES_TIME' ) ) bppllist_policies( )->execute( $threads );
 			if ( due( 'CLIENTS', 'NBUCLIENTS_TIME' ) ) bpplclients( )->execute( $threads );
 			if ( due( 'JOBS', 'NBUJOBS_TIME' ) ) bpdbjobs_report( $days )->execute( $threads );
+			if ( due( 'IMAGES', 'NBUIMAGES_TIME' ) ) bpimagelist_hoursago( $hours )->execute( $threads );
+			if ( due( 'SLP', 'NBUSLP_TIME' ) ) nbstl( )->execute( $threads );
 			$threads->execute( );
 			if ( due( 'VAULT', 'NBUVAULT_TIME' ) ) try { handler( vault_xml( os( )->path( array ( $ini[ 'NBU_DATA_HOME' ], 'db', 'vault' ) ) )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
 			if ( due( 'RETLEVEL', 'NBURETLEVEL_TIME' ) ) try { handler( bpretlevel( )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
 			if ( due( 'ESL', 'NBU2ESL_TIME' ) ) nbu2esl( );
 			if ( due( 'SM9', 'NBU2SM9_TIME' ) ) nbu2sm9( );
-			if ( due( 'IMAGES', 'NBUIMAGES_TIME' ) ) bpimagelist_hoursago( $hours )->execute( $threads );
-			if ( due( 'FILES', 'NBUFILES_TIME' ) ) read_files( $hours );
 		} catch ( exception $e ) { exception_handler( $e ); }
 		$lock->lock( false );
 	} else {
 		logfile( display( 'Another instance in progress.' ) );
 	}
+	if ( due( 'FILES', 'NBUFILES_TIME' ) ) read_files( 4 * $hours );
+	if ( due( 'IMAGES', 'NBUIMAGES_TIME' ) ) bpimagelist_hoursago( $hours )->execute( $threads );
+	$threads->execute( );
 } catch ( exception $e ) { exception_handler( $e ); }
 display( '------' );
 display( sprintf( 'Memory used: %sMb',round( os( )->memory_peak( ) /1000000, 1 ) ) );

@@ -36,6 +36,140 @@ class nbu extends cmd {
 	
 }
 
+### NBSTL
+
+class nbstl extends nbu {
+	const WIN_BIN				= 'admincmd\\nbstl';
+	const ARGUMENTS				= '-l';
+	const SLPNAME				= 'slpname';
+	const DATACLASSIFICATION	= 'dataclassification';
+	const DUPLICATIONPRIORITY	= 'duplicationpriority';
+	const STATE					= 'state';
+	const VERSION				= 'version';
+	const USEFOR				= 'usefor';
+	const STORAGEUNIT			= 'storageunit';
+	const VOLUMEPOOL			= 'volumepool';
+	const MEDIAOWNER			= 'mediaowner';
+	const RETENTIONTYPE			= 'retentiontype';
+	const RETENTIONLEVEL		= 'retentionlevel';
+	const ALTERNATEREADSERVER	= 'alternatereadserver';
+	const PRESERVEMPX			= 'preservempx';
+	const DDOSTATE				= 'ddostate';
+	const SOURCE				= 'source';
+	const UNUSED				= 'unused';
+	const OPERATIONID			= 'operationid';
+	const OPERATIONINDEX		= 'operationindex';
+	const SLPWINDOW				= 'slpwindow';
+	const TARGETMASTER			= 'targetmaster';
+	const TARGETMASTERSLP		= 'targetmasterslp';
+	const UPDATED				= 'updated';
+	const OBSOLETED				= 'obsoleted';
+
+	private $updated			= '';
+	private $slps				= array( );
+	private $slps_row			= array( );
+	
+	public function updated( $value = NULL ) { return _var( $this->updated, func_get_args( ) ); }
+	public function slps( $field = NULL, $value = NULL) { return _arr( $this->slps, func_get_args( ) ); }
+	public function slps_row( $field = NULL, $value = NULL) { return _arr( $this->slps_row, func_get_args( ) ); }
+
+	public static function pattern( ) {
+		$pattern = array(
+			text::P( static::SLPNAME, text::CSV ),
+			text::P( static::DATACLASSIFICATION, text::CSV ),
+			text::P( static::DUPLICATIONPRIORITY, text::CSV ),
+			text::P( static::STATE, text::CSV ),
+			text::P( static::VERSION, text::CSV ),
+			text::P( static::USEFOR, text::CSV ),
+			text::P( static::STORAGEUNIT, text::CSV ),
+			text::P( static::VOLUMEPOOL, text::CSV ),
+			text::P( static::MEDIAOWNER, text::CSV ),
+			text::P( static::RETENTIONTYPE, text::CSV ),
+			text::P( static::RETENTIONLEVEL, text::CSV ),
+			text::P( static::ALTERNATEREADSERVER, text::CSV ),
+			text::P( static::PRESERVEMPX, text::CSV ),
+			text::P( static::DDOSTATE, text::CSV ),
+			text::P( static::SOURCE, text::CSV ),
+			text::P( static::UNUSED, text::CSV ),
+			text::P( static::OPERATIONID, text::CSV ),
+			text::P( static::OPERATIONINDEX, text::CSV ),
+			text::P( static::SLPWINDOW, text::CSV ),
+			text::P( static::TARGETMASTER, text::CSV ),
+			text::P( static::TARGETMASTERSLP, text::CSV )
+		);
+		return sprintf( static::PATTERN, implode( text::SPACES, $pattern ) );
+	}
+
+	protected function setup( ) {
+		parent::setup( );
+		$this->add_fields( static::UPDATED, $this->updated( date( 'Y-m-d H:i:s' ) ) );
+		$this->add_fields( static::OBSOLETED, NULL );
+	}
+
+	protected function parse_split( $split ) {
+//		$split = str_replace( '*NULL*', 'NULL', $split );
+		$split = str_replace( '*ANY*', 'ANY', $split );
+		$row = array( );
+		$pattern = '^(\S+) (\S+) (\S+) (\S+) (\S+)$';
+		if ( preg_match( sprintf( '/%s/', $pattern ), $split, $match ) ) {
+			array_shift( $match );
+			foreach ( $this->fields( ) as $name => $type ) {
+				$row[ $name ] = field::validate( isset( $match[ $name ] ) ? $match[ $name ] : $this->add_fields( $name ), $type );
+			}
+			list(
+				$row[ static::SLPNAME ],
+				$row[ static::DATACLASSIFICATION ],
+				$row[ static::DUPLICATIONPRIORITY ],
+				$row[ static::STATE ],
+				$row[ static::VERSION ]
+			) = $match;
+			$this->slps_row( $row );
+			$row = array( );
+		} else {
+			$pattern = '^(\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+) (\S+)$';
+			if ( preg_match( sprintf( '/%s/', $pattern ), $split, $match ) ) {
+				array_shift( $match );
+				$row = $this->slps_row( );
+				list(
+					$row[ static::USEFOR ],
+					$row[ static::STORAGEUNIT ],
+					$row[ static::VOLUMEPOOL ],
+					$row[ static::MEDIAOWNER ],
+					$row[ static::RETENTIONTYPE ],
+					$row[ static::RETENTIONLEVEL ],
+					$row[ static::ALTERNATEREADSERVER ],
+					$row[ static::PRESERVEMPX ],
+					$row[ static::DDOSTATE ],
+					$row[ static::SOURCE ],
+					$row[ static::UNUSED ],
+					$row[ static::OPERATIONID ],
+					$row[ static::OPERATIONINDEX ],
+					$row[ static::SLPWINDOW ],
+					$row[ static::TARGETMASTER ],
+					$row[ static::TARGETMASTERSLP ]
+				) = $match;
+			} else { throw new exception( sprintf( static::PARSING_EXCEPTION, $this->arguments( ) ) ); }
+		}
+		unset( $match );
+		foreach ( $row as $key => $value ) if ( $value == '*NULL*' ) $row[ $key ] = '';
+		return $row;
+	}
+
+	protected function parse_rows( ) {
+		parent::parse_rows( );
+		foreach ( $this->rows( ) as $row ) $this->slps( sprintf( '%s_%s', $row[ static::SLPNAME ], $row[ static::OPERATIONID ] ), $row );
+	}
+
+	public function sql( $table = NULL ) {
+		$result = parent::sql( $table );
+		$result[ ] = sprintf( "update %s set %s=%s where %s is null and %s<'%s';", $table, 
+			static::OBSOLETED, static::UPDATED, static::OBSOLETED, static::UPDATED, $this->updated( ) );
+		return $result;
+	}
+	
+}
+
+
 ### BPPLCLIENTS
 
 class bpplclients extends nbu {
@@ -73,7 +207,6 @@ class bpplclients extends nbu {
 
 	protected function setup( ) {
 		parent::setup( );
-		$this->row_delimiter( '^(?=CLIENT)' );
 		$this->add_fields( static::UPDATED, $this->updated( date( 'Y-m-d H:i:s' ) ) );
 		$this->add_fields( static::OBSOLETED, NULL );
 	}
@@ -1554,6 +1687,7 @@ function bppllist_clients( ) { return new bppllist_clients( ); }
 function bppllist_schedules( ) { return new bppllist_schedules( ); }
 function vault_xml( $home ) { return new vault_xml( $home ); }
 function bpretlevel( ) { return new bpretlevel( ); }
+function nbstl( ) { return new nbstl( ); }
 
 function nbu( ) { global $nbu; return $nbu; }
 
