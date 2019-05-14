@@ -711,6 +711,10 @@ BEGIN
 	INSERT INTO temp_table SELECT * FROM bpretlevel ORDER BY masterserver,level;
 	RENAME TABLE bpretlevel TO drop_table,temp_table TO bpretlevel;
 	DROP TABLE drop_table;
+	CREATE TABLE temp_table LIKE nbstl;
+	INSERT INTO temp_table SELECT * FROM nbstl WHERE obsoleted IS NULL ORDER BY masterserver,slpname;
+	RENAME TABLE nbstl TO drop_table,temp_table TO nbstl;
+	DROP TABLE drop_table;
 	CREATE TABLE temp_table LIKE nbu_policy_tower_customer;
 	INSERT INTO temp_table SELECT * FROM nbu_policy_tower_customer ORDER BY masterserver,policy;
 	RENAME TABLE nbu_policy_tower_customer TO drop_table,temp_table TO nbu_policy_tower_customer;
@@ -732,12 +736,15 @@ BEGIN
 	INSERT INTO temp_table SELECT * FROM bpdbjobs_report WHERE started>=UNIX_TIMESTAMP(NOW()-INTERVAL @months MONTH) ORDER BY masterserver,jobid;
 	RENAME TABLE bpdbjobs_report TO drop_table,temp_table TO bpdbjobs_report;
 	DROP TABLE drop_table;
+	CREATE OR REPLACE TEMPORARY TABLE backupids (backupid VARCHAR(64) NOT NULL PRIMARY KEY);
+	REPLACE INTO backupids (backupid) SELECT backupid FROM bpdbjobs_report WHERE backupid IS NOT NULL;
+	REPLACE INTO backupids (backupid) SELECT backupid FROM bpimagelist WHERE backupid IS NOT NULL;
 	CREATE TABLE temp_table LIKE bpflist_backupid;
 	INSERT INTO temp_table SELECT f.* FROM bpflist_backupid f 
-		WHERE EXISTS (SELECT j.backupid FROM bpdbjobs_report j WHERE j.masterserver=f.masterserver AND j.backupid=f.backupid) 
-		OR EXISTS (SELECT i.backupid FROM bpimagelist i WHERE i.masterserver=f.masterserver AND i.backupid=f.backupid) 
+		WHERE EXISTS (SELECT j.backupid FROM backupids j WHERE j.backupid=f.backupid) 
 		ORDER BY f.masterserver,f.backupid;
 	RENAME TABLE bpflist_backupid TO drop_table,temp_table TO bpflist_backupid;
+	DROP TABLE backupids;
 	DROP TABLE drop_table;
 	ALTER EVENT nbu_event ENABLE;
 	REPLACE INTO config_settings (name,value) VALUES ('maintenance',TIMESTAMPDIFF(SECOND,@start,NOW()));
@@ -1367,7 +1374,7 @@ SELECT DISTINCT
 	IF(s2.`slpname` IS NULL,SUBSTRING_INDEX(p.`res`,',',1),s2.`storageunit`) AS `schedule_stu`,
 	s3.`slpname` AS `slp_name`,s3.`storageunit` AS `slp_stu`,
 	(SELECT rl.`period` FROM bpretlevel rl 
-		WHERE rl.`masterserver`=s3.`masterserver` AND rl.`level`=s2.`retentionlevel`) AS `slp_ret`,
+		WHERE rl.`masterserver`=s3.`masterserver` AND rl.`level`=s3.`retentionlevel`) AS `slp_ret`,
 	v.`profile_name` AS `vault`,v.`stgunit` AS `vault_stu`,
 	(SELECT rl.`period` FROM bpretlevel rl 
 		WHERE rl.`masterserver`=v.`masterserver` AND rl.`level`=v.`retention`) AS `vault_ret`

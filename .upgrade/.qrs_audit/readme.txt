@@ -1,8 +1,8 @@
 MARS 4.1 VPC QRS Audit
 
 CHANGELOG:
-1.04.2018 Fresh VPC QRS Audit
-•	
+1.05.2019 Fresh VPC QRS Audit
+•	SLP support added
 
 HOW-TO INSTALL:
 (Automatic execution)

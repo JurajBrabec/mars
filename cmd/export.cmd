@@ -56,12 +56,12 @@ if "%db%" equ "MARS40" set tables=config_customers config_reports config_schedul
 config_settings config_timeperiods config_towers ^
 bpdbjobs_report bpdbjobs_summary bpflist_backupid bpimagelist bpimagelist_frags ^
 bpplclients bppllist_clients bppllist_policies bppllist_schedules bpretlevel ^
-nbu_policy_tower_customer vault_item_xml vault_xml
+nbu_policy_tower_customer nbstl vault_item_xml vault_xml
 if "%db%" equ "MARS41" set tables=config_customers config_owners config_settings config_timeperiods config_towers ^
 mars_backups mars_devices mars_hosts mars_ids mars_links mars_lists ^
 mars_log mars_media mars_objects mars_status mars_strings ^
 nbu_clients nbu_files nbu_images nbu_image_frags nbu_jobs ^
-nbu_policies nbu_retlevels nbu_schedules nbu_strings nbu_vaults
+nbu_policies nbu_retlevels nbu_schedules nbu_strings nbu_slps nbu_vaults
 if "%db%" equ "MARS_BACKUP" set tables=
 :export-execute
 echo.>"%root%\tmp\.export"
