@@ -24,17 +24,18 @@ if "%scheduler%" equ "1" call :echo (started from scheduler)
 if "%webinterface%" equ "1" call :echo (started from web interface)
 call :echo Copying file(s)...
 for /f %%i in ("%~dp0.") do set postupdate=%%~nxi.cmd
-xcopy /e /i /y files "%root%\tmp">>nul 2>&1
+xcopy /e /i /y files "%root%\tmp" >nul 2>&1
 if "%errorlevel%" neq "0" goto :error
 :finish
 if exist "%root%\tmp\%postupdate%" ( 
 	del /q /f "%root%\tmp\%postupdate%" > nul 2>&1
-) else ( 
-	echo %postupdate%>>"%root%\tmp\.updates" 
 )
-ren "%root%\tmp\.cmd" %postupdate%>>nul 2>&1
-if "%scheduler%" equ "1" goto :success
-if "%webinterface%" equ "1" goto :success
+ren "%root%\tmp\.cmd" %postupdate% >nul 2>&1
+if "%scheduler%%webinterface%" equ "00" goto :post-update
+findstr %postupdate% "%root%\tmp\.updates" >nul 2>&1
+if "%errorlevel%" equ "1" echo %postupdate%>>"%root%\tmp\.updates" 
+goto :success
+:post-update
 call :echo Starting post-update script %postupdate%...
 start /b /wait cmd /c "%root%\tmp\%postupdate%" 2>&1
 call :echo Post-update script %postupdate% finished. E:%errorlevel%
