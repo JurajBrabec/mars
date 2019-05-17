@@ -333,8 +333,8 @@ CREATE TABLE `bppllist_policies` (
 	`frozenimage` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`backupcopy` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`effectivedate` INT(10) UNSIGNED NULL DEFAULT NULL,
-	`classid` INT(11) NULL DEFAULT NULL,
-	`backupcopies` VARCHAR(64) NULL DEFAULT NULL,
+	`classid` VARCHAR(64) NULL DEFAULT NULL,
+	`backupcopies` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`checkpoints` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`checkpointinterval` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`unused` INT(10) UNSIGNED NULL DEFAULT NULL,
@@ -1054,7 +1054,7 @@ DROP VIEW IF EXISTS `nbu_policies`;
 CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_policies` AS 
 SELECT 
 	ptc.tower,ptc.customer,p.masterserver,p.name,
-	p.active,
+	IF(p.active=1,'NO','YES') AS active,
 	nbu_code('policytype',p.policytype) AS policytype,
 	(SELECT COUNT(c.name) FROM bppllist_clients c WHERE c.masterserver=p.masterserver AND c.policyname=p.name and c.obsoleted IS NULL) AS clients,
 	(SELECT COUNT(s.name) FROM bppllist_schedules s WHERE s.masterserver=p.masterserver AND s.policyname=p.name and s.obsoleted IS NULL) AS schedules,
@@ -1391,8 +1391,7 @@ SELECT DISTINCT
 		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.`masterserver`=c.`masterserver` AND ptc.`policy`=c.`policyname`)
 	WHERE c.`obsoleted` IS NULL
 	AND (IFNULL(v.`schedulefilter`,'')<>'INCLUDE' OR vs.`value` IS NOT NULL)
-	AND c.`policyname` NOT REGEXP 'dummy' 
-#	AND p.`active`=0
+	AND p.`active`=0
 	AND IFNULL(ptc.`tower`,'')=IFNULL(f_tower(),IFNULL(ptc.`tower`,''))
 	AND IFNULL (ptc.`customer`,'')=IFNULL(f_customer(),IFNULL(ptc.`customer`,''))
 	ORDER BY ptc.`tower`,ptc.`customer`,c.`name`,p.`name`,s1.`name`,s2.`slpname`,v.`profile_name` 
@@ -2869,7 +2868,7 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_policies', 2, 'tower', 'Tower', 'STRING', NULL, NULL, '2017-03-20 09:06:04', '2017-03-20 09:06:04', NULL),
 	('nbu_policies', 3, 'customer', 'Customer', 'STRING', NULL, NULL, '2017-03-20 09:06:04', '2017-04-27 13:42:30', NULL),
 	('nbu_policies', 4, 'name', 'Policy name', 'STRING', NULL, NULL, '2017-03-20 09:06:38', '2017-04-27 13:42:32', NULL),
-	('nbu_policies', 5, 'active', 'Active', 'NUMBER', NULL, NULL, '2017-03-20 09:07:03', '2017-04-27 13:42:34', NULL),
+	('nbu_policies', 5, 'active', 'Active', 'STRING', NULL, NULL, '2017-03-20 09:07:03', '2017-04-27 13:42:34', NULL),
 	('nbu_policies', 6, 'policytype', 'Type', 'STRING', NULL, NULL, '2017-03-20 09:07:18', '2017-04-27 13:42:35', NULL),
 	('nbu_policies', 7, 'include', 'Include', 'STRING', NULL, NULL, '2017-03-20 09:07:18', '2017-04-27 13:42:35', NULL),
 	('nbu_policies', 8, 'clients', 'Clients', 'NUMBER', 'nbu_clients', 'Show clients for \'%name%\'', '2017-03-20 09:07:45', '2017-07-14 14:55:10', NULL),

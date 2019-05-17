@@ -1061,6 +1061,7 @@ class bppllist_policies extends bppllist_allpolicies {
 			$row[ static::MAXFRAGSIZE ],
 			$row[ static::ACTIVE ],
 			$row[ static::TIR ],
+			$row[ static::UNUSED ],
 			$row[ static::BLOCKLEVELINCREMENTALS ],
 			$row[ static::INDIVIDUALFILERESTORE ],
 			$row[ static::STREAMING ],
