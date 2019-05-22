@@ -27,4 +27,5 @@ goto :EOF
 echo Error %errorlevel% during update.
 goto :EOF
 :END
+endlocal
 popd

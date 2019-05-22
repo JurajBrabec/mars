@@ -109,6 +109,7 @@ goto :end
 :install-redist
 call :echo Installing Microsoft Visual C++ Redistributable Components...
 start /wait /d "%root%\bin" vc_redist.x64.exe /repair /passive /norestart
+if "%errorlevel%" equ "1638" ver>nul
 if "%errorlevel%" equ "3010" ver>nul
 if "%errorlevel%" leq "0" goto :install-http
 call :echo Error %errorlevel% installing Microsoft Visual C++ Redistributable Components.
