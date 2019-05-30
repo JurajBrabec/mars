@@ -15,8 +15,10 @@ for /f %%i in ('dir /b files\httpd-*.zip') do set filename=%%i
 for /f "tokens=2 delims=-" %%i in ("%filename%") do set build=%%i
 set "logfile=%root%\logs\update_http_%build%.log"
 if exist %logfile% del /q %logfile%
+set webinterface=0
 if "%1" equ "WEBINTERFACE" set webinterface=1
 if "%scheduler%" equ "1" goto :begin
+set scheduler=0
 tasklist | findstr php.exe >nul 2>&1
 if "%errorlevel%" equ "0" set scheduler=1
 :begin

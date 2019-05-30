@@ -14,8 +14,10 @@ if "%root:~-1%"=="\" set root=%root:~0,-1%
 set build=vpc-qrs-audit
 set "logfile=%root%\logs\%build%.log"
 if exist %logfile% del /q %logfile%
+set webinterface=0
 if "%1" equ "WEBINTERFACE" set webinterface=1
 if "%scheduler%" equ "1" goto :begin
+set scheduler=0
 tasklist | findstr php.exe >nul 2>&1
 if "%errorlevel%" equ "0" set scheduler=1
 :begin
