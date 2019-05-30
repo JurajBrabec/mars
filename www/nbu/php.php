@@ -338,7 +338,8 @@ function get_sql( $source ) {
 			$match[ 'sign' ] == '' && $match[ 'sign' ] = '+';
 			$value = sprintf( '(now() %s interval %s %s)', $match[ 'sign' ], $match[ 'num' ], $match[ 'int' ] );
 		}
-		if ( $types[ $field ] == 'NUMBER' ) {
+//		if ( $types[ $field ] == 'NUMBER' ) {
+		if ( is_numeric( str_replace( ' ','', $filter[ 'value' ] ) ) ) {
 			$value = str_replace( ' ','', $filter[ 'value' ] );
 		}
 		if ( $types[ $field ] == 'STRING' and $filter[ 'value' ] == '' and in_array( $operator, array( '=', '!=' ) ) ) {
