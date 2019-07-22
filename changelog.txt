@@ -1,6 +1,9 @@
 MARS 4.1 Change Log
 ======================
 
+18.07.2019 version 4.1 build #16
+•	Added NBU support for ticket creation
+
 30.05.2019 version 4.1 build #15
 •	Fixed bug in passing numeric condition values higher than 999 (removed thousands separator).
 

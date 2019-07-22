@@ -1385,9 +1385,9 @@ SELECT DISTINCT
 			AND s2.`slpname`=IFNULL(NULLIF(SUBSTRING_INDEX(s1.`schedres`,',',1),'NULL'),NULLIF(SUBSTRING_INDEX(p.`res`,',',1),'NULL')))
 		LEFT JOIN nbstl s3 ON (s3.`masterserver`=p.`masterserver` AND s3.`usefor` IN (1,3) AND s3.`obsoleted` IS NULL
 			AND s3.`slpname`=IFNULL(NULLIF(SUBSTRING_INDEX(s1.`schedres`,',',1),'NULL'),NULLIF(SUBSTRING_INDEX(p.`res`,',',1),'NULL')))
-		LEFT JOIN vault_item_xml vc ON (vc.`type`='CLIENT' AND vc.`value`=c.`name` AND vc.`obsoleted` IS NULL)
-		LEFT JOIN vault_xml v  ON (v.`profile_name`=vc.`profile` AND v.`obsoleted` IS NULL)
-		LEFT JOIN vault_item_xml vs ON (vs.`type`='SCHEDULE' AND vs.`profile`=v.`profile_name` AND vs.`value`=s1.`name` AND vs.`obsoleted` IS NULL)
+		LEFT JOIN vault_item_xml vc ON (vc.`masterserver`=c.`masterserver` AND vc.`type`='CLIENT' AND vc.`value`=c.`name` AND vc.`obsoleted` IS NULL)
+		LEFT JOIN vault_xml v  ON (v.`masterserver`=c.`masterserver` AND v.`profile_name`=vc.`profile` AND v.`obsoleted` IS NULL)
+		LEFT JOIN vault_item_xml vs ON ( vs.`masterserver`=c.`masterserver` AND vs.`type`='SCHEDULE' AND vs.`profile`=v.`profile_name` AND vs.`value`=s1.`name` AND vs.`obsoleted` IS NULL)
 		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.`masterserver`=c.`masterserver` AND ptc.`policy`=c.`policyname`)
 	WHERE c.`obsoleted` IS NULL
 	AND (IFNULL(v.`schedulefilter`,'')<>'INCLUDE' OR vs.`value` IS NOT NULL)
@@ -1437,7 +1437,7 @@ SELECT
 	nbu_code('scheduletype',j.scheduletype) AS scheduletype
 	FROM bpdbjobs_report j
 	LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=j.masterserver AND ptc.policy=j.policy)
-	WHERE j.ended > UNIX_TIMESTAMP(NOW()- INTERVAL 16 DAY)
+	WHERE j.ended > UNIX_TIMESTAMP(NOW()- INTERVAL 1 DAY)
 	AND ((j.status>1 AND j.tries>0) OR (j.status=196))
 	ORDER BY j.ended 
 ;
