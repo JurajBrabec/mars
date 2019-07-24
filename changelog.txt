@@ -1,5 +1,10 @@
 MARS 4.1 Change Log
 ======================
+24.07.2019 version 4.1 build #17
+•	Added help section to NBU client
+•	Upgraded BOOTSTRAP to v3.4.1
+•	Upgraded JQUERY to v3.4.1
+•	Upgraded PHPMAILER to v6.0.7
 
 18.07.2019 version 4.1 build #16
 •	Added NBU support for ticket creation
@@ -15,7 +20,7 @@ MARS 4.1 Change Log
 •	Fixed issue with import policies in NBU 
 
 24.04.2019 version 4.1 build #12
-•	Extended NBU SLP support to schedules too, linked "Policies" and "Schedules" report to it
+•	Extended NBU SLP support to schedules too, linked "policies' and "Schedules" report to it
 
 18.04.2019 version 4.1 build #11
 •	Added NBU SLP support, and created report "Storage Lifecycle Policies"

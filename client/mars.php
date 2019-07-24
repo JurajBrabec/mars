@@ -11,6 +11,27 @@ require_once os( )->path( array( __DIR__, 'inc', 'database.php' ) );
 require_once os( )->path( array( __DIR__, 'inc', 'nbu_commands.php' ) );
 
 #-----------------------------------
+function help( ) {
+	display( 'USAGE: MARS [-ACTION] [-h[ours]=HH] [-d[ays]=DD] [-t[ime]=HH:MM]' );
+	display( 'Configuration related actions:' );
+	display( "\tclients\t\treads clients" );
+	display( "\tpolicies\treads policies and schedules" );
+	display( "\tretlevels\treads retention levels" );
+	display( "\tslps\t\treads SLP`s" );
+	display( "\tvaults\t\treads vaults" );
+	display( 'Data related actions:' );
+	display( "\tjobs [-d[ays]=DD]\treads jobs for last DD days" );
+	display( "\timages [-h[ours]=HH]\treads images for last HH hours" );
+	display( "\tfiles [-h[ours]=HH]\treads files for last HH hours" );
+	display( 'Other actions:' );
+	display( "\tesl\t\texport configuration to ESL *.txt files" );
+	display( "\tsm9\t\texport tickets to SM9 nbmom.log file" );
+	display( "\tupdate\t\tupdate MARS and exit" );
+	display( 'Parameters:' );
+	display( "\td[ays]=DD\tdefault 1 day, 3 days at 7:15, 7 days at 11:15" );
+	display( "\th[ours]=HH\tdefault 1 hour, 3 hours at 7:45, 7 hours at 11:45" );
+	display( "\tt[ime]=HH:MM\tMARS can be run for a specific time, default is current time" );
+}
 
 function convert_config( ) {
 	try {
@@ -328,6 +349,13 @@ function shutdown_function( ) {
 error_reporting( E_ALL );
 register_shutdown_function( 'shutdown_function' );
 set_exception_handler( 'exception_handler' );
+$opt = array( );
+for ( $i = 1; $i < count( $argv ); $i++ ) {
+	if ( preg_match( '/^[\/|-]+([^=]+)=?(.*)/', $argv[ $i ], $match ) ) {
+        $opt[ strtoupper( $match[ 1 ] ) ] = $match[ 2 ];
+    }
+}
+if ( isset( $opt[ '?' ] ) or isset( $opt[ 'HELP' ] ) ) die( help( ) );
 display( '------' );
 try {
 	if ( !os( )->php( '7.2' ) ) throw new exception( sprintf( os::PHP_UNSUPPORTED, os::php( ) ) );
@@ -338,22 +366,18 @@ try {
 	$ini = array_change_key_case( parse_ini_file( os( )->path( 'config.ini' ), FALSE ), CASE_UPPER );
 	date_default_timezone_set( $ini[ 'TIME_ZONE' ] );
 	debug( )->enabled( $ini[ 'DEBUG' ] );
-	$opts = array( 'esl', 'clients', 'files', 'images', 'jobs', 'policies', 'retlevel', 'sm9', 'summary', 'update', 'slp', 'vault', 'hours::', 'days::', 'time::'  );
-	$opt = array_change_key_case( array_map( 'strtoupper', getopt( '', $opts ) ), CASE_UPPER );
 	if ( isset( $opt[ 'TIME' ] ) ) { $time = $opt[ 'TIME' ]; unset( $opt[ 'TIME' ] ); }
 	empty( $time ) && $time = date( 'H:i' );
 	if ( isset( $opt[ 'HOURS' ] ) ) { $hours = $opt[ 'HOURS' ]; unset( $opt[ 'HOURS' ] ); }
 	if ( empty( $hours ) ) switch( $time ) {
 		case '11:45': $hours = 7; break;
-		case '07:45': 
-		case '17:45': $hours = 3; break;
+		case '07:45': $hours = 3; break;
 		default : $hours = 1; break;
 	}
 	if ( isset( $opt[ 'DAYS' ] ) ) { $days = $opt[ 'DAYS' ]; unset( $opt[ 'DAYS' ] ); }
 	if ( empty( $days ) ) switch( $time ) {
 		case '11:15': $days = 7; break;
-		case '07:15':
-		case '17:15': $days = 3; break;
+		case '07:15': $days = 3; break;
 		default : $days = 1; break;
 	}
 	debug( 100, timestamp( sprintf( 'START TIME %s', $time ) ) );
@@ -371,11 +395,12 @@ try {
 			if ( due( 'POLICIES', 'NBUPOLICIES_TIME' ) ) bppllist_policies( )->execute( $threads );
 			if ( due( 'CLIENTS', 'NBUCLIENTS_TIME' ) ) bpplclients( )->execute( $threads );
 			if ( due( 'JOBS', 'NBUJOBS_TIME' ) ) bpdbjobs_report( $days )->execute( $threads );
+			if ( due( 'FILES', 'NBUFILES_TIME' ) ) read_files( $hours );
 			if ( due( 'IMAGES', 'NBUIMAGES_TIME' ) ) bpimagelist_hoursago( $hours )->execute( $threads );
-			if ( due( 'SLP', 'NBUSLP_TIME' ) ) nbstl( )->execute( $threads );
+			if ( due( 'SLPS', 'NBUSLP_TIME' ) ) nbstl( )->execute( $threads );
 			$threads->execute( );
-			if ( due( 'VAULT', 'NBUVAULT_TIME' ) ) try { handler( vault_xml( os( )->path( array ( $ini[ 'NBU_DATA_HOME' ], 'db', 'vault' ) ) )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
-			if ( due( 'RETLEVEL', 'NBURETLEVEL_TIME' ) ) try { handler( bpretlevel( )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
+			if ( due( 'VAULTS', 'NBUVAULT_TIME' ) ) try { handler( vault_xml( os( )->path( array ( $ini[ 'NBU_DATA_HOME' ], 'db', 'vault' ) ) )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
+			if ( due( 'RETLEVELS', 'NBURETLEVEL_TIME' ) ) try { handler( bpretlevel( )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
 			if ( due( 'ESL', 'NBU2ESL_TIME' ) ) nbu2esl( );
 			if ( due( 'SM9', 'NBU2SM9_TIME' ) ) nbu2sm9( );
 		} catch ( exception $e ) { exception_handler( $e ); }
@@ -383,8 +408,6 @@ try {
 	} else {
 		logfile( display( 'Another instance in progress.' ) );
 	}
-	if ( due( 'FILES', 'NBUFILES_TIME' ) ) read_files( 4 * $hours );
-	if ( due( 'IMAGES', 'NBUIMAGES_TIME' ) ) bpimagelist_hoursago( $hours )->execute( $threads );
 	$threads->execute( );
 } catch ( exception $e ) { exception_handler( $e ); }
 display( '------' );

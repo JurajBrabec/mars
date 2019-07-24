@@ -739,8 +739,9 @@ function send_report( $name, $title, $sources, $tower, $customer, $timeperiod, $
 function phpMailer( $name, $title, $to, $cc, $text, $mode ) {
 	global $config;
 	
-	require_once dirname( __FILE__ ) . '/inc/class.smtp.php';
-	require_once dirname( __FILE__ ) . '/inc/class.phpmailer.php';
+	require_once dirname( __FILE__ ) . '/inc/PHPMailer.php';
+	require_once dirname( __FILE__ ) . '/inc/SMTP.php';
+	require_once dirname( __FILE__ ) . '/inc/Exception.php';
 	
 	$delims = array( ';', ' ', '|' );
 	$name = preg_replace( "([^\w\s\d\-_~,;\[\]\(\).])", '', $name );
@@ -758,7 +759,7 @@ function phpMailer( $name, $title, $to, $cc, $text, $mode ) {
 	$debug = empty( $config[ 'ini' ][ 'SMTP_DEBUG' ] ) ? 0 : $config[ 'ini' ][ 'SMTP_DEBUG' ];
 	$port = empty( $config[ 'ini' ][ 'SMTP_PORT' ] ) ? 25 : $config[ 'ini' ][ 'SMTP_PORT' ];
 	$limit = empty( $config[ 'ini' ][ 'HTML_SIZE_LIMIT' ] ) ? 2 : $config[ 'ini' ][ 'HTML_SIZE_LIMIT' ];
-	$mail = new PHPMailer;
+	$mail = new PHPMailer\PHPMailer\PHPMailer;
 	$mail->isSMTP( );
 	$mail->SMTPDebug = $debug;
 	$mail->Host = $host;

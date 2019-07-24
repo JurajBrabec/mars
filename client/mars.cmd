@@ -21,6 +21,7 @@ echo Updating file(s)...
 xcopy /s /e /i /y "%_mars_home%.update" "%_mars_home%"
 if "%errorlevel%" neq "0" goto :ERROR
 rmdir /s /q "%_mars_home%.update"
+del /q "%mars_home%tmp\*.tmp" >nul
 echo Done.
 goto :EOF
 :ERROR

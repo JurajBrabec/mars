@@ -17,10 +17,13 @@ set "logfile=%root%\logs\mars.log"
 echo MARS %build% Monitoring And Reporting Script
 echo ==========================================================================
 echo.
-:begin
 if "%command%" equ "" goto :usage
-if "%command:~0,1%"=="/" set command=%command:~1%
+:begin
 if "%command:~0,1%"=="-" set command=%command:~1%
+if "%command:~0,1%"=="-" goto :begin
+if "%command:~0,1%"=="/" set command=%command:~1%
+if /i "%command%" equ "?" goto :usage
+if /i "%command%" equ "help" goto :usage
 if /i "%command%" equ "disable" goto :scheduler-disable
 if /i "%command%" equ "enable" goto :scheduler-enable
 if /i "%command%" equ "status" goto :mars-status

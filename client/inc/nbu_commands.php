@@ -1,7 +1,7 @@
 <?php
 
 /*
- * MARS 4.0 PHP CODE
+ * MARS 4.1 PHP CODE
  * build 4.1.17 @ 2018-10-25 04:17
  * * rewritten from scratch
  */
@@ -162,8 +162,11 @@ class nbstl extends nbu {
 
 	public function sql( $table = NULL ) {
 		$result = parent::sql( $table );
-		$result[ ] = sprintf( "update %s set %s=%s where %s is null and %s<'%s';", $table, 
-			static::OBSOLETED, static::UPDATED, static::OBSOLETED, static::UPDATED, $this->updated( ) );
+		$result[ ] = sprintf( "update %s set %s=%s where %s='%s' and %s is null and %s<'%s';", $table,
+			static::OBSOLETED, static::UPDATED, 
+			static::MASTERSERVER, nbu( )->masterserver( ), 
+			static::OBSOLETED, 
+			static::UPDATED, $this->updated( ) );
 		return $result;
 	}
 	
@@ -223,8 +226,11 @@ class bpplclients extends nbu {
 
 	public function sql( $table = NULL ) {
 		$result = parent::sql( $table );
-		$result[ ] = sprintf( "update %s set %s=%s where %s is null and %s<'%s';", $table, 
-			static::OBSOLETED, static::UPDATED, static::OBSOLETED, static::UPDATED, $this->updated( ) );
+		$result[ ] = sprintf( "update %s set %s=%s where %s='%s' and %s is null and %s<'%s';", $table,
+			static::OBSOLETED, static::UPDATED, 
+			static::MASTERSERVER, nbu( )->masterserver( ), 
+			static::OBSOLETED, 
+			static::UPDATED, $this->updated( ) );
 		return $result;
 	}
 	
@@ -936,8 +942,11 @@ class bppllist_allpolicies extends bppllist {
 
 	public function sql( $table = NULL ) {
 		$result = parent::sql( $table );
-		$result[ ] = sprintf( "update %s set %s=%s where %s is null and %s<'%s';", $table, 
-			static::OBSOLETED, static::UPDATED, static::OBSOLETED, static::UPDATED, $this->updated( ) );
+		$result[ ] = sprintf( "update %s set %s=%s where %s='%s' and %s is null and %s<'%s';", $table,
+			static::OBSOLETED, static::UPDATED, 
+			static::MASTERSERVER, nbu( )->masterserver( ), 
+			static::OBSOLETED, 
+			static::UPDATED, $this->updated( ) );
 		return $result;
 	}
 }
@@ -1629,9 +1638,9 @@ class vault_xml extends text {
 				display( $e->getmessage( ) );
 			}
 			$vault_sql = substr_replace( $vault_sql, ';', strrpos( $vault_sql, ',' ), 1 );
-			$vault_sql_cleanup = sprintf( "update vault_xml set obsoleted=updated where obsoleted is null and updated<'%s';", $this->updated( ) );
+			$vault_sql_cleanup = sprintf( "update vault_xml set obsoleted=updated where masterserver='%s' and obsoleted is null and updated<'%s';", $masterserver, $this->updated( ) );
 			$vault_item_sql = substr_replace( $vault_item_sql, ';', strrpos( $vault_item_sql, ',' ), 1 );
-			$vault_item_sql_cleanup = sprintf( "update vault_item_xml set obsoleted=updated where obsoleted is null and updated<'%s';", $this->updated( ) );
+			$vault_item_sql_cleanup = sprintf( "update vault_item_xml set obsoleted=updated where masterserver='%s' and obsoleted is null and updated<'%s';", $masterserver, $this->updated( ) );
 
 			return array( $vault_sql, $vault_sql_cleanup, $vault_item_sql, $vault_item_sql_cleanup );
 	}
