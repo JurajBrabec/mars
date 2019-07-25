@@ -1175,9 +1175,9 @@ SELECT p.masterserver,p.name AS policy,s.backuptype,
 	s.thu_start,s.thu_hours,
 	s.fri_start,s.fri_hours,
 	s.sat_start,s.sat_hours
-	FROM nbu_policies p
+	FROM bppllist_policies p
 		LEFT JOIN nbu_schedules s ON (s.masterserver=p.masterserver AND s.policyname=p.name AND s.freq_days<>84)
-	WHERE p.name NOT regexp 'DUMMY|Template' AND p.clients>0 AND p.jobs>0
+	WHERE p.name NOT regexp 'DUMMY|Template' AND p.active='YES' AND s.jobs>0
 	ORDER BY 1,2 
 ;
 
@@ -1185,7 +1185,7 @@ DROP VIEW IF EXISTS `nbu_esl_client`;
 CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_esl_client` AS 
 SELECT e.masterserver,e.name,c.name as client 
 	FROM nbu_esl e
-		LEFT JOIN nbu_clients c ON (c.masterserver=e.masterserver and e.policy=c.policyname)
+		LEFT JOIN bppllist_clients c ON (c.masterserver=e.masterserver and c.policyname=e.policy AND c.obsoleted IS NULL)
 	ORDER BY 1,2,3 
 ;
 
