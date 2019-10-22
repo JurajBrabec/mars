@@ -21,7 +21,8 @@ function help( ) {
 	display( "\tvaults\t\treads vaults" );
 	display( 'Data related actions:' );
 	display( "\tjobs [-d[ays]=DD]\treads jobs for last DD days" );
-	display( "\timages [-h[ours]=HH]\treads images for last HH hours" );
+	display( "\tallimages\treads all backup images" );
+	display( "\timages [-d[ays]=DD]\treads backup images for last DD days" );
 	display( "\tfiles [-h[ours]=HH]\treads files for last HH hours" );
 	display( 'Other actions:' );
 	display( "\tesl\t\texport configuration to ESL *.txt files" );
@@ -50,6 +51,8 @@ function convert_config( ) {
 				$key = trim( $key ); $value = trim( $value ); $new_value = $value;
 				switch ( $key ) {
 //MODIFY					case '%KEY%' : $new_value = '%VALUE%'; break;
+							case 'NBUIMAGES_TIME' : $new_value = '"10:15"'; break;
+							case 'NBUFILES_TIME' : $new_value = '"..:45"'; break;
 				}
 				$modify = $value <> $new_value;
 				if ( $modify ) { 
@@ -58,10 +61,14 @@ function convert_config( ) {
 				}
 			}
 //REMOVE			preg_match( '/^%KEY%/', $line ) && $remove = true;
+			preg_match( '/^NBU2SM9_X_STATUS/', $line ) && $remove = true;
+			preg_match( '/^NBU2SM9_X_JOBTYPE/', $line ) && $remove = true;
 			$remove && logfile( display( 'Removed line ' . $line ) ) || $newconfig[ ] = $line;
 //ADD			!preg_match( '/%KEY%/', $content ) && preg_match( '/^%AFTER%/', $line ) && $add = true && $line = str_pad( '%KEY%', 24 ) . '="%VALUE%"';
-			!preg_match( '/NBU2SM9_X_JOBTYPE/', $content ) && preg_match( '/^NBURETLEVEL_TIME/', $line ) && $add = true && $line = str_pad( 'NBU2SM9_X_JOBTYPE', 24 ) . '="Image cleanup"';
-			!preg_match( '/NBU2SM9_X_STATUS/', $content ) && preg_match( '/^NBURETLEVEL_TIME/', $line ) && $add = true && $line = str_pad( 'NBU2SM9_X_STATUS', 24 ) . '="150"';
+			!preg_match( '/NBU2SM9_LOGROT_TIME/', $content ) && preg_match( '/^NBU2SM9_PATH/', $line ) && $add = true && $line = str_pad( 'NBU2SM9_LOGROT_TIME', 24 ) . '="12:00"';
+			!preg_match( '/NBU2SM9_LOG_HISTORY/', $content ) && preg_match( '/^NBU2SM9_LOGROT_TIME/', $line ) && $add = true && $line = str_pad( 'NBU2SM9_LOG_HISTORY', 24 ) . '=7';
+			!preg_match( '/NBU2SM9_FILTER_JOBTYPES/', $content ) && preg_match( '/^NBU2SM9_LOG_HISTORY/', $line ) && $add = true && $line = str_pad( 'NBU2SM9_FILTER_JOBTYPES', 24 ) . '="Image cleanup"';
+			!preg_match( '/NBU2SM9_FILTER_STATUSES/', $content ) && preg_match( '/^NBU2SM9_FILTER_JOBTYPES/', $line ) && $add = true && $line = str_pad( 'NBU2SM9_FILTER_STATUSES', 24 ) . '="150"';
 			$add && logfile( display( 'Added line ' . $line ) ) && $newconfig[ ] = $line;
 			$modified = $modified || $modify || $remove || $add;
 			$i++;
@@ -158,49 +165,97 @@ function nbu2sm9( ) {
 		global $ini;
 		$debug_level = '303';
 		ini_default( 'NBU2SM9_PATH', 'tmp' );
-		ini_default( 'NBU2SM9_FILE', 'nbmon.log' );
-		ini_default( 'NBU2SM9_LINE', 
-#			'RR-TT-Major-<@.MGrp>-<@.EType>-Policy:<*.POLICY>-<@.ClientServer> Policy:<*.POLICY> failed with JobID:<*.JOBID> <*.MText>'
-			'RM-TT-Major-<@.MGrp>-<@.EType>-Policy:<*.POLICY> Policy:<*.POLICY> failed with JobID:<*.JOBID> <*.MText>'
-		 );
-		ini_default( 'NBU2SM9_MTEXT', '<*.JOBTYPE> Type:<*.POLICYTYPE> State:<*.STATE> Status:<*.STATUS> Schedule:<*.SCHEDULE> ClientServer:<*.CLIENT> MasterServer:NULL' );
-		ini_default( 'NBU2SM9_X_JOBTYPE', 'Image cleanup' );
-		ini_default( 'NBU2SM9_X_POLICY', '' );
-		ini_default( 'NBU2SM9_X_POLICYTYPE', '' );
- 		ini_default( 'NBU2SM9_X_STATUS', '150' );
-		$lastfailurefile = 'tmp/LastFailure.json';
-		$lastfailure = file_exists( $lastfailurefile ) ? json_decode( file_get_contents( $lastfailurefile ), true ) : array( 'jobid' => 0, 'ended' => date( 'Y-m-d H:i:s', 0 ) );
-		debug( $debug_level, timestamp( sprintf( 'Last JobID %s', $lastfailure[ 'jobid' ] ) ) );
+		ini_default( 'NBU2SM9_LOGROT_TIME', '12:00' );
+		ini_default( 'NBU2SM9_LOG_HISTORY', 7 );
+
+		if ( stripos( $ini[ 'NBU2SM9_PATH' ], 'backupmon' ) > 0 ) {
+			ini_default( 'NBU2SM9_FILE', 'nbmon.log' );
+			ini_default( 'NBU2SM9_LINE', 'RM-TT-Major-<@.MGrp>-<@.EType>-Policy:<*.POLICY> Policy:<*.POLICY> failed with JobID:<*.JOBID> <*.MESSAGETEXT>' );
+			ini_default( 'NBU2SM9_MESSAGETEXT', '<*.JOBTYPE> Type:<*.POLICYTYPE> State:<*.STATE> Status:<*.STATUS> Schedule:<*.SCHEDULE> ClientServer:<*.CLIENT> MasterServer:NULL' );
+			$keymask = '<*%s>';
+		} else {
+			ini_default( 'NBU2SM9_FILE', 'mars_mon.log' );
+			ini_default( 'NBU2SM9_LINE', '<DATE>::<SEVERITY>::<ERRORCODE>::<MESSAGETEXT>::<EVENTNODE>::<EVENTTYPEINSTANCE>::<CORELLATIONKEY>');
+			ini_default( 'NBU2SM9_MESSAGETEXT', '<JOBTYPE> Policy:<POLICY> failed with JobID:<JOBID> Type:<POLICYTYPE> State:<STATE> Status:<STATUS> Schedule:<SCHEDULE> ClientServer:<CLIENT> MasterServer:NULL' );
+			$keymask = '<%s>';
+		}
+		ini_default( 'NBU2SM9_FILTER_JOBTYPES', 'Image cleanup' );
+		ini_default( 'NBU2SM9_FILTER_POLICIES', '' );
+		ini_default( 'NBU2SM9_FILTER_POLICYTYPES', '' );
+ 		ini_default( 'NBU2SM9_FILTER_STATUSES', '150' );
+		
 		is_dir( $ini[ 'NBU2SM9_PATH' ] ) || mkdir( $ini[ 'NBU2SM9_PATH' ], 0777, true );
 		$file_name = os( )->path( array( $ini[ 'NBU2SM9_PATH' ] , $ini[ 'NBU2SM9_FILE' ] ) );
-		$sql = sprintf( "select * from nbu_tickets where masterserver='%s' and ((ended='%s' and jobid>%s) or ended>'%s');", 
-			nbu( )->masterserver( ), $lastfailure[ 'ended' ], $lastfailure[ 'jobid' ], $lastfailure[ 'ended' ]);
+		$lffile_name = os( )->path( array( $ini[ 'NBU2SM9_PATH' ] , 'LastFailure.json' ) );
+		$lastfailure = array( 'jobid' => 0, 'ended' => date( 'Y-m-d H:i:s', 0 ) );
+		file_exists( $lffile_name ) && $lastfailure = json_decode( file_get_contents( $lffile_name ), true );
+		file_exists( 'tmp\LastFailure.json' ) && $lastfailure = json_decode( file_get_contents( 'tmp\LastFailure.json' ), true ) && unlink( 'tmp\LastFailure.json' );
+		$ended = $lastfailure[ 'ended' ];
+		$jobid = $lastfailure[ 'jobid' ];
+		$lines = 1;
+		if ( file_exists( $file_name ) ) {
+			$f = @fopen( $file_name, 'rb' );
+			fseek( $f, -1, SEEK_END );
+			if ( fread( $f, strlen( "\n" ) ) != "\n" ) $lines -= 1;
+			$output = '';
+			$chunk = '';
+			while ( ftell( $f ) > 0 && $lines >= 0 ) {
+				$seek = min( ftell( $f ), 64 );
+				fseek( $f, -$seek, SEEK_CUR );
+				$output = ( $chunk = fread( $f, $seek ) ) . $output;
+				fseek( $f, -mb_strlen( $chunk, '8bit' ), SEEK_CUR );
+				$lines -= substr_count( $chunk, "\n" );
+			}
+			while ( $lines++ < 0 ) {
+				$output = substr( $output, strpos( $output, "\n" ) + 1 );
+			}
+			fclose( $f );
+			$ended = '';
+			$jobid = '';
+			strpos( $output, '::' ) > 0 && $ended = substr( $output, 0, strpos( $output, '::' ) );
+			preg_match( '/JobID:(\d+)/i', $output, $match ) && $jobid = $match[ 1 ];
+		}
+		debug( $debug_level, timestamp( sprintf( 'Last JobID %s', $jobid ) ) );
+		$difftime = strtotime( 'Today ' . $ini[ 'NBU2SM9_LOGROT_TIME' ] );
+		if ( file_exists( $file_name ) && filemtime( $file_name ) < $difftime && time( ) > $difftime ) {
+			file_exists( $file_name . '.' . $ini[ 'NBU2SM9_LOG_HISTORY' ] ) && unlink( $file_name . '.' . $ini[ 'NBU2SM9_LOG_HISTORY' ] );
+			for ( $i = $ini[ 'NBU2SM9_LOG_HISTORY' ]; $i > 0; $i-- ) {
+				file_exists( $file_name . '.' . $i ) && rename( $file_name . '.' . $i, $file_name . '.' . ( $i + 1 ) );
+			}
+			rename( $file_name, $file_name . '.1' );
+			touch( $file_name );
+		}
+		$sql = sprintf( "select * from nbu_tickets where masterserver='%s' and ended>='%s';", nbu( )->masterserver( ), $ended );
 		$rows = database( )->execute_query( $sql );
 		debug( $debug_level, timestamp( sprintf( 'Records %s', $rows ) ) );
 		$file = new basic_log_file( $file_name );
 		$i = 0;
 		foreach( database( )->rows( ) as $row ) {
 			debug( $debug_level, timestamp( sprintf( 'ID %s', $row[ 'jobid' ] ) ) );
-			if ( filter( $ini[ 'NBU2SM9_X_JOBTYPE' ], $row[ 'jobtype' ] ) ) continue;
-			if ( filter( $ini[ 'NBU2SM9_X_POLICY' ], $row[ 'policy' ] ) ) continue;
-			if ( filter( $ini[ 'NBU2SM9_X_POLICYTYPE' ], $row[ 'policytype' ] ) ) continue;
-			if ( filter( $ini[ 'NBU2SM9_X_STATUS' ], $row[ 'status' ] ) ) continue;
-			$lastfailure = array( 'jobid' =>  $row[ 'jobid' ], 'ended' =>  $row[ 'ended' ] );
+			if ( filter( $ini[ 'NBU2SM9_FILTER_JOBTYPES' ], $row[ 'jobtype' ] ) ) continue;
+			if ( filter( $ini[ 'NBU2SM9_FILTER_POLICIES' ], $row[ 'policy' ] ) ) continue;
+			if ( filter( $ini[ 'NBU2SM9_FILTER_POLICYTYPES' ], $row[ 'policytype' ] ) ) continue;
+			if ( filter( $ini[ 'NBU2SM9_FILTER_STATUSES' ], $row[ 'status' ] ) ) continue;
+			if ( $row[ 'ended' ] == $ended and $row[ 'jobid' ]<= $jobid ) continue;
+			$jobid = $row[ 'jobid' ];
+			$ended = $row[ 'ended' ];
 			$line = $ini[ 'NBU2SM9_LINE' ];
-			$mtext = $ini[ 'NBU2SM9_MTEXT' ];
-			$line = str_replace( '<@.MGrp>', 'Backup', $line );
-			$line = str_replace( '<@.EType>', 'NBU', $line );
+			$mtext = $ini[ 'NBU2SM9_MESSAGETEXT' ];
+			if ( $ini[ 'NBU2SM9_FILE' ] == 'nbmon.log' ) {
+				$line = str_replace( '<@.MGrp>', 'Backup', $line );
+				$line = str_replace( '<@.EType>', 'NBU', $line );
+			}
 			foreach( $row as $key=>$value ) {
 				if ( is_numeric( $key ) ) continue;
-				$line = str_replace( '<*.' . strtoupper( $key ) . '>', $value, $line );
-				$mtext = str_replace( '<*.' . strtoupper( $key ) . '>', $value, $mtext );
+				$line = str_replace( sprintf( $keymask, strtoupper( $key ) ), $value, $line );
+				$mtext = str_replace( sprintf( $keymask, strtoupper( $key ) ), $value, $mtext );
 			}
-			$line = str_replace( '<*.MText>', $mtext, $line );
+			$line = str_replace( sprintf( $keymask, 'MESSAGETEXT' ), $mtext, $line );
 			$file->write( $line );
-			debug( $debug_level, timestamp( sprintf( 'Ticket for ID %s created', $lastfailure[ 'jobid' ] ) ) );
+			debug( $debug_level, timestamp( sprintf( 'Ticket for ID %s created', $jobid ) ) );
 			$i++;
 		}
-		file_put_contents( $lastfailurefile, json_encode( $lastfailure ) );
+#		file_put_contents( $lffile_name, json_encode( array( 'jobid' => $jobid, 'ended' => $ended ) ) );
 		logfile( display( 'NBU2SM9 tickets:' . $i ) );
 	} catch ( exception $e ) { exception_handler( $e ); }
 	return true;
@@ -306,27 +361,42 @@ function read_files( $interval ) {
 		$sql .= 'AND j.jobid<>j.parentjob ';
 		$sql .= 'AND j.status IN (0,1) ';
 		$sql .= sprintf( 'AND j.started>unix_timestamp(NOW()-INTERVAL %s HOUR) ', $interval );
-//		$sql .= 'UNION ALL ';
-//		$sql .= 'SELECT i.masterserver,i.backupid,i.backup_time AS started FROM bpimagelist i ';
-//		$sql .= sprintf( 'WHERE i.client_type IN (%s) AND i.backupid IS NOT NULL ', $types );
-//		$sql .= sprintf( 'AND i.backup_time>unix_timestamp(NOW()-INTERVAL %s HOUR) ', $interval );
 		$sql .= ') id ';
 		$sql .= 'LEFT JOIN bpflist_backupid f ON (f.masterserver=id.masterserver AND f.backupid=id.backupid) ';
 		$sql .= 'WHERE f.backupid IS NULL ';
 		$sql .= 'ORDER BY id.started;';
 		logfile( display( 'Backup ID`s:' . database( )->execute_query( $sql ) ) );
 		foreach( database( )->rows( ) as $row ) {
-			bpflist_backupid( $row[ 'backupid' ] )->execute( $threads );
-//			try { handler( bpflist_backupid( $row[ 'backupid' ] )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
+//			bpflist_backupid( $row[ 'backupid' ] )->execute( $threads );
+			try { handler( bpflist_backupid( $row[ 'backupid' ] )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
 		}
-		$threads->execute( );
+//		$threads->execute( );
+	} catch ( exception $e ) { exception_handler( $e ); }
+	return true;
+}
+
+function read_all_images( ) {
+	global $threads;
+	debug( 100, timestamp( 'READ ALL IMAGES' ) );
+	try {	
+		$sql = 'SELECT DISTINCT c.name FROM bppllist_clients c ';
+		$sql .= 'LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=c.masterserver AND ptc.policy=c.policyname) ';
+		$sql .= sprintf( "WHERE c.masterserver='%s' ", nbu( )->masterserver( ) );
+		$sql .= 'AND c.obsoleted IS NULL ';
+		$sql .= 'ORDER BY c.NAME;';
+		logfile( display( 'Clients:' . database( )->execute_query( $sql ) ) );
+		foreach( database( )->rows( ) as $row ) {
+//			bpimmedia_client( $row[ 'name' ] )->execute( $threads );
+			try { handler( bpimmedia_client( $row[ 'name' ] )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
+		}
+//		$threads->execute( );
 	} catch ( exception $e ) { exception_handler( $e ); }
 	return true;
 }
 
 function due( $optitem, $iniitem = '' ) {
 	global $opt, $ini, $time;
-	$match = $iniitem == '' ? true : preg_match( '/' . $ini[ $iniitem ] . '/', $time );
+	$match = isset( $ini[ $iniitem ] ) ? preg_match( '/' . $ini[ $iniitem ] . '/', $time ) : false;
 	$result = empty( $opt ) ? $match : isset( $opt[ $optitem ] );
 	return $result;
 }
@@ -376,12 +446,12 @@ try {
 	}
 	if ( isset( $opt[ 'DAYS' ] ) ) { $days = $opt[ 'DAYS' ]; unset( $opt[ 'DAYS' ] ); }
 	if ( empty( $days ) ) switch( $time ) {
-		case '11:15': $days = 7; break;
-		case '07:15': $days = 3; break;
+		case '11:15': $days = 3; break;
+		case '07:15': $days = 2; break;
 		default : $days = 1; break;
 	}
 	debug( 100, timestamp( sprintf( 'START TIME %s', $time ) ) );
-	if ( due( 'UPDATE' ) ) update( );
+	update( );
 	database( new mysqli_database( $ini[ 'DB_HOST' ], $ini[ 'DB_USER' ], $ini[ 'DB_PWD' ], $ini[ 'DB_NAME' ] ) );
 	$threads = new multi_thread( $ini[ 'THREADS' ] );
 	$threads->root( os( )->path( 'tmp' ) );
@@ -396,7 +466,9 @@ try {
 			if ( due( 'CLIENTS', 'NBUCLIENTS_TIME' ) ) bpplclients( )->execute( $threads );
 			if ( due( 'JOBS', 'NBUJOBS_TIME' ) ) bpdbjobs_report( $days )->execute( $threads );
 			if ( due( 'FILES', 'NBUFILES_TIME' ) ) read_files( $hours );
-			if ( due( 'IMAGES', 'NBUIMAGES_TIME' ) ) bpimagelist_hoursago( $hours )->execute( $threads );
+			if ( due( 'ALLIMAGES' ) ) read_all_images( );
+			if ( due( 'IMAGES', 'NBUIMAGES_TIME' ) ) bpimmedia( $days )->execute( $threads );
+#			if ( due( 'IMAGES', 'NBUIMAGES_TIME' ) ) bpimagelist_hoursago( $hours )->execute( $threads );
 			if ( due( 'SLPS', 'NBUSLP_TIME' ) ) nbstl( )->execute( $threads );
 			$threads->execute( );
 			if ( due( 'VAULTS', 'NBUVAULT_TIME' ) ) try { handler( vault_xml( os( )->path( array ( $ini[ 'NBU_DATA_HOME' ], 'db', 'vault' ) ) )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }

@@ -678,8 +678,9 @@ class text {
 		return implode( PHP_EOL, $result );
 	}
 
-	public function SQL( $table = NULL ) {
-		$count = count( $this->rows( ) ); 
+	public function SQL( $table = NULL, $rows = NULL ) {
+		$rows == NULL && $rows = $this->rows( );
+		$count = count( $rows ); 
 		if ( $count == 0 ) return FALSE;
 		$fieldlist = array( );
 		$update = array( );
@@ -689,7 +690,7 @@ class text {
 		}
 		$result = array( );
 		$values = array( );
-		foreach( $this->rows( ) as $id => $fields ) {
+		foreach( $rows as $id => $fields ) {
 			if ( count( $fields ) == 0 ) continue;
 			$row = array( );
 			foreach ( $fields as $field => $value ) {

@@ -16,6 +16,7 @@
 **/.qrs_audit
 
 # Upgrade directory
+**/.*
 !**/.upgrade
 
 # Test webinterface

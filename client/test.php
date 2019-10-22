@@ -277,6 +277,8 @@ function nbu_process( $t ) {
 		case 'bpplclients':
 			display( '#Clients: ' . count( $t->clients( ) ) );
 			break;
+		case 'bpimmedia': 
+		case 'bpimmedia_client': 
 		case 'bpimagelist_hoursago': 
 			display( '#Images: '. count( $t->images( ) ) ); 
 			display( '#Fragments: ' . count( $t->frags( ) ) );
@@ -312,7 +314,9 @@ function nbu_test( $multi_thread = 0 ) {
 #	$t = bpplclients( );
 #	$t = bpimagelist_hoursago( 24 );
 #	$t = bpflist_backupid( 'test_0' );
-	$t = nbstl( );
+#	$t = nbstl( );
+	$t = bpimmedia( 1 );
+#	$t = bpimmedia_client( 'test' );
     if ( $multi_thread == 0 ) {
 		$t->execute( );
 		nbu_process( $t );

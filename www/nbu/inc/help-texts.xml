@@ -1,62 +1,62 @@
 <?xml version="1.0"?>
 <help-texts>
 	<imgBrand>MARS 4.1</imgBrand>
-	<liReload>Click here to <b>reload</b> current data in report(s).</liReload>
+	<liReload>Click here to [b]reload[/b] current data in report(s).</liReload>
 	<liRestart>Click here to remove all reports and start from scratch.</liRestart>
-	<nbu_reports>Click here to add various <b>NBU</b> related reports</nbu_reports>
-	<daily_bsr>Click here to add <b>Daily BSR</b> reports</daily_bsr>
-	<bsr>Click here to add <b>Global BSR</b> reports</bsr>
-	<vaults>Click here to add various <b>NBU Vault</b> related reports</vaults>
-	<audits>Click here to add <b>audit</b> related reports</audits>
-	<userReports>Click here to open <b>User</b> reports</userReports>
-	<scheduledReports>Click here to open <b>Scheduled</b> reports</scheduledReports>
-	<liActions>Click here to send, save or schedule the current report(s) in either <b>HTML</b> or <b>CSV</b> format.</liActions>
-	<liTower>Click here to select a specific <b>Tower</b> or all towers.</liTower>
-	<liCustomer>Click here to select a specific <b>Customer</b> or all customers.</liCustomer>
-	<liTimePeriod>Click here to select a specific <b>Time period</b>.</liTimePeriod>
+	<nbu_reports>Click here to add various [b]NBU[/b] related reports</nbu_reports>
+	<daily_bsr>Click here to add [b]Daily BSR[/b] reports</daily_bsr>
+	<bsr>Click here to add [b]Global BSR[/b] reports</bsr>
+	<vaults>Click here to add various [b]NBU Vault[/b] related reports</vaults>
+	<audits>Click here to add [b]audit[/b] related reports</audits>
+	<userReports>Click here to open [b]User[/b] reports</userReports>
+	<scheduledReports>Click here to open [b]Scheduled[/b] reports</scheduledReports>
+	<liActions>Click here to send, save or schedule the current report(s) in either [b]HTML[/b] or [b]CSV[/b] format.</liActions>
+	<liTower>Click here to select a specific [b]Tower[/b] or all towers.</liTower>
+	<liCustomer>Click here to select a specific [b]Customer[/b] or all customers.</liCustomer>
+	<liTimePeriod>Click here to select a specific [b]Time period[/b].</liTimePeriod>
 	<remove>Click here to remove the report.</remove>
 	<refreshData>Click here to load or refresh the data based on current conditions and sorts.</refreshData>
-	<pagination>Click here to toggle <b>pagination</b> i.e. to show all rows at once, or show 10 rows per page.</pagination>
-	<prevpage>Click here to go to <b>previous</b> page.</prevpage>
-	<nextpage>Click here to go to <b>next</b> page.</nextpage>
-	<modal-field>Select the <b>report field</b> used in the filter/sort.</modal-field>
-	<modal-operator>Select the <b>operator</b> used in the filter.</modal-operator>
-	<modal-sort>Select the <b>field order</b>.</modal-sort>
-	<modal-value>Enter the <b>value</b>.</modal-value>
+	<pagination>Click here to toggle [b]pagination[/b] i.e. to show all rows at once, or show 10 rows per page.</pagination>
+	<prevpage>Click here to go to [b]previous[/b] page.</prevpage>
+	<nextpage>Click here to go to [b]next[/b] page.</nextpage>
+	<modal-field>Select the [b]report field[/b] used in the filter/sort.</modal-field>
+	<modal-operator>Select the [b]operator[/b] used in the filter.</modal-operator>
+	<modal-sort>Select the [b]field order[/b].</modal-sort>
+	<modal-value>Enter the [b]value[/b].</modal-value>
 	<modal-add>Add the filter/sort.</modal-add>
 	<modal-update>Update the filter/sort.</modal-update>
 	<modal-remove>Remove the filter/sort.</modal-remove>
-	<modal-save>Save the report(s) as <b>user report</b> now.</modal-save>
+	<modal-save>Save the report(s) as [b]user report[/b] now.</modal-save>
 	<modal-send>Send the report to recipients now.</modal-send>
 	<modal-schedule>Schedule the report for later.</modal-schedule>
-	<liAdmin>Click here to enter <b>Administration interface</b>.</liAdmin>
-	<liLogout>Click here to return to <b>User interface</b>.</liLogout>
-	<signin>Enter your user name and password, then click <b>Sign in</b> button.</signin>
+	<liAdmin>Click here to enter [b]Administration interface[/b].</liAdmin>
+	<liLogout>Click here to return to [b]User interface[/b].</liLogout>
+	<signin>Enter your user name and password, then click [b]Sign in[/b] button.</signin>
 	<nbu_event>Click the button to execute the routine. It should be executed auomaticlaly each 5 minutes.</nbu_event>
 	<nbu_maintenance>Click the button tho execute the database maintenance.</nbu_maintenance>
-	<upload>Click the <b>Select package</b> button to select the package *.zip file.<br></br>Then click <b>Upload package</b> button to tranfer the file to web/DB server for installation.</upload>
+	<upload>Click the [b]Select package[/b] button to select the package *.zip file.[br][/br]Then click [b]Upload package[/b] button to tranfer the file to web/DB server for installation.</upload>
 	<gotop>Click here to return to the top of the page.</gotop>
-	<towers>Add, modify or obsolete <b>towers</b>.</towers>
-	<customers>Add, modify or obsolete <b>customers</b>.</customers>
-	<timeperiods>Add, modify or obsolete <b>time periods</b>.</timeperiods>
-	<userreports>Modify or obsolete <b>user reports</b>.</userreports>
-	<scheduledreports>Modify or obsolete <b>scheduled reports</b>.</scheduledreports>
+	<towers>Add, modify or obsolete [b]towers[/b].</towers>
+	<customers>Add, modify or obsolete [b]customers[/b].</customers>
+	<timeperiods>Add, modify or obsolete [b]time periods[/b].</timeperiods>
+	<userreports>Modify or obsolete [b]user reports[/b].</userreports>
+	<scheduledreports>Modify or obsolete [b]scheduled reports[/b].</scheduledreports>
 	<Add>Click here to add new item to the list.</Add>
 	<Update>Click here to modify the item details.</Update>
 	<Close>Close the window without any action.</Close>
 	<add>Add the item to the database.</add>
 	<upd>Update the item in the database.</upd>
 	<del>Mark the item in the database as obsolete.</del>
-	<modal-name>Enter the item <b>name</b>. This field must be unique.</modal-name>
-	<modal-pattern>Enter the item substring <b>pattern</b>. You can use regular experessions and wildcards.</modal-pattern>
-	<modal-ord>Enter the <b>order</b> number, in which it will appear in the list.</modal-ord>
-	<modal-title>Enter the report <b>name</b>. It may contain special characters and spaces.</modal-title>
-	<modal-tower>Select a specific <b>Tower</b> or all leave empty for towers.</modal-tower>
-	<modal-customer>Select a specific <b>Customer</b> or leave empty for all customers.</modal-customer>
-	<modal-timeperiod>Select a specific <b>Time period</b>, or leave empty for no time period restriction.</modal-timeperiod>
-	<modal-to>Enter the report's main <b>recipent list</b>. Separate multiple entries with comma (,) or semicolon (;).</modal-to>
-	<modal-cc>Enter the report's CC <b>recipent list</b>. Separate multiple entries with comma (,) or semicolon (;).</modal-cc>
-	<modal-mode>Select whether you want the report to be in <b>HTML</b> (hypertext markup, useful for distribution) or in <b>CSV</b> (comma-separated values, useful for Excel manipulation) format.</modal-mode>
-	<modal-date>Enter the <b>date</b> match pattern. You can use any part of the 'Thu 8. Feb 2018' date format (i.e. '<b>Thu</b>' for each Thursday, '<b>8.</b>' for each eighth). Leave <b>empty</b> for daily report.</modal-date>
-	<modal-time>Enter the <b>time</b> match pattern. You can use any part of the 'HH:MM' time format (i.e. '<b>:00</b>' for each full hour).</modal-time>
+	<modal-name>Enter the item [b]name[/b]. This field must be unique.</modal-name>
+	<modal-pattern>Enter the item substring [b]pattern[/b]. You can use regular experessions and wildcards.</modal-pattern>
+	<modal-ord>Enter the [b]order[/b] number, in which it will appear in the list.</modal-ord>
+	<modal-title>Enter the report [b]name[/b]. It may contain special characters and spaces.</modal-title>
+	<modal-tower>Select a specific [b]Tower[/b] or all leave empty for towers.</modal-tower>
+	<modal-customer>Select a specific [b]Customer[/b] or leave empty for all customers.</modal-customer>
+	<modal-timeperiod>Select a specific [b]Time period[/b], or leave empty for no time period restriction.</modal-timeperiod>
+	<modal-to>Enter the report's main [b]recipent list[/b]. Separate multiple entries with comma (,) or semicolon (;).</modal-to>
+	<modal-cc>Enter the report's CC [b]recipent list[/b]. Separate multiple entries with comma (,) or semicolon (;).</modal-cc>
+	<modal-mode>Select whether you want the report to be in [b]HTML[/b] (hypertext markup, useful for distribution) or in [b]CSV[/b] (comma-separated values, useful for Excel manipulation) format.</modal-mode>
+	<modal-date>Enter the [b]date[/b] match pattern. You can use any part of the 'Thu 8. Feb 2018' date format (i.e. '[b]Thu[/b]' for each Thursday, '[b]8.[/b]' for each eighth). Leave [b]empty[/b] for daily report.</modal-date>
+	<modal-time>Enter the [b]time[/b] match pattern. You can use any part of the 'HH:MM' time format (i.e. '[b]:00[/b]' for each full hour).</modal-time>
 </help-texts>

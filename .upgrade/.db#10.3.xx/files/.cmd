@@ -38,6 +38,7 @@ goto :end
 
 :remove
 call :echo Removing previous DB version %prevversion%...
+for /d %%i in ("%root%\bin\db.10*") do rmdir /s /q "%%i" >nul 2>&1
 ren "%root%\bin\db" db.%prevversion% >nul 2>&1
 set result=%errorlevel%
 goto :eof

@@ -54,7 +54,7 @@ dataprotector_sessions dataprotector_session_devices dataprotector_session_media
 dataprotector_session_objects dataprotector_specifications mars_log mars_queue
 if "%db%" equ "MARS40" set tables=config_customers config_reports config_schedules ^
 config_settings config_timeperiods config_towers ^
-bpdbjobs_report bpdbjobs_summary bpflist_backupid bpimagelist bpimagelist_frags ^
+bpdbjobs_report bpdbjobs_summary bpflist_backupid bpimmedia bpimmedia_frags ^
 bpplclients bppllist_clients bppllist_policies bppllist_schedules bpretlevel ^
 nbu_policy_tower_customer nbstl vault_item_xml vault_xml
 if "%db%" equ "MARS41" set tables=config_customers config_owners config_settings config_timeperiods config_towers ^

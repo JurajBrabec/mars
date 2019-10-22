@@ -72,6 +72,7 @@ CREATE TABLE `bpdbjobs_report` (
 	PRIMARY KEY (`masterserver`, `jobid`),
 	INDEX `masterserver_policy_schedule_client` (`masterserver`,`policy`,`schedule`,`client`),
 	INDEX `started` (`started`),
+	INDEX `ended` (`ended`),
 	INDEX `client` (`client`),
 	INDEX `policy` (`policy`),
 	INDEX `policy_schedule` (`policy`, `schedule`),
@@ -146,83 +147,33 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-DROP TABLE IF EXISTS `bpimagelist`;
-CREATE TABLE `bpimagelist` (
+DROP TABLE IF EXISTS `bpimmedia`;
+CREATE TABLE `bpimmedia` (
 	`masterserver` VARCHAR(64) NOT NULL,
 	`name` VARCHAR(64) NOT NULL,
-	`date1` TINYINT(3) UNSIGNED NOT NULL,
-	`date2` TINYINT(3) UNSIGNED NOT NULL,
 	`version` TINYINT(3) UNSIGNED NOT NULL,
 	`backupid` VARCHAR(64) NOT NULL,
 	`policy_name` VARCHAR(64) NULL DEFAULT NULL,
-	`client_type` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`proxy_client` VARCHAR(64) NULL DEFAULT NULL,
-	`creator` VARCHAR(64) NULL DEFAULT NULL,
+	`policy_type` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`sched_label` VARCHAR(64) NULL DEFAULT NULL,
 	`sched_type` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`retention` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`backup_time` INT(10) UNSIGNED NULL DEFAULT NULL,
-	`elapsed` INT(10) UNSIGNED NULL DEFAULT NULL,
+	`num_files` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`expiration` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`compression` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`encryption` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`kbytes` INT(10) UNSIGNED NULL DEFAULT NULL,
-	`num_files` INT(10) UNSIGNED NULL DEFAULT NULL,
-	`copies` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`num_fragments` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`files_compressed` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`files_file` VARCHAR(64) NULL DEFAULT NULL,
-	`sw_version` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`name1` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`options` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`primary` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`image_type` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`tir_info` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`tir_expiration` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`keywords` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`mpx` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`ext_security` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`raw` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`dump_lvl` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`fs_only` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`prev_bitime` INT(10) UNSIGNED NULL DEFAULT NULL,
-	`bifull_time` INT(10) UNSIGNED NULL DEFAULT NULL,
-	`obj_desc` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`requestid` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`backup_stat` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`backup_copy` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`prev_image` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`jobid` INT(10) UNSIGNED NULL DEFAULT NULL,
-	`num_resumes` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`resume_expr` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`ff_size` INT(10) UNSIGNED NULL DEFAULT NULL,
-	`pfi_type` TINYINT(4) NULL DEFAULT NULL,
-	`image_attrib` TINYINT(4) NULL DEFAULT NULL,
-	`ss_classification_id` TINYINT(4) NULL DEFAULT NULL,
-	`ss_name` TINYINT(4) NULL DEFAULT NULL,
-	`ss_completed` TINYINT(4) NULL DEFAULT NULL,
-	`snap_time` INT(11) NULL DEFAULT NULL,
-	`slp_version` TINYINT(4) NULL DEFAULT NULL,
-	`remote_expiration` TINYINT(4) NULL DEFAULT NULL,
-	`origin_master_server` TINYINT(4) NULL DEFAULT NULL,
-	`origin_master_guid` TINYINT(4) NULL DEFAULT NULL,
-	`ir_enabled` TINYINT(4) NULL DEFAULT NULL,
-	`client_charset` TINYINT(4) NULL DEFAULT NULL,
 	`hold` TINYINT(4) NULL DEFAULT NULL,
-	`indexing_status` INT(11) NULL DEFAULT NULL,
 	PRIMARY KEY (`masterserver`, `backupid`),
 	INDEX `name` (`name`),
-	INDEX `backup_time` (`backup_time`),
-	INDEX `expiration` (`expiration`),
-	INDEX `masterserver_jobid` (`masterserver`, `jobid`)
+	INDEX `expiration` (`expiration`)
 )
-COMMENT='bpimagelist -l'
+COMMENT='bpimmedia -l'
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-DROP TABLE IF EXISTS `bpimagelist_frags`;
-CREATE TABLE `bpimagelist_frags` (
+DROP TABLE IF EXISTS `bpimmedia_frags`;
+CREATE TABLE `bpimmedia_frags` (
 	`masterserver` VARCHAR(64) NOT NULL,
 	`backupid` VARCHAR(64) NOT NULL,
 	`copy_number` TINYINT(3) UNSIGNED NOT NULL,
@@ -231,11 +182,11 @@ CREATE TABLE `bpimagelist_frags` (
 	`remainder` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`media_type` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`density` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`file_number` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
+	`file_number` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`id_path` VARCHAR(64) NULL DEFAULT NULL,
 	`host` VARCHAR(64) NULL DEFAULT NULL,
 	`block_size` INT(10) UNSIGNED NULL DEFAULT NULL,
-	`offset` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
+	`offset` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`media_date` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`device_written_on` TINYINT(4) NULL DEFAULT NULL,
 	`f_flags` SMALLINT(5) UNSIGNED NULL DEFAULT NULL,
@@ -244,23 +195,12 @@ CREATE TABLE `bpimagelist_frags` (
 	`mpx` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`retention_level` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`checkpoint` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`resume_nbr` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`media_seq` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`media_subtype` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`try_to_keep_time` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`copy_creation_time` INT(10) UNSIGNED NULL DEFAULT NULL,
-	`fragment_state` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`data_format` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`key_tag` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`stl_tag` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`mirror_parent` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`copy_on_hold` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	PRIMARY KEY (`masterserver`, `backupid`, `copy_number`, `fragment_number`),
 	INDEX `host` (`host`),
-	INDEX `expiration` (`expiration`),
-	INDEX `copy_creation_time` (`copy_creation_time`)
+	INDEX `expiration` (`expiration`)
 )
-COMMENT='bpimagelist -l (FRAG parts)'
+COMMENT='bpimmedia -l (FRAG parts)'
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
@@ -687,13 +627,13 @@ BEGIN
 	INSERT INTO temp_table SELECT * FROM bpplclients WHERE obsoleted IS NULL ORDER BY masterserver,name;
 	RENAME TABLE bpplclients TO drop_table,temp_table TO bpplclients;
 	DROP TABLE drop_table;
-	CREATE TABLE temp_table LIKE bpimagelist;
-	INSERT INTO temp_table SELECT * FROM bpimagelist WHERE expiration>UNIX_TIMESTAMP(NOW()) ORDER BY masterserver,name;
-	RENAME TABLE bpimagelist TO drop_table,temp_table TO bpimagelist;
+	CREATE TABLE temp_table LIKE bpimmedia_frags;
+	INSERT INTO temp_table SELECT * FROM bpimmedia_frags WHERE expiration>UNIX_TIMESTAMP(NOW()) ORDER BY masterserver,backupid;
+	RENAME TABLE bpimmedia_frags TO drop_table,temp_table TO bpimmedia_frags;
 	DROP TABLE drop_table;
-	CREATE TABLE temp_table LIKE bpimagelist_frags;
-	INSERT INTO temp_table SELECT * FROM bpimagelist_frags WHERE expiration>UNIX_TIMESTAMP(NOW()) ORDER BY masterserver,backupid;
-	RENAME TABLE bpimagelist_frags TO drop_table,temp_table TO bpimagelist_frags;
+	CREATE TABLE temp_table LIKE bpimmedia;
+	INSERT INTO temp_table SELECT i.* FROM bpimmedia i WHERE EXISTS (SELECT * FROM bpimmedia_frags f WHERE f.masterserver=i.masterserver AND f.backupid=i.backupid AND f.fragment_number>0);
+	RENAME TABLE bpimmedia TO drop_table,temp_table TO bpimmedia;
 	DROP TABLE drop_table;
 	CREATE TABLE temp_table LIKE bppllist_clients;
 	INSERT INTO temp_table SELECT * FROM bppllist_clients WHERE obsoleted IS NULL ORDER BY masterserver,policyname,name;
@@ -1078,75 +1018,32 @@ SELECT
 		AND p.name IS NOT NULL AND p.obsoleted IS NULL
 ;
 
-DROP VIEW IF EXISTS `nbu_imagelist`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_imagelist` AS 
+DROP VIEW IF EXISTS `nbu_images`;
+CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_images` AS 
 SELECT 
-	i.masterserver,i.backupid,i.jobid,ptc.tower,ptc.customer,i.name AS client,
-	IF(i.client_type IN (4,6,7,8,11,15,16,17,18,19,25,35),'INTEG','FS') as type,
-	nbu_code('policytype',i.client_type) AS policytype,
-	i.policy_name AS policyname,i.sched_label AS schedulename,
+	i.masterserver,ptc.tower,ptc.customer,i.name AS client,
+	IF(i.policy_type IN (4,6,7,8,11,15,16,17,18,19,25,35),'INTEG','FS') as type,
+	i.backupid,
+#	(SELECT rl.period FROM bpretlevel rl WHERE rl.masterserver=i.masterserver AND rl.level=i.retention) AS retention,
+#	FROM_UNIXTIME(NULLIF(i.expiration,0)) AS expiration,
+	nbu_code('policytype',i.policy_type) AS policytype,
+	i.policy_name AS policyname,
 	nbu_code('scheduletype',i.sched_type) AS scheduletype,
-	(SELECT rl.period FROM bpretlevel rl WHERE rl.masterserver=i.masterserver AND rl.level=i.retention) AS retention,
-	DATE(FROM_UNIXTIME(i.backup_time-TIME_TO_SEC(s.value))) AS bw_day,
-	FROM_UNIXTIME(NULLIF(i.backup_time,0)) AS started,
-	SEC_TO_TIME(i.elapsed) AS elapsed,
-	FROM_UNIXTIME(NULLIF(i.expiration,0)) AS expiration,
-	i.kbytes,i.num_files AS files,i.num_fragments AS fragments,i.files_file,i.`primary`,i.tir_info,tir_expiration,
-	i.raw,i.dump_lvl,
-	FROM_UNIXTIME(NULLIF(i.prev_bitime,0)) AS prev_bitime,
-	FROM_UNIXTIME(NULLIF(i.bifull_time,0)) AS bifull_time,
-	i.num_resumes,i.ff_size,i.pfi_type,i.image_attrib,i.ss_completed,
-	FROM_UNIXTIME(NULLIF(i.snap_time,0)) AS snap_time,
-	i.slp_version,i.ir_enabled,i.client_charset,i.indexing_status
-	FROM bpimagelist i
+	i.sched_label AS schedulename,i.num_files AS files,
+	f.copy_number,f.fragment_number,f.id_path,f.media_type,
+	FROM_UNIXTIME(NULLIF(f.media_date,0)) AS media_date,
+	(SELECT rl.period FROM bpretlevel rl WHERE rl.masterserver=f.masterserver AND rl.level=retention_level) AS retention_level,
+	FROM_UNIXTIME(NULLIF(f.expiration,0)) AS expiration,
+	f.kilobytes,f.density,f.file_number,f.block_size,f.offset,
+	f.host,f.device_written_on,f.f_flags,f.media_descriptor
+		FROM bpimmedia i
 		LEFT JOIN config_settings s ON (s.name='bw_start')
 		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=i.masterserver AND ptc.policy=i.policy_name)
+		LEFT JOIN bpimmedia_frags f ON (f.masterserver=i.masterserver AND f.backupid=i.backupid) 
 	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
 	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
-	AND i.backup_time BETWEEN f_from() AND f_to() 
-;
-
-DROP VIEW IF EXISTS `nbu_imagelist_frags`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_imagelist_frags` AS 
-SELECT f.masterserver,f.backupid,f.fragment_number,f.copy_number,f.kilobytes,f.media_type,f.density,f.file_number,f.block_size,f.offset,
-	FROM_UNIXTIME(NULLIF(f.copy_creation_time,0)) AS copy_creation_time,
-	FROM_UNIXTIME(NULLIF(f.media_date,0)) AS media_date,
-	FROM_UNIXTIME(NULLIF(f.expiration,0)) AS expiration,
-	f.device_written_on,f.f_flags,
-	(SELECT rl.period FROM bpretlevel rl WHERE rl.masterserver=f.masterserver AND rl.level=retention_level) AS retention_level,
-	f.id_path,f.host,f.media_descriptor,f.resume_nbr,f.media_subtype,f.try_to_keep_time
-	FROM bpimagelist_frags f 
-	WHERE f.copy_creation_time BETWEEN f_from() AND f_to() 
-;
-
-DROP VIEW IF EXISTS `nbu_images`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_images` AS 
-SELECT 
-	masterserver,tower,customer,
-	client,
-	policytype,
-	bw_day,
-#	CONCAT(GROUP_CONCAT(DISTINCT LEFT(scheduletype,4)),' (',COUNT(DISTINCT backupid),')') AS images
-	GROUP_CONCAT(DISTINCT LEFT(scheduletype,4)) AS images
-	FROM nbu_imagelist
-	WHERE fragments>0
-	GROUP BY masterserver,tower,customer,client,policytype,bw_day
-	ORDER BY masterserver,tower,customer,client,policytype,bw_day 
-;
-
-DROP VIEW IF EXISTS `nbu_gimages`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_gimages` AS 
-SELECT i.masterserver,i.tower,i.customer,i.client,i.type,i.policytype,
-#	GROUP_CONCAT(DISTINCT LEFT(i.scheduletype,4)) AS scheduletype,
-	scheduletype,
-	COUNT(DISTINCT i.backupid) AS images,
-	GROUP_CONCAT(DISTINCT f.id_path ORDER BY f.id_path) AS media
-	FROM nbu_imagelist i
-	LEFT JOIN bpimagelist_frags f ON (f.masterserver=i.masterserver AND f.backupid=i.backupid)
-	WHERE i.fragments>0
-	GROUP BY i.tower,i.customer,i.client,i.policytype,i.scheduletype
-	ORDER BY i.tower,i.customer,i.client,i.policytype,i.scheduletype 
-;
+	AND f.`fragment_number`>0
+ORDER BY i.backupid,f.copy_number;
 
 DROP VIEW IF EXISTS `nbu_plclients`;
 CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_plclients` AS 
@@ -1439,8 +1336,9 @@ SELECT
 	LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=j.masterserver AND ptc.policy=j.policy)
 	WHERE j.ended > UNIX_TIMESTAMP(NOW()- INTERVAL 1 DAY)
 	AND ((j.status>1 AND j.tries>0) OR (j.status=196))
-	ORDER BY j.ended 
+	ORDER BY j.masterserver,j.ended,j.jobid
 ;
+
 
 DROP VIEW IF EXISTS `nbu_bsr_job_results`;
 CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_bsr_job_results` AS 
@@ -2687,52 +2585,33 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_gbsr_type', 1, 'type', 'Type', 'STRING', NULL, NULL, '2017-03-22 15:15:41', '2017-03-22 15:19:21', NULL),
 	('nbu_gbsr_type', 2, 'jobs', 'Jobs', 'NUMBER', 'nbu_bsr_jobs', 'Show jobs for %type%', '2017-03-22 15:15:41', '2017-03-22 15:19:38', NULL),
 	('nbu_gbsr_type', 3, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed jobs for %type%', '2017-03-22 15:15:41', '2017-03-23 14:55:46', NULL),
-	('nbu_gimages', 1, 'masterserver', 'Master Server', 'STRING', NULL, NULL, '2018-08-30 14:13:50', '2018-08-30 14:19:38', NULL),
-	('nbu_gimages', 2, 'tower', 'Tower', 'STRING', NULL, NULL, '2018-08-30 14:14:16', '2018-08-30 14:19:40', NULL),
-	('nbu_gimages', 3, 'customer', 'Customer', 'STRING', NULL, NULL, '2018-08-30 14:14:25', '2018-08-30 14:19:40', NULL),
-	('nbu_gimages', 4, 'type', 'Type', 'STRING', NULL, NULL, '2018-08-30 14:14:36', '2018-09-05 10:49:35', NULL),
-	('nbu_gimages', 5, 'client', 'Client name', 'STRING', 'nbu_imagelist', 'Show all images for %client%', '2018-08-30 14:14:36', '2018-09-05 10:49:34', NULL),
-	('nbu_gimages', 6, 'policytype', 'Policy', 'STRING', 'nbu_imagelist', 'Show %policytype% images for %client%', '2018-08-30 14:15:02', '2018-09-05 10:38:22', NULL),
-	('nbu_gimages', 7, 'scheduletype', 'Schedule', 'STRING', 'nbu_imagelist', 'Show %scheduletype% %policytype% images for %client%', '2018-08-30 14:15:02', '2018-09-05 11:14:15', NULL),
-	('nbu_gimages', 8, 'images', 'Images', 'NUMBER', NULL, NULL, '2018-08-30 14:15:16', '2018-09-05 11:14:18', NULL),
-	('nbu_gimages', 9, 'media', 'Media', 'STRING', NULL, NULL, '2018-08-30 14:15:16', '2018-09-05 10:57:36', NULL),
-	('nbu_imagelist', 1, 'masterserver', 'Master server', 'STRING', NULL, NULL, '2018-08-30 14:57:24', '2018-08-30 14:57:24', NULL),
-	('nbu_imagelist', 2, 'tower', 'Tower', 'STRING', NULL, NULL, '2018-08-30 14:57:59', '2018-08-30 14:57:59', NULL),
-	('nbu_imagelist', 3, 'customer', 'Customer', 'STRING', NULL, NULL, '2018-08-30 14:58:09', '2018-08-30 14:58:09', NULL),
-	('nbu_imagelist', 4, 'type', 'Type', 'STRING', NULL, NULL, '2018-08-30 14:58:23', '2018-08-30 14:58:23', NULL),
-	('nbu_imagelist', 5, 'client', 'Client name', 'STRING', 'nbu_imagelist_frags', 'Show all image fragments for %client%', '2018-08-30 14:58:23', '2018-09-05 11:06:03', NULL),
-	('nbu_imagelist', 6, 'jobid', 'Job ID', 'NUMBER', 'nbu_jobs', 'Show job #%jobid%', '2018-08-30 14:58:36', '2018-09-03 14:35:50', NULL),
-	('nbu_imagelist', 7, 'policytype', 'Policy type', 'STRING', NULL, NULL, '2018-08-30 14:59:07', '2018-09-03 14:35:54', NULL),
-	('nbu_imagelist', 8, 'scheduletype', 'Schedule type', 'STRING', NULL, NULL, '2018-08-30 14:59:46', '2018-09-03 14:36:03', NULL),
-	('nbu_imagelist', 9, 'policyname', 'Policy name', 'STRING', NULL, NULL, '2018-08-30 14:59:17', '2018-09-03 14:36:05', NULL),
-	('nbu_imagelist', 10, 'schedulename', 'Schedule name', 'STRING', NULL, NULL, '2018-08-30 14:59:58', '2018-09-03 14:36:08', NULL),
-	('nbu_imagelist', 11, 'backupid', 'Backup ID', 'STRING', 'nbu_flist', 'Show objects for backup ID %backupid%', '2018-08-30 14:58:46', '2018-10-26 13:32:05', NULL),
-	('nbu_imagelist', 12, 'fragments', 'Frags', 'NUMBER', 'nbu_imagelist_frags', 'Show %fragments% image fragments for %backupid%', '2018-08-30 15:02:30', '2018-10-26 13:32:08', NULL),
-	('nbu_imagelist', 13, 'snap_time', 'Snapshot', 'DATE', NULL, NULL, '2018-08-30 15:03:27', '2018-10-26 13:32:09', NULL),
-	('nbu_imagelist', 14, 'bw_day', 'Backup day', 'DATE', NULL, NULL, '2018-08-30 15:00:47', '2018-10-26 13:32:10', NULL),
-	('nbu_imagelist', 15, 'started', 'Started', 'DATE', NULL, NULL, '2018-08-30 15:00:56', '2018-10-26 13:32:12', NULL),
-	('nbu_imagelist', 16, 'elapsed', 'Elaped', 'TIME', NULL, NULL, '2018-08-30 15:01:06', '2018-10-26 13:32:13', NULL),
-	('nbu_imagelist', 17, 'retention', 'Retention', 'STRING', NULL, NULL, '2018-08-30 15:00:25', '2018-10-26 13:32:15', NULL),
-	('nbu_imagelist', 18, 'expiration', 'Expiration', 'DATE', NULL, NULL, '2018-08-30 15:01:18', '2018-10-26 13:32:17', NULL),
-	('nbu_imagelist', 19, 'kbytes', 'kB', 'NUMBER', NULL, NULL, '2018-08-30 15:02:10', '2018-10-26 13:32:19', NULL),
-	('nbu_imagelist', 20, 'files', 'Files', 'NUMBER', NULL, NULL, '2018-08-30 15:02:19', '2018-10-26 13:32:26', NULL),
-	('nbu_imagelist_frags', 1, 'masterserver', 'Master server', 'STRING', NULL, NULL, '2018-08-30 15:17:43', '2018-08-30 15:17:43', NULL),
-	('nbu_imagelist_frags', 2, 'backupid', 'Backup ID', 'STRING', NULL, NULL, '2018-08-30 15:17:57', '2018-08-30 15:17:57', NULL),
-	('nbu_imagelist_frags', 3, 'fragment_number', 'Frag#', 'NUMBER', NULL, NULL, '2018-08-30 15:18:39', '2018-08-30 15:19:07', NULL),
-	('nbu_imagelist_frags', 4, 'copy_number', 'Copy#', 'NUMBER', NULL, NULL, '2018-08-30 15:19:04', '2018-08-30 15:19:10', NULL),
-	('nbu_imagelist_frags', 5, 'kilobytes', 'kB', 'NUMBER', NULL, NULL, '2018-08-30 15:19:34', '2018-08-30 15:19:34', NULL),
-	('nbu_imagelist_frags', 6, 'id_path', 'ID/Path', 'STRING', NULL, NULL, '2018-08-30 15:22:14', '2018-08-30 15:22:14', NULL),
-	('nbu_imagelist_frags', 7, 'copy_creation_time', 'Copy time', 'DATE', NULL, NULL, '2018-08-30 15:19:56', '2018-08-30 15:22:17', NULL),
-	('nbu_imagelist_frags', 8, 'media_date', 'Media date', 'DATE', NULL, NULL, '2018-08-30 15:20:07', '2018-09-05 11:19:17', NULL),
-	('nbu_imagelist_frags', 9, 'expiration', 'Expiration', 'DATE', NULL, NULL, '2018-08-30 15:20:20', '2018-08-30 15:22:21', NULL),
-	('nbu_imagelist_frags', 10, 'retention_level', 'Retention Level', 'STRING', NULL, NULL, '2018-08-30 15:21:11', '2018-08-30 15:22:23', NULL),
-	('nbu_imagelist_frags', 11, 'host', 'Host', 'STRING', NULL, NULL, '2018-08-30 15:21:28', '2018-08-30 15:22:24', NULL),
-	('nbu_imagelist_frags', 12, 'media_descriptor', 'Media descriptor', 'STRING', NULL, NULL, '2018-08-30 15:21:42', '2018-08-30 15:22:26', NULL),
-	('nbu_images', 1, 'bw_day', 'Backup day', 'DATE', NULL, NULL, '2018-08-30 14:16:42', '2018-08-30 14:33:36', NULL),
-	('nbu_images', 2, 'client', 'Client name', 'STRING', NULL, NULL, '2018-08-30 14:22:10', '2018-08-30 15:11:19', NULL),
-	('nbu_images', 3, 'scheduletype', 'Type', 'STRING', NULL, NULL, '2018-08-30 14:41:15', '2018-09-05 09:14:56', '2018-09-05 09:14:56'),
-	('nbu_images', 4, 'policytype', 'Type', 'STRING', NULL, NULL, '2018-08-30 14:41:15', '2018-09-03 15:42:53', NULL),
-	('nbu_images', 5, 'images', 'Image', 'STRING', 'nbu_imagelist', 'Show %policytype% images from %bw_day% for %client%', '2018-08-30 14:22:45', '2018-09-05 09:34:40', NULL),
+	('nbu_images', 1, 'masterserver', 'Master Server', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 2, 'tower', 'Tower', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 3, 'customer', 'Customer', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 4, 'client', 'Client name', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 5, 'type', 'Type', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 6, 'backupid', 'Backup ID', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 7, 'policytype', 'Policy type', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 8, 'policyname', 'Policy name', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 9, 'scheduletype', 'Schedule type', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 10, 'schedulename', 'Schedule name', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 11, 'files', 'Files', 'NUMBER', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 12, 'copy_number', 'Copy', 'NUMBER', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 13, 'fragment_number', 'Frag', 'NUMBER', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 14, 'id_path', 'Media label', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 15, 'media_type', 'Media type', 'NUMBER', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 16, 'media_date', 'Media date', 'DATE', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 17, 'retention_level', 'Retention', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 18, 'expiration', 'Expiration', 'DATE', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 19, 'kilobytes', 'kB', 'NUMBER', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 20, 'density', 'Density', 'NUMBER', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 21, 'file_number', 'File No.', 'NUMBER', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 22, 'block_size', 'Block size', 'NUMBER', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 23, 'offset', 'Offset', 'NUMBER', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 24, 'host', 'Host name', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 25, 'device_written_on', 'Device', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 26, 'f_flags', 'Flags', 'NUMBER', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
+	('nbu_images', 27, 'media_descriptor', 'Media descriptor', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
 	('nbu_jobs', 1, 'masterserver', 'Master server', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
 	('nbu_jobs', 2, 'jobid', 'Job ID', 'NUMBER', NULL, NULL, '2017-02-13 10:33:58', '2017-02-13 10:40:49', NULL),
 	('nbu_jobs', 3, 'childjobs', 'Childs', 'NUMBER', 'nbu_jobs', 'Show child jobs for %parentjob%', '2017-02-13 10:34:19', '2017-03-20 15:47:05', NULL),
@@ -2960,11 +2839,6 @@ REPLACE INTO `core_formats` (`report`, `ord`, `source`, `field`, `operator`, `va
 	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 3, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 'bsr', '>=', '90', 'background-color: gold; color: brown;', '90%', NULL, '2017-03-22 12:30:00', '2019-04-05 11:14:36', NULL),
 	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 4, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 'bsr', '>=', '95', 'background-color: greenyellow; color: green;', '95%', NULL, '2017-03-22 12:30:00', '2019-04-05 11:14:36', NULL),
 	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 5, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 'bsr', '>=', '98', 'background-color: lightgreen; color: green;', '98%', NULL, '2017-03-22 12:30:00', '2019-04-05 11:14:37', NULL),
-	('nbu_(imagelist|gimages)$', 1, 'nbu_(imagelist|gimages)$', 'type', '=', 'INTEG', 'background-color: lightblue; color: blue;', 'Integ images', NULL, '2018-08-30 14:46:33', '2018-09-05 10:35:12', NULL),
-	('nbu_(imagelist|gimages)$', 2, 'nbu_(imagelist|gimages)$', 'type', '=', 'FS', 'background-color: lightgreen; color: green;', 'FS images', NULL, '2018-08-30 14:46:33', '2018-09-05 10:35:13', NULL),
-	('nbu_(imagelist|gimages)$', 3, 'nbu_(imagelist|gimages)$', 'policytype', 'regexp', 'vmware|hyper', 'background-color: greenyellow; color: green;', 'VM images', NULL, '2018-08-30 14:46:33', '2018-09-05 10:35:13', NULL),
-	('nbu_(imagelist|gimages)$', 4, 'nbu_(imagelist|gimages)$', 'policytype', 'regexp', 'vault', 'background-color: gold; color: brown;', 'Vault images', NULL, '2018-08-30 14:46:33', '2018-09-05 10:35:13', NULL),
-	('nbu_(imagelist|gimages)$', 6, 'nbu_(imagelist|gimages)$', 'scheduletype', '=', 'Full', 'font-weight: bold;', 'Full backup', NULL, '2018-09-03 14:22:34', '2018-09-05 10:35:14', NULL),
 	('nbu_audit', 1, 'nbu_audit', 'vault', '=', NULL, 'background-color: greenyellow; color: green;', 'Without vaulting', NULL, '2017-10-09 15:02:36', '2017-10-09 15:08:03', NULL),
 	('nbu_audit', 2, 'nbu_audit', 'vault', '!=', NULL, 'background-color: lightgreen; color: green;', 'With vaulting', NULL, '2017-10-09 15:03:30', '2017-10-09 15:08:07', NULL),
 	('nbu_codes', 1, 'nbu_codes', 'code', '=', '0', 'background-color: lightgreen; color: green;', 'Success', NULL, '2017-05-12 13:36:29', '2017-05-12 13:37:35', NULL),
@@ -2980,16 +2854,8 @@ REPLACE INTO `core_formats` (`report`, `ord`, `source`, `field`, `operator`, `va
 	('nbu_flist', 1, 'nbu_flist', 'policytype', 'regexp', 'win|ux|vmw', 'background-color: lightgreen; color: green;', 'FS backup objects', NULL, '2018-10-26 13:14:14', '2019-04-01 13:47:26', NULL),
 	('nbu_flist', 2, 'nbu_flist', 'policytype', 'not regexp', 'win|ux|vmw', 'background-color: lightblue; color: blue;', 'INTEG backup objects', NULL, '2018-10-26 13:14:55', '2019-04-01 13:47:28', NULL),
 	('nbu_flist', 3, 'nbu_flist', 'schedule_type', 'regexp', 'full', 'font-weight:bold;', 'Full backup objects', NULL, '2018-10-26 13:14:55', '2018-10-26 13:15:02', NULL),
-	('nbu_gimages', 7, 'nbu_gimages', 'media', 'regexp', '^@', 'background-color: honeydew; font-style: italic;', 'Virtual tape', 'media', '2018-08-30 15:26:50', '2018-09-05 10:53:56', NULL),
-	('nbu_gimages', 8, 'nbu_gimages', 'media', 'regexp', '^\\w', 'background-color: lightcyan; color: black;', 'Physical tape', 'media', '2018-08-30 15:26:50', '2018-09-05 10:53:51', NULL),
-	('nbu_imagelist$', 5, 'nbu_imagelist$', 'fragments', '=', '0', 'background-color:silver ;color: gray;font-weight: lighter;', 'No fragments', NULL, '2018-09-03 14:22:34', '2018-09-05 10:32:34', NULL),
-	('nbu_imagelist_frags', 7, 'nbu_imagelist_frags', 'id_path', 'regexp', '^@', 'background-color: honeydew; font-style: italic;', 'Virtual tape', NULL, '2018-08-30 15:26:50', '2018-09-05 10:53:59', NULL),
-	('nbu_imagelist_frags', 8, 'nbu_imagelist_frags', 'id_path', 'regexp', '^\\w', 'background-color: lightcyan; color: black;', 'Physical tape', NULL, '2018-08-30 15:26:50', '2018-09-05 10:54:08', NULL),
-	('nbu_images', 1, 'nbu_images', 'images', 'regexp', 'cumul', 'background-color: gold; color: brown;', 'Cumulative', NULL, '2018-09-03 15:06:16', '2018-09-05 09:56:58', NULL),
-	('nbu_images', 2, 'nbu_images', 'images', 'regexp', 'user', 'background-color: lightblue; color: blue;', 'User', NULL, '2018-09-03 15:06:16', '2018-09-05 09:57:00', NULL),
-	('nbu_images', 3, 'nbu_images', 'images', 'regexp', 'incr', 'background-color: greenyellow; color: green;', 'Incremental', NULL, '2018-09-03 15:06:16', '2018-09-05 10:24:39', NULL),
-	('nbu_images', 4, 'nbu_images', 'images', 'regexp', 'log|arch', 'background-color: silver; color: black;', 'Log/Archive', NULL, '2018-09-03 15:06:16', '2018-09-05 09:56:45', NULL),
-	('nbu_images', 5, 'nbu_images', 'images', 'regexp', 'full', 'font-weight: bold;background-color: lightgreen; color: green;', 'Full', NULL, '2018-09-03 15:06:16', '2018-09-05 09:56:47', NULL),
+	('nbu_images', 1, 'nbu_images', 'id_path', 'regexp', '^@', 'background-color: honeydew; font-style: italic;', 'Virtual tape', NULL, '2018-10-26 13:14:55', '2018-10-26 13:15:02', NULL),
+	('nbu_images', 2, 'nbu_images', 'id_path', 'regexp', '^\\w', 'background-color: lightcyan; color: black;', 'Physical tape', NULL, '2018-10-26 13:14:55', '2018-10-26 13:15:02', NULL),
 	('nbu_slps', 1, 'nbu_slps', 'usefor', '=', 'Snapshot', 'background-color: greenyellow; color: green;', 'Snapshot', NULL, '2019-04-17 15:02:15', '2019-04-17 15:02:35', NULL),
 	('nbu_slps', 2, 'nbu_slps', 'usefor', 'REGEXP', 'Backup', 'background-color: lightgreen; color: green;', 'Backup', NULL, '2019-04-17 15:00:28', '2019-04-17 15:03:37', NULL),
 	('nbu_slps', 3, 'nbu_slps', 'usefor', '=', 'Duplication', 'background-color: lightblue; color: blue;', 'Duplication', NULL, '2019-04-17 15:01:24', '2019-04-17 15:01:47', NULL),
@@ -3006,8 +2872,8 @@ REPLACE INTO `core_formats` (`report`, `ord`, `source`, `field`, `operator`, `va
 	('nbu_vault_vaults', 2, 'nbu_vault_vaults', 'profiles', '>', '0', 'background-color: lightblue; color: blue;', 'With profiles', NULL, '2017-07-26 09:45:54', '2017-07-26 09:56:10', NULL);
 
 REPLACE INTO `core_links` (`source`, `field`, `ord`, `target`, `filter`, `operator`, `value`, `created`, `updated`, `obsoleted`) VALUES
-	('nbu((_bsr)?_jobs|_imagelist)', 'backupid', 1, 'nbu_flist', 'masterserver', '=', '%masterserver%', '2017-03-20 15:38:43', '2018-10-26 13:37:14', NULL),
-	('nbu((_bsr)?_jobs|_imagelist)', 'backupid', 2, 'nbu_flist', 'backupid', '=', '%backupid%', '2017-03-20 15:38:43', '2018-10-26 13:35:48', NULL),
+	('nbu(_bsr)?_jobs', 'backupid', 1, 'nbu_flist', 'masterserver', '=', '%masterserver%', '2017-03-20 15:38:43', '2018-10-26 13:37:14', NULL),
+	('nbu(_bsr)?_jobs', 'backupid', 2, 'nbu_flist', 'backupid', '=', '%backupid%', '2017-03-20 15:38:43', '2018-10-26 13:35:48', NULL),
 	('nbu(_bsr)?_jobs', 'childjobs', 1, 'nbu_jobs', 'parentjob', '=', '%parentjob%', '2017-03-20 15:36:14', '2017-04-10 15:06:36', NULL),
 	('nbu(_bsr)?_jobs', 'policy', 1, 'nbu_policies', 'name', '=', '%policy%', '2017-03-20 15:37:51', '2017-04-10 15:06:37', NULL),
 	('nbu(_bsr)?_jobs', 'schedule', 1, 'nbu_schedules', 'policyname', '=', '%policy%', '2017-03-20 15:38:11', '2017-04-10 15:06:38', NULL),
@@ -3039,21 +2905,6 @@ REPLACE INTO `core_links` (`source`, `field`, `ord`, `target`, `filter`, `operat
 	('nbu_g?bsr_schedule', 'jobs', 2, 'nbu_bsr_jobs', 'scheduletype', '=', '%schedule%', '2017-03-22 15:15:36', '2018-01-04 10:35:58', NULL),
 	('nbu_g?bsr_type', 'bsr', 2, 'nbu_bsr_jobs', 'jobtype', '=', '%type%', '2017-03-22 15:15:41', '2018-01-04 10:36:04', NULL),
 	('nbu_g?bsr_type', 'jobs', 2, 'nbu_bsr_jobs', 'jobtype', '=', '%type%', '2017-03-22 15:15:41', '2018-01-04 10:36:13', NULL),
-	('nbu_gimages', 'client', 1, 'nbu_imagelist', 'client', '=', '%client%', '2018-08-30 15:07:28', '2018-08-30 15:07:28', NULL),
-	('nbu_gimages', 'policytype', 1, 'nbu_imagelist', 'policytype', '=', '%policytype%', '2018-08-30 15:07:10', '2018-08-30 15:08:27', NULL),
-	('nbu_gimages', 'policytype', 2, 'nbu_imagelist', 'client', '=', '%client%', '2018-08-30 15:07:28', '2018-08-30 15:07:28', NULL),
-	('nbu_gimages', 'scheduletype', 1, 'nbu_imagelist', 'policytype', '=', '%policytype%', '2018-08-30 15:07:10', '2018-09-05 11:13:44', NULL),
-	('nbu_gimages', 'scheduletype', 2, 'nbu_imagelist', 'client', '=', '%client%', '2018-08-30 15:07:28', '2018-09-05 11:13:45', NULL),
-	('nbu_gimages', 'scheduletype', 4, 'nbu_imagelist', 'scheduletype', '=', '%scheduletype%', '2018-08-30 15:06:46', '2018-09-05 11:13:46', NULL),
-	('nbu_imagelist', 'client', 1, 'nbu_imagelist_frags', 'masterserver', '=', '%masterserver%', '2018-08-30 15:06:46', '2018-09-05 11:11:14', NULL),
-	('nbu_imagelist', 'client', 2, 'nbu_imagelist_frags', 'backupid', 'REGEXP', '%client%', '2018-08-30 15:06:46', '2018-09-05 11:11:13', NULL),
-	('nbu_imagelist', 'fragments', 1, 'nbu_imagelist_frags', 'masterserver', '=', '%masterserver%', '2018-08-30 15:17:00', '2018-09-05 11:04:23', NULL),
-	('nbu_imagelist', 'fragments', 2, 'nbu_imagelist_frags', 'backupid', '=', '%backupid%', '2018-08-30 15:17:00', '2018-09-05 11:04:22', NULL),
-	('nbu_imagelist', 'jobid', 1, 'nbu_jobs', 'masterserver', '=', '%masterserver%', '2018-08-30 15:16:32', '2018-09-05 11:55:37', NULL),
-	('nbu_imagelist', 'jobid', 2, 'nbu_jobs', 'jobid', '=', '%jobid%', '2018-08-30 15:16:32', '2018-09-05 11:04:50', NULL),
-	('nbu_images', 'images', 1, 'nbu_imagelist', 'bw_day', '=', '%bw_day%', '2018-08-30 15:06:17', '2018-08-30 15:08:16', NULL),
-	('nbu_images', 'images', 2, 'nbu_imagelist', 'client', '=', '%client%', '2018-08-30 15:06:46', '2018-08-30 15:06:46', NULL),
-	('nbu_images', 'images', 3, 'nbu_imagelist', 'policytype', '=', '%policytype%', '2018-08-30 15:06:46', '2018-09-05 09:22:20', NULL),
 	('nbu_overview_clients', 'bsr', 1, 'nbu_bsr_jobs', 'client', '=', '%name%', '2017-03-20 14:01:30', '2017-06-13 10:18:26', NULL),
 	('nbu_overview_clients', 'bsr', 2, 'nbu_bsr_jobs', 'status', '>', '1', '2017-03-20 14:01:30', '2017-06-13 10:18:27', NULL),
 	('nbu_overview_clients', 'bsrjobs', 1, 'nbu_bsr_jobs', 'client', '=', '%name%', '2017-03-20 14:01:30', '2017-06-13 10:18:40', NULL),
@@ -3120,9 +2971,7 @@ REPLACE INTO `core_reports` (`ord`, `name`, `category`, `title`, `created`, `upd
 	(6, 'nbu_consecutive_failures', 'NBU Reports', 'Consecutive failures', '2017-03-22 15:31:14', '2017-08-31 15:29:54', NULL),
 	(7, 'nbu_bsr_job_results', 'NBU Reports', 'Failing BSR Job Results', '2017-03-22 15:31:14', '2018-04-27 14:32:21', NULL),
 	(8, '---', 'NBU Reports', ' ', '2017-03-22 15:31:14', '2018-04-27 14:21:44', NULL),
-	(9, 'nbu_gimages', 'NBU Reports', 'Images per client', '2018-08-30 14:03:59', '2018-09-05 10:29:08', NULL),
-	(10, 'nbu_imagelist', 'NBU Reports', 'Image list', '2018-08-30 14:06:09', '2018-09-05 10:28:14', NULL),
-	(11, 'nbu_imagelist_frags', 'NBU Reports', 'Image fragments', '2018-08-30 14:06:49', '2018-09-05 10:28:15', NULL),
+	(9, 'nbu_images', 'NBU Reports', 'Images per client', '2017-03-22 15:31:14', '2018-04-27 14:21:44', NULL),
 	(12, 'nbu_flist', 'NBU Reports', 'Backup/Image objects', '2018-08-30 14:06:49', '2018-09-05 10:28:15', NULL),
 	(13, '---', 'NBU Reports', ' ', '2018-08-30 14:07:11', '2018-10-26 13:02:17', NULL),
 	(14, 'nbu_overview_jobs', 'NBU Reports', 'Jobs overview', '2017-06-01 15:18:00', '2018-10-26 13:02:19', NULL),
@@ -3145,7 +2994,6 @@ REPLACE INTO `core_reports` (`ord`, `name`, `category`, `title`, `created`, `upd
 	(32, 'nbu_gbsr_type', 'BSR', 'Global BSR per job type', '2018-01-04 10:24:54', '2018-01-04 10:24:54', NULL),
 	(33, '---', 'BSR', ' ', '2018-08-30 14:02:52', '2018-08-30 14:02:52', NULL),
 	(34, 'nbu_status_breakdown', 'BSR', 'Status breakdown', '2018-08-30 14:04:16', '2019-05-24 13:02:21', NULL),
-	(35, 'nbu_images', 'BSR', 'Daily images per client', '2018-08-30 14:04:16', '2018-08-30 14:04:16', NULL),
 	(40, 'nbu_vault_robots', 'Vaults', 'Robots', '2017-07-24 15:33:40', '2018-01-04 10:21:14', NULL),
 	(41, 'nbu_vault_vaults', 'Vaults', 'Vaults', '2017-07-24 15:44:25', '2018-01-04 10:21:16', NULL),
 	(42, 'nbu_vault_profiles', 'Vaults', 'Profiles', '2017-07-24 15:56:03', '2018-01-04 10:21:20', NULL),
@@ -3191,10 +3039,7 @@ REPLACE INTO `core_sources` (`report`, `ord`, `name`, `title`, `description`, `f
 	('nbu_gbsr_policy', 1, 'nbu_gbsr_policy', 'BSR per policy type', 'Global BSR per policy type', NULL, NULL, NULL, 1, 1, 1, 10, '2018-01-04 10:28:41', '2018-01-04 10:31:01', NULL),
 	('nbu_gbsr_schedule', 1, 'nbu_gbsr_schedule', 'BSR per schedule type', 'Global BSR per schedule type', NULL, NULL, NULL, 1, 1, 1, 10, '2018-01-04 10:28:41', '2018-01-04 10:28:41', NULL),
 	('nbu_gbsr_type', 1, 'nbu_gbsr_type', 'BSR per job type', 'Global BSR per job type', NULL, NULL, NULL, 1, 1, 1, 10, '2018-01-04 10:28:41', '2018-01-04 10:28:41', NULL),
-	('nbu_gimages', 1, 'nbu_gimages', 'Images per client', 'List of images per client', NULL, NULL, NULL, 1, 1, 1, 10, '2018-08-30 14:09:08', '2018-08-30 15:08:54', NULL),
-	('nbu_imagelist', 1, 'nbu_imagelist', 'Images', 'List of images', NULL, NULL, NULL, 1, 1, 1, 10, '2018-08-30 14:10:33', '2018-08-30 14:11:24', NULL),
-	('nbu_imagelist_frags', 1, 'nbu_imagelist_frags', 'Image fragments', 'list of image fragments', NULL, NULL, NULL, 0, 0, 1, 10, '2018-08-30 14:11:16', '2018-09-05 11:19:26', NULL),
-	('nbu_images', 1, 'nbu_images', 'Daily images per client', 'List of daily images per client', NULL, NULL, 'client,policytype,bw_day', 1, 1, 1, 10, '2018-08-30 14:09:53', '2018-09-05 09:03:59', NULL),
+	('nbu_images', 1, 'nbu_images', 'Images per client', 'List of images per client', NULL, NULL, NULL, 1, 1, 0, 10, '2018-01-04 10:28:41', '2018-01-04 10:28:41', NULL),
 	('nbu_jobs', 1, 'nbu_jobs', 'Jobs', 'List of jobs', NULL, NULL, NULL, 1, 1, 1, 10, '2017-03-20 09:01:05', '2017-05-12 13:25:58', NULL),
 	('nbu_overview_clients', 1, 'nbu_overview_clients', 'Clients overview', 'Overview of clients', NULL, NULL, NULL, 1, 1, 1, 10, '2017-02-13 10:09:51', '2017-06-13 11:28:35', NULL),
 	('nbu_overview_customers', 1, 'nbu_overview_customers', 'Customers overview', 'Overview of customers', NULL, NULL, NULL, 1, 1, 1, 25, '2017-06-13 10:46:59', '2017-06-13 11:28:28', NULL),

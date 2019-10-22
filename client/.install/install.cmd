@@ -40,16 +40,23 @@ call :echo XML file does not exist.
 goto :end
 :check-xml2
 findstr "MARS_ROOT" "%root%\.install\schtasks.xml" >nul 2>&1
-if "%errorlevel%" equ "1" goto :redist
+if "%errorlevel%" equ "1" goto :vcredist
 call :echo XML file was not edited.
 goto :end
-:redist
-call :echo Installing Microsoft Visual C++ Redistributable Components...
+:vcredist
+set version=14.16.27024.01
+set key=HKLM\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\x64
+reg query %key% /v Version | findstr "%version%">nul
+if "%errorlevel%" EQU "1" goto :vcredistinstall
+call :echo Microsoft Visual C++ Redistributable Components %version% installed.
+goto :task
+:vcredistinstall
+call :echo Installing Microsoft Visual C++ Redistributable Components %version%...
 start /wait /d "%root%\bin" vc_redist.x64.exe /repair /passive /norestart
-if "%errorlevel%" equ "1638" ver>nul
-if "%errorlevel%" equ "3010" ver>nul
-if "%errorlevel%" leq "0" goto :task
-call :echo Error %errorlevel% installing Microsoft Visual C++ Redistributable Components.
+if %errorlevel% equ 1638 ver>nul
+if %errorlevel% equ 3010 ver>nul
+if %errorlevel% leq 0 goto :task
+call :echo Error %errorlevel% installing Microsoft Visual C++ Redistributable Components %version%.
 goto :end
 :task
 call :echo Installing scheduled task...

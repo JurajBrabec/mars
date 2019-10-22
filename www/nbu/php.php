@@ -367,7 +367,8 @@ function get_classes( $source, $key, $value, $i ) {
 //		if ( matches( $value, $format ) ) $class[ 'class' ] =  get_classname( $format[ 'style' ], $source[ 'classes' ] );
 	}
 	if ( $key == '' ) {
-		if ( $source[ 'highlight' ] == $source[ 'pagination' ] * ( $source[ 'page' ] - 1 ) * $source[ 'limit' ] + $i + 1 ) {
+		$row = $source[ 'pagination' ] * ( $source[ 'page' ] - 1 ) * $source[ 'limit' ];
+		if ( $source[ 'highlight' ] == $row + $i ) {
 			$class[ ] = 'highlight';
 		}
 	} else {
@@ -445,34 +446,39 @@ function get_body( $source, $c, $r, $i = 0 ) {
 	$result = '';
 	$pivots = array_keys( $c );
 	$i == 0 && $result .= '<tbody>';
+	$rowid = 1;
 	if ( count( $pivots ) == 0 ) {
 		foreach( $r as $row ) {
-			$classes = get_classes( $source, '', $row, $i );
+			$classes = get_classes( $source, '', $row, $rowid );
 			$result .= sprintf( '<tr%s>', $classes == '' ? '' : sprintf( ' class="%s"', $classes ) );
 			foreach( $row as $field => $value ) {
-				$classes = get_classes( $source, $field, $value, $i );
+				$classes = get_classes( $source, $field, $value, $rowid );
 				$result .= sprintf( '<td%s>', $classes == '' ? '' : sprintf( ' class="%s"', $classes ) );
 				$result .= get_value( $source, $field, $value );
 				$result .= '</td>';
 			}
 			$result .= '</tr>';
+			$rowid++;
 		}
 	} else foreach( $c[ $pivots[ $i ] ] as $pivot ) {
 		$row = isset( $r[ $pivot ] ) ? $r[ $pivot ] : array_fill( 0, count( $source[ 'fields' ] ) - $i - 1, '' );
 		if ( $i == 0 ) {
-			$result .= '<tr>';
+			$classes = get_classes( $source, '', $row, $rowid );
+			$result .= sprintf( '<tr%s>', $classes == '' ? '' : sprintf( ' class="%s"', $classes ) );
 			$result .= sprintf( '<th>%s</th>', $pivot );
+			$rowid++;
 		}
 		if ( isset( $pivots[ $i + 1 ] ) ) {
 			$result .= get_body( $source, $c, isset( $r[ $pivot ] ) ? $r[ $pivot ] : array( ), $i + 1 );
 		} else {
 			foreach( $row as $field => $value ) {
-				$classes = get_classes( $source, '', $row, $i );
+				$classes = get_classes( $source, '', $row, $rowid );
 				$classes != '' && $classes .= ' ';
-				$classes .= get_classes( $source, $field, $value, $i );
+				$classes .= get_classes( $source, $field, $value, $rowid );
 				$result .= sprintf( '<td%s>', $classes == '' ? '' : sprintf( ' class="%s"', $classes ) );
 				$result .= get_value( $source, $field, $value );
 				$result .= '</td>';
+				$rowid++;
 			}
 		}
 		if ( $i == 0 ) $result .= '</tr>';
@@ -843,6 +849,7 @@ try {
 		$starttime = empty( getenv( 'starttime' ) ) ? date( 'H:i' ) : getenv( 'starttime' );
 		return scheduler( $starttime ); 
 	}
+	session_id( 'MARS40' );
 	session_start( );
 	switch ( $_SERVER[ 'REQUEST_METHOD' ] ) {
 		case 'POST':
@@ -851,8 +858,8 @@ try {
 				if ( $post[ 'action' ] == 'help' ) {
 					$xml = simplexml_load_file( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'help-texts.xml' );
 					$item = $post[ 'id' ];
-					$result = $xml->$item ? $xml->$item->asXML( ) : 'Error retrieving help text for #' . $item;
-					echo $result;
+					$result = $xml->$item ? $xml->$item : 'Error retrieving help text for #' . $item;
+					echo str_replace( array( '[', ']' ), array( '<', '>' ), $result );
 				}
 				if ( $post[ 'action' ] == 'upload' ) {
 					if ( empty( $_FILES[ 'file' ] ) or empty( $_FILES[ 'file' ][ 'name' ] ) ) 

@@ -37,6 +37,7 @@ goto :end
 
 :remove
 call :echo Removing previous HTTP (Apache) version %prevversion%...
+for /d %%i in ("%root%\bin\http.2*") do rmdir /s /q "%root%\%%i" >nul 2>&1
 ren "%root%\bin\http" http.%prevversion% >nul 2>&1
 set result=%errorlevel%
 goto :eof
@@ -64,10 +65,18 @@ if exist "%root%\bin\http.%prevversion%" call :ECHO Unable to delete HTTP folder
 goto :eof
 
 :vcredist
-call :echo Installing Microsoft Visual C++ Redistributable Components...
+set version=14.16.27024.01
+set key=HKLM\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\x64
+reg query %key% /v Version | findstr "%version%">nul
+if "%errorlevel%" EQU "1" goto :vcredistinstall
+call :echo Microsoft Visual C++ Redistributable Components %version% installed.
+goto :eof
+:vcredistinstall
+call :echo Installing Microsoft Visual C++ Redistributable Components %version%...
 start /wait /d "%root%\bin" vc_redist.x64.exe /repair /passive /norestart
+if %errorlevel% equ 1638 ver>nul
 if %errorlevel% equ 3010 ver > nul
-if %errorlevel% gtr 0 call :echo Error %errorlevel% installing Microsoft Visual C++ Redistributable Components.
+if %errorlevel% gtr 0 call :echo Error %errorlevel% installing Microsoft Visual C++ Redistributable Components %version%.
 goto :eof
 
 :echo

@@ -17,7 +17,7 @@ if exist "%root%\conf\install.ini" copy "%root%\conf\install.ini" "%root%" >nul 
 if not exist "%root%\conf\install.ini" copy "%root%\cmd\install\conf\install.ini" "%root%" >nul 2>&1
 :begin
 if /i "%1" equ "" goto :install-prompt
-if /i "%1" equ "redist" goto :install-redist
+if /i "%1" equ "vcredist" goto :vcredist
 if /i "%1" equ "http" goto :install-http
 if /i "%1" equ "db" goto :install-db
 if /i "%1" equ "task" goto :install-scheduledtask
@@ -103,16 +103,23 @@ call :echo XML configuration file does not exist.
 goto :end
 :check-xml2
 findstr "%%MARS_ROOT%%" "%root%\conf\mars-scheduler.xml" >nul 2>&1
-if "%errorlevel%" equ "1" goto :install-redist
+if "%errorlevel%" equ "1" goto :vcredist
 call :echo XML configuration file was not edited.
 goto :end
-:install-redist
-call :echo Installing Microsoft Visual C++ Redistributable Components...
+:vcredist
+set version=14.16.27024.01
+set key=HKLM\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\x64
+reg query %key% /v Version | findstr "%version%">nul
+if "%errorlevel%" EQU "1" goto :vcredistinstall
+call :echo Microsoft Visual C++ Redistributable Components %version% installed.
+goto :install-http
+:vcredistinstall
+call :echo Installing Microsoft Visual C++ Redistributable Components %version%...
 start /wait /d "%root%\bin" vc_redist.x64.exe /repair /passive /norestart
-if "%errorlevel%" equ "1638" ver>nul
-if "%errorlevel%" equ "3010" ver>nul
-if "%errorlevel%" leq "0" goto :install-http
-call :echo Error %errorlevel% installing Microsoft Visual C++ Redistributable Components.
+if %errorlevel% equ 1638 ver>nul
+if %errorlevel% equ 3010 ver>nul
+if %errorlevel% gtr 0 goto :install-http
+call :echo Error %errorlevel% installing Microsoft Visual C++ Redistributable Components %version%.
 goto :end
 :install-http
 call :echo Installing HTTP service...
