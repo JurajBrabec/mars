@@ -170,7 +170,7 @@ function nbu2sm9( ) {
 
 		if ( stripos( $ini[ 'NBU2SM9_PATH' ], 'backupmon' ) > 0 ) {
 			ini_default( 'NBU2SM9_FILE', 'nbmon.log' );
-			ini_default( 'NBU2SM9_LINE', 'RM-TT-Major-<@.MGrp>-<@.EType>-Policy:<*.POLICY> Policy:<*.POLICY> failed with JobID:<*.JOBID> <*.MESSAGETEXT>' );
+			ini_default( 'NBU2SM9_LINE', 'RM-TT-Major-BACKUP-NBU-Policy:<*.POLICY> Policy:<*.POLICY> failed with JobID:<*.JOBID> <*.MESSAGETEXT>' );
 			ini_default( 'NBU2SM9_MESSAGETEXT', '<*.JOBTYPE> Type:<*.POLICYTYPE> State:<*.STATE> Status:<*.STATUS> Schedule:<*.SCHEDULE> ClientServer:<*.CLIENT> MasterServer:NULL' );
 			$keymask = '<*.%s>';
 		} else {
@@ -190,7 +190,7 @@ function nbu2sm9( ) {
 		$lastfailure = array( 'jobid' => 0, 'ended' => date( 'Y-m-d H:i:s', 0 ) );
 		file_exists( $lffile_name ) && $lastfailure = json_decode( file_get_contents( $lffile_name ), true );
 		file_exists( 'tmp\LastFailure.json' ) && $lastfailure = json_decode( file_get_contents( 'tmp\LastFailure.json' ), true ) && unlink( 'tmp\LastFailure.json' );
-		$ended = $lastfailure[ 'ended' ];
+		$date = $lastfailure[ 'ended' ];
 		$jobid = $lastfailure[ 'jobid' ];
 		$lines = 1;
 		if ( file_exists( $file_name ) ) {
@@ -210,19 +210,19 @@ function nbu2sm9( ) {
 				$output = substr( $output, strpos( $output, "\n" ) + 1 );
 			}
 			fclose( $f );
-			$ended = '';
+			$date = '';
 			$jobid = '';
-			strpos( $output, '::' ) > 0 && $ended = substr( $output, 0, strpos( $output, '::' ) );
+			strpos( $output, '::' ) > 0 && $date = substr( $output, 0, strpos( $output, '::' ) );
 			preg_match( '/JobID:(\d+)/i', $output, $match ) && $jobid = $match[ 1 ];
 		}
 		debug( $debug_level, timestamp( sprintf( 'Last JobID %s', $jobid ) ) );
-		if ( $jobid <> '' AND $ended == '' ) {
-			$sql = sprintf( "select ended from nbu_tickets where masterserver='%s' and jobid='%s';", nbu( )->masterserver( ), $jobid );
-			database( )->execute_query( $sql ) == 1 && $ended = database( )->rows( )[ 0 ][ 'ended' ];
-			debug( $debug_level, timestamp( sprintf( 'JobID %s ended %s', $jobid, $ended ) ) );
+		if ( $jobid <> '' AND $date == '' ) {
+			$sql = sprintf( "select `date` from nbu_sm9 where `eventnode`='%s' and `jobid`=%s;", nbu( )->masterserver( ), $jobid );
+			database( )->execute_query( $sql ) == 1 && $date = database( )->rows( )[ 0 ][ 'date' ];
+			debug( $debug_level, timestamp( sprintf( 'JobID %s failed %s', $jobid, $date ) ) );
 		}
 		$jobid == '' && $jobid = $lastfailure[ 'jobid' ];
-		$ended == '' && $ended = $lastfailure[ 'ended' ];
+		$date == '' && $date = $lastfailure[ 'ended' ];
 		$difftime = strtotime( 'Today ' . $ini[ 'NBU2SM9_LOGROT_TIME' ] );
 		if ( file_exists( $file_name ) && filemtime( $file_name ) < $difftime && time( ) > $difftime ) {
 			file_exists( $file_name . '.' . $ini[ 'NBU2SM9_LOG_HISTORY' ] ) && unlink( $file_name . '.' . $ini[ 'NBU2SM9_LOG_HISTORY' ] );
@@ -232,7 +232,7 @@ function nbu2sm9( ) {
 			rename( $file_name, $file_name . '.1' );
 			touch( $file_name );
 		}
-		$sql = sprintf( "select * from nbu_tickets where masterserver='%s' and ended>='%s';", nbu( )->masterserver( ), $ended );
+		$sql = sprintf( "select * from nbu_sm9 where `eventnode`='%s' and `date`>='%s';", nbu( )->masterserver( ), $date );
 		$rows = database( )->execute_query( $sql );
 		debug( $debug_level, timestamp( sprintf( 'Records %s', $rows ) ) );
 		$file = new basic_log_file( $file_name );
@@ -243,13 +243,9 @@ function nbu2sm9( ) {
 			if ( filter( $ini[ 'NBU2SM9_FILTER_POLICIES' ], $row[ 'policy' ] ) ) continue;
 			if ( filter( $ini[ 'NBU2SM9_FILTER_POLICYTYPES' ], $row[ 'policytype' ] ) ) continue;
 			if ( filter( $ini[ 'NBU2SM9_FILTER_STATUSES' ], $row[ 'status' ] ) ) continue;
-			if ( $row[ 'ended' ] == $ended and $row[ 'jobid' ]<= $jobid ) continue;
+			if ( $row[ 'date' ] == $date and $row[ 'jobid' ]<= $jobid ) continue;
 			$line = $ini[ 'NBU2SM9_LINE' ];
 			$mtext = $ini[ 'NBU2SM9_MESSAGETEXT' ];
-			if ( $ini[ 'NBU2SM9_FILE' ] == 'nbmon.log' ) {
-				$line = str_replace( '<@.MGrp>', 'Backup', $line );
-				$line = str_replace( '<@.EType>', 'NBU', $line );
-			}
 			foreach( $row as $key=>$value ) {
 				if ( is_numeric( $key ) ) continue;
 				$line = str_replace( sprintf( $keymask, strtoupper( $key ) ), $value, $line );
@@ -260,7 +256,7 @@ function nbu2sm9( ) {
 			debug( $debug_level, timestamp( sprintf( 'Ticket for ID %s created', $jobid ) ) );
 			$i++;
 		}
-#		file_put_contents( $lffile_name, json_encode( array( 'jobid' => $row[ 'jobid' ], 'ended' => $row[ 'ended' ] ) ) );
+#		file_put_contents( $lffile_name, json_encode( array( 'jobid' => $row[ 'jobid' ], 'ended' => $row[ 'date' ] ) ) );
 		logfile( display( 'NBU2SM9 tickets:' . $i ) );
 	} catch ( exception $e ) { exception_handler( $e ); }
 	return true;

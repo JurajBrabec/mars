@@ -1311,34 +1311,30 @@ SELECT
 	ORDER BY s.`masterserver`,s.`slpname`,s.`operationindex` 
 ;
 
-DROP VIEW IF EXISTS `nbu_tickets`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_tickets` AS 
+DROP VIEW IF EXISTS `nbu_sm9`;
+CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_sm9` AS 
 SELECT 
-	FROM_UNIXTIME(j.ended) AS ended,
-	j.masterserver,'MAJOR' as priority,
-	IF(status=196,'Missed',CONCAT(tries,IF(tries=1,'st',IF(tries=2,'nd',IF(tries=3,'rd','th'))),' failure')) as message,
-	j.jobid,
+	FROM_UNIXTIME(j.ended) AS `date`,
+	'MAJOR' AS `severity`,
+	j.status AS `errorcode`,
+	j.masterserver AS `eventnode`,
+	'NBU' AS `eventtypeinstance`,
 	nbu_code('jobtype',j.jobtype) AS jobtype,
-	nbu_code('subtype',j.subtype) AS subtype,
-	nbu_code('state',j.state) AS state,
-	FROM_UNIXTIME(j.started) AS started,SEC_TO_TIME(j.elapsed) AS elapsed,
-	j.tries,
-	j.status,
-	nbu_code('status',status) as description,
-	ptc.tower,
-	ptc.customer,
-	j.client,
 	j.policy,
+	j.jobid,
 	nbu_code('policytype',j.policytype) AS policytype,
+	nbu_code('state',j.state) AS state,
+	j.status,
 	j.schedule,
-	nbu_code('scheduletype',j.scheduletype) AS scheduletype
+	j.client,
+	'' AS `corellationkey`,
+	IF(status=196,'Missed',CONCAT(tries,IF(tries=1,'st',IF(tries=2,'nd',IF(tries=3,'rd','th'))),' failure')) as message,
+	nbu_code('status',status) as description
 	FROM bpdbjobs_report j
-	LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=j.masterserver AND ptc.policy=j.policy)
-	WHERE j.ended > UNIX_TIMESTAMP(NOW()- INTERVAL 1 DAY)
+	WHERE j.ended > UNIX_TIMESTAMP(NOW()- INTERVAL 1 HOUR)
 	AND ((j.status>1 AND j.tries>0) OR (j.status=196))
-	ORDER BY j.masterserver,j.ended,j.jobid
+	ORDER BY j.masterserver,j.ended,j.jobid 
 ;
-
 
 DROP VIEW IF EXISTS `nbu_bsr_job_results`;
 CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_bsr_job_results` AS 
