@@ -849,7 +849,7 @@ try {
 		$starttime = empty( getenv( 'starttime' ) ) ? date( 'H:i' ) : getenv( 'starttime' );
 		return scheduler( $starttime ); 
 	}
-	session_id( 'MARS40' );
+	session_id( );
 	session_start( );
 	switch ( $_SERVER[ 'REQUEST_METHOD' ] ) {
 		case 'POST':

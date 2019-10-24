@@ -172,7 +172,7 @@ function nbu2sm9( ) {
 			ini_default( 'NBU2SM9_FILE', 'nbmon.log' );
 			ini_default( 'NBU2SM9_LINE', 'RM-TT-Major-<@.MGrp>-<@.EType>-Policy:<*.POLICY> Policy:<*.POLICY> failed with JobID:<*.JOBID> <*.MESSAGETEXT>' );
 			ini_default( 'NBU2SM9_MESSAGETEXT', '<*.JOBTYPE> Type:<*.POLICYTYPE> State:<*.STATE> Status:<*.STATUS> Schedule:<*.SCHEDULE> ClientServer:<*.CLIENT> MasterServer:NULL' );
-			$keymask = '<*%s>';
+			$keymask = '<*.%s>';
 		} else {
 			ini_default( 'NBU2SM9_FILE', 'mars_mon.log' );
 			ini_default( 'NBU2SM9_LINE', '<DATE>::<SEVERITY>::<ERRORCODE>::<MESSAGETEXT>::<EVENTNODE>::<EVENTTYPEINSTANCE>::<CORELLATIONKEY>');
@@ -216,6 +216,13 @@ function nbu2sm9( ) {
 			preg_match( '/JobID:(\d+)/i', $output, $match ) && $jobid = $match[ 1 ];
 		}
 		debug( $debug_level, timestamp( sprintf( 'Last JobID %s', $jobid ) ) );
+		if ( $jobid <> '' AND $ended == '' ) {
+			$sql = sprintf( "select ended from nbu_tickets where masterserver='%s' and jobid='%s';", nbu( )->masterserver( ), $jobid );
+			database( )->execute_query( $sql ) == 1 && $ended = database( )->rows( )[ 0 ][ 'ended' ];
+			debug( $debug_level, timestamp( sprintf( 'JobID %s ended %s', $jobid, $ended ) ) );
+		}
+		$jobid == '' && $jobid = $lastfailure[ 'jobid' ];
+		$ended == '' && $ended = $lastfailure[ 'ended' ];
 		$difftime = strtotime( 'Today ' . $ini[ 'NBU2SM9_LOGROT_TIME' ] );
 		if ( file_exists( $file_name ) && filemtime( $file_name ) < $difftime && time( ) > $difftime ) {
 			file_exists( $file_name . '.' . $ini[ 'NBU2SM9_LOG_HISTORY' ] ) && unlink( $file_name . '.' . $ini[ 'NBU2SM9_LOG_HISTORY' ] );
@@ -237,8 +244,6 @@ function nbu2sm9( ) {
 			if ( filter( $ini[ 'NBU2SM9_FILTER_POLICYTYPES' ], $row[ 'policytype' ] ) ) continue;
 			if ( filter( $ini[ 'NBU2SM9_FILTER_STATUSES' ], $row[ 'status' ] ) ) continue;
 			if ( $row[ 'ended' ] == $ended and $row[ 'jobid' ]<= $jobid ) continue;
-			$jobid = $row[ 'jobid' ];
-			$ended = $row[ 'ended' ];
 			$line = $ini[ 'NBU2SM9_LINE' ];
 			$mtext = $ini[ 'NBU2SM9_MESSAGETEXT' ];
 			if ( $ini[ 'NBU2SM9_FILE' ] == 'nbmon.log' ) {
@@ -255,7 +260,7 @@ function nbu2sm9( ) {
 			debug( $debug_level, timestamp( sprintf( 'Ticket for ID %s created', $jobid ) ) );
 			$i++;
 		}
-#		file_put_contents( $lffile_name, json_encode( array( 'jobid' => $jobid, 'ended' => $ended ) ) );
+#		file_put_contents( $lffile_name, json_encode( array( 'jobid' => $row[ 'jobid' ], 'ended' => $row[ 'ended' ] ) ) );
 		logfile( display( 'NBU2SM9 tickets:' . $i ) );
 	} catch ( exception $e ) { exception_handler( $e ); }
 	return true;
