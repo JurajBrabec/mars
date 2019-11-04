@@ -804,7 +804,7 @@ class bpimmedia extends nbu {
 	}
 	
 	public function sql( $table = NULL, $rows = NULL ) {
-		$result = array_merge( parent::sql( 'bpimmedia', $rows ), $this->_frags( )->sql( get_class( $this->_frags( ) ), $rows ) );
+		$result = count( $this->images( ) ) == 0 ? '' : array_merge( parent::sql( 'bpimmedia', $rows ), $this->_frags( )->sql( get_class( $this->_frags( ) ), $rows ) );
 		return $result;
 	}
 }

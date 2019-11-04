@@ -51,8 +51,6 @@ function convert_config( ) {
 				$key = trim( $key ); $value = trim( $value ); $new_value = $value;
 				switch ( $key ) {
 //MODIFY					case '%KEY%' : $new_value = '%VALUE%'; break;
-							case 'NBUIMAGES_TIME' : $new_value = '"10:15"'; break;
-							case 'NBUFILES_TIME' : $new_value = '"..:45"'; break;
 				}
 				$modify = $value <> $new_value;
 				if ( $modify ) { 
@@ -61,14 +59,8 @@ function convert_config( ) {
 				}
 			}
 //REMOVE			preg_match( '/^%KEY%/', $line ) && $remove = true;
-			preg_match( '/^NBU2SM9_X_STATUS/', $line ) && $remove = true;
-			preg_match( '/^NBU2SM9_X_JOBTYPE/', $line ) && $remove = true;
 			$remove && logfile( display( 'Removed line ' . $line ) ) || $newconfig[ ] = $line;
 //ADD			!preg_match( '/%KEY%/', $content ) && preg_match( '/^%AFTER%/', $line ) && $add = true && $line = str_pad( '%KEY%', 24 ) . '="%VALUE%"';
-			!preg_match( '/NBU2SM9_LOGROT_TIME/', $content ) && preg_match( '/^NBU2SM9_PATH/', $line ) && $add = true && $line = str_pad( 'NBU2SM9_LOGROT_TIME', 24 ) . '="12:00"';
-			!preg_match( '/NBU2SM9_LOG_HISTORY/', $content ) && preg_match( '/^NBU2SM9_LOGROT_TIME/', $line ) && $add = true && $line = str_pad( 'NBU2SM9_LOG_HISTORY', 24 ) . '=7';
-			!preg_match( '/NBU2SM9_FILTER_JOBTYPES/', $content ) && preg_match( '/^NBU2SM9_LOG_HISTORY/', $line ) && $add = true && $line = str_pad( 'NBU2SM9_FILTER_JOBTYPES', 24 ) . '="Image cleanup"';
-			!preg_match( '/NBU2SM9_FILTER_STATUSES/', $content ) && preg_match( '/^NBU2SM9_FILTER_JOBTYPES/', $line ) && $add = true && $line = str_pad( 'NBU2SM9_FILTER_STATUSES', 24 ) . '="150"';
 			$add && logfile( display( 'Added line ' . $line ) ) && $newconfig[ ] = $line;
 			$modified = $modified || $modify || $remove || $add;
 			$i++;
@@ -372,10 +364,14 @@ function read_files( $interval ) {
 		$sql .= 'LEFT JOIN bpflist_backupid f ON (f.masterserver=id.masterserver AND f.backupid=id.backupid) ';
 		$sql .= 'WHERE f.backupid IS NULL ';
 		$sql .= 'ORDER BY id.started;';
-		logfile( display( 'Backup ID`s:' . database( )->execute_query( $sql ) ) );
+		$count = database( )->execute_query( $sql );
+		logfile( display( 'Backup ID`s:' . $count ) );
+		$i = 1;
 		foreach( database( )->rows( ) as $row ) {
 //			bpflist_backupid( $row[ 'backupid' ] )->execute( $threads );
+			display( sprintf( '%s/%s: %s (%s%%)', $i, $count, $row[ 'backupid' ], round( 100 * $i / $count, 1 ) ) );
 			try { handler( bpflist_backupid( $row[ 'backupid' ] )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
+			$i++;
 		}
 //		$threads->execute( );
 	} catch ( exception $e ) { exception_handler( $e ); }
@@ -386,16 +382,18 @@ function read_all_images( ) {
 	global $threads;
 	debug( 100, timestamp( 'READ ALL IMAGES' ) );
 	try {
-		database( )->execute_query( 'TRUNCATE TABLE bpimmedia;' );
-		database( )->execute_query( 'TRUNCATE TABLE bpimmedia_frags;' );
 		$sql = sprintf( "SELECT DISTINCT c.name FROM bppllist_clients c WHERE c.masterserver='%s' AND c.obsoleted IS NULL ORDER BY c.NAME;", 
 			nbu( )->masterserver( ) );
-		logfile( display( 'Clients:' . database( )->execute_query( $sql ) ) );
+		$count = database( )->execute_query( $sql );
+		logfile( display( 'Clients: ' . $count ) );
+		$i = 1;
 		foreach( database( )->rows( ) as $row ) {
-//			bpimmedia_client( $row[ 'name' ] )->execute( $threads );
+			display( sprintf( '%s/%s: %s (%s%%)', $i, $count, $row[ 'name' ], round( 100 * $i / $count, 1 ) ) );
+			database( )->execute_query( sprintf( "UPDATE bpimmedia SET version=0 WHERE masterserver='%s' AND name='%s';", nbu( )->masterserver( ), $row[ 'name' ] ) );
 			try { handler( bpimmedia_client( $row[ 'name' ] )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
+			database( )->execute_query( sprintf( "DELETE FROM bpimmedia WHERE masterserver='%s' AND name='%s' AND version=0;", nbu( )->masterserver( ), $row[ 'name' ] ) );
+			$i++;
 		}
-//		$threads->execute( );
 	} catch ( exception $e ) { exception_handler( $e ); }
 	return true;
 }
