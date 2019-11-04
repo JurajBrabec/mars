@@ -1,5 +1,9 @@
 MARS 4.1 Change Log
 ======================
+4.11.2019 version 4.1 build #19
+•	Finalized ticket generation template
+•	Modified BPIMMEDIA import to skip schedule type 2 (user backup) and policy types 4 and 15 (mssql and oracle)
+
 22.10.2019 version 4.1 build #18
 •	Replaced BPIMAGELIST with BPIMMEDIA data source
 •	Modified ticket generation template

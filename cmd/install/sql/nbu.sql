@@ -1319,17 +1319,17 @@ SELECT
 	j.status AS `errorcode`,
 	j.masterserver AS `eventnode`,
 	'NBU' AS `eventtypeinstance`,
+	nbu_code('policytype',j.policytype) AS policytype,
 	nbu_code('jobtype',j.jobtype) AS jobtype,
 	j.policy,
-	j.jobid,
-	nbu_code('policytype',j.policytype) AS policytype,
+	IF(status=196,'Missed',CONCAT(tries,IF(tries=1,'st',IF(tries=2,'nd',IF(tries=3,'rd','th'))),' failure')) as statustext,
 	nbu_code('state',j.state) AS state,
-	j.status,
+	j.jobid,
 	j.schedule,
 	j.client,
-	'' AS `corellationkey`,
-	IF(status=196,'Missed',CONCAT(tries,IF(tries=1,'st',IF(tries=2,'nd',IF(tries=3,'rd','th'))),' failure')) as message,
-	nbu_code('status',status) as description
+	j.status,
+	nbu_code('status',status) as errortext,
+	'' AS `corellationkey`
 	FROM bpdbjobs_report j
 	WHERE j.ended > UNIX_TIMESTAMP(NOW()- INTERVAL 1 HOUR)
 	AND ((j.status>1 AND j.tries>0) OR (j.status=196))

@@ -786,6 +786,7 @@ class bpimmedia extends nbu {
 			}
 			$row[ $key ] = field::validate( $row[ $key ] );
 		}
+		if ( $row[ static::SCHED_TYPE ] == 2 and ( $row[ static::POLICY_TYPE ] == 4 or $row[ static::POLICY_TYPE ] == 15 ) ) return array( );
 		$frags = new bpimmedia_frags( );
 		$frags->add_fields( static::BACKUPID, $row[ static::BACKUPID ] );
 		$frags->parse( $split );

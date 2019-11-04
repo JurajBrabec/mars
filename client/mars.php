@@ -91,30 +91,31 @@ function handler( $object ) {
 	try {
 		logfile( display( sprintf( 'Report: %s', get_class( $object ) ) ) );
 		$sql = $object->SQL( get_class( $object ) );
-		if ( $sql === false ) $sql = array( );
-		logfile( display( 'SQLs:' . count( $sql ) ) );
-		$i = 1;
-		foreach( $sql as $s ) {
-			$result = database( )->execute_query( $s );
-			debug( 100, timestamp( sprintf( 'RESULT: %s', $result ) ) );
-			if ( $result == -1 ) {
-				logfile( display( ' Insert ID:' . database( )->insert_id( ) ) );
-				logfile( display( ' Rows:' . database( )->row_count( ) ) );
-				logfile( display( ' Info:' . database( )->query_info( ) ) );
-				logfile( display( ' Error:' . database( )->error( ) ) );
-				logfile( display( ' Message:' . database( )->message( ) ) );
-				logfile( display( ' Duration:' . database( )->duration( ) ) );
-				debug( 'SQL ' . $i . ': ' . $s );
+		if ( is_array( $sql ) || is_object( $sql ) ) {
+			logfile( display( 'SQLs:' . count( $sql ) ) );
+			$i = 1;
+			foreach( $sql as $s ) {
+				$result = database( )->execute_query( $s );
+				debug( 100, timestamp( sprintf( 'RESULT: %s', $result ) ) );
+				if ( $result == -1 ) {
+					logfile( display( ' Insert ID:' . database( )->insert_id( ) ) );
+					logfile( display( ' Rows:' . database( )->row_count( ) ) );
+					logfile( display( ' Info:' . database( )->query_info( ) ) );
+					logfile( display( ' Error:' . database( )->error( ) ) );
+					logfile( display( ' Message:' . database( )->message( ) ) );
+					logfile( display( ' Duration:' . database( )->duration( ) ) );
+					debug( 'SQL ' . $i . ': ' . $s );
+				}
+				$i++;
 			}
-			$i++;
 		}
 	} catch ( exception $e ) { exception_handler( $e ); }
 	return true;
 }
 
 function update( ) {
+	global $ini;
 	try {
-		global $ini;
 		$url = sprintf( 'http://%s/nbu/client/update.zip', $ini[ 'DB_HOST' ] );
 		$root = dirname( __FILE__ );
 		$tmp = os( )->path( array( $root, 'tmp' ) );
@@ -146,6 +147,9 @@ function update( ) {
 				} else {
 					logfile( display( sprintf( 'Error downloading ZIP file "%s".', $url ) ) );
 				}
+				foreach ( glob( sprintf( '%s\*', $tmp ) ) as $file ) {
+					if ( is_file( $file ) and ( os( )->start_time( ) - filemtime( $file ) >= 60 * 60 * 24 * 1 ) ) unlink( $file );
+				}				
 			}
 		}
 	} catch ( exception $e ) { exception_handler( $e ); }
@@ -176,7 +180,7 @@ function nbu2sm9( ) {
 		} else {
 			ini_default( 'NBU2SM9_FILE', 'mars_mon.log' );
 			ini_default( 'NBU2SM9_LINE', '<DATE>::<SEVERITY>::<ERRORCODE>::<MESSAGETEXT>::<EVENTNODE>::<EVENTTYPEINSTANCE>::<CORELLATIONKEY>');
-			ini_default( 'NBU2SM9_MESSAGETEXT', '<JOBTYPE> Policy:<POLICY> failed with JobID:<JOBID> Type:<POLICYTYPE> State:<STATE> Status:<STATUS> Schedule:<SCHEDULE> ClientServer:<CLIENT> MasterServer:NULL' );
+			ini_default( 'NBU2SM9_MESSAGETEXT', '<POLICYTYPE> <JOBTYPE> policy ”<POLICY>” <STATUSTEXT>. <STATE> with JobID <JOBID> schedule “<SCHEDULE>” client <CLIENT> status <ERRORCODE> (<ERRORTEXT>)' );
 			$keymask = '<%s>';
 		}
 		ini_default( 'NBU2SM9_FILTER_JOBTYPES', 'Image cleanup' );
@@ -223,41 +227,43 @@ function nbu2sm9( ) {
 		}
 		$jobid == '' && $jobid = $lastfailure[ 'jobid' ];
 		$date == '' && $date = $lastfailure[ 'ended' ];
-		$difftime = strtotime( 'Today ' . $ini[ 'NBU2SM9_LOGROT_TIME' ] );
-		if ( file_exists( $file_name ) && filemtime( $file_name ) < $difftime && time( ) > $difftime ) {
-			file_exists( $file_name . '.' . $ini[ 'NBU2SM9_LOG_HISTORY' ] ) && unlink( $file_name . '.' . $ini[ 'NBU2SM9_LOG_HISTORY' ] );
-			for ( $i = $ini[ 'NBU2SM9_LOG_HISTORY' ]; $i > 0; $i-- ) {
-				file_exists( $file_name . '.' . $i ) && rename( $file_name . '.' . $i, $file_name . '.' . ( $i + 1 ) );
-			}
-			rename( $file_name, $file_name . '.1' );
-			touch( $file_name );
-		}
 		$sql = sprintf( "select * from nbu_sm9 where `eventnode`='%s' and `date`>='%s';", nbu( )->masterserver( ), $date );
 		$rows = database( )->execute_query( $sql );
 		debug( $debug_level, timestamp( sprintf( 'Records %s', $rows ) ) );
-		$file = new basic_log_file( $file_name );
-		$i = 0;
-		foreach( database( )->rows( ) as $row ) {
-			debug( $debug_level, timestamp( sprintf( 'ID %s', $row[ 'jobid' ] ) ) );
-			if ( filter( $ini[ 'NBU2SM9_FILTER_JOBTYPES' ], $row[ 'jobtype' ] ) ) continue;
-			if ( filter( $ini[ 'NBU2SM9_FILTER_POLICIES' ], $row[ 'policy' ] ) ) continue;
-			if ( filter( $ini[ 'NBU2SM9_FILTER_POLICYTYPES' ], $row[ 'policytype' ] ) ) continue;
-			if ( filter( $ini[ 'NBU2SM9_FILTER_STATUSES' ], $row[ 'status' ] ) ) continue;
-			if ( $row[ 'date' ] == $date and $row[ 'jobid' ]<= $jobid ) continue;
-			$line = $ini[ 'NBU2SM9_LINE' ];
-			$mtext = $ini[ 'NBU2SM9_MESSAGETEXT' ];
-			foreach( $row as $key=>$value ) {
-				if ( is_numeric( $key ) ) continue;
-				$line = str_replace( sprintf( $keymask, strtoupper( $key ) ), $value, $line );
-				$mtext = str_replace( sprintf( $keymask, strtoupper( $key ) ), $value, $mtext );
+		if ( $rows > 0 ) {
+			$difftime = strtotime( 'Today ' . $ini[ 'NBU2SM9_LOGROT_TIME' ] );
+			if ( file_exists( $file_name ) && filemtime( $file_name ) < $difftime && time( ) > $difftime ) {
+				file_exists( $file_name . '.' . $ini[ 'NBU2SM9_LOG_HISTORY' ] ) && unlink( $file_name . '.' . $ini[ 'NBU2SM9_LOG_HISTORY' ] );
+				for ( $i = $ini[ 'NBU2SM9_LOG_HISTORY' ]; $i > 0; $i-- ) {
+					file_exists( $file_name . '.' . $i ) && rename( $file_name . '.' . $i, $file_name . '.' . ( $i + 1 ) );
+				}
+				rename( $file_name, $file_name . '.1' );
+				touch( $file_name );
 			}
-			$line = str_replace( sprintf( $keymask, 'MESSAGETEXT' ), $mtext, $line );
-			$file->write( $line );
-			debug( $debug_level, timestamp( sprintf( 'Ticket for ID %s created', $jobid ) ) );
-			$i++;
+			$file = new basic_log_file( $file_name );
+			$i = 0;
+			foreach( database( )->rows( ) as $row ) {
+				debug( $debug_level, timestamp( sprintf( 'ID %s', $row[ 'jobid' ] ) ) );
+				if ( filter( $ini[ 'NBU2SM9_FILTER_JOBTYPES' ], $row[ 'jobtype' ] ) ) continue;
+				if ( filter( $ini[ 'NBU2SM9_FILTER_POLICIES' ], $row[ 'policy' ] ) ) continue;
+				if ( filter( $ini[ 'NBU2SM9_FILTER_POLICYTYPES' ], $row[ 'policytype' ] ) ) continue;
+				if ( filter( $ini[ 'NBU2SM9_FILTER_STATUSES' ], $row[ 'status' ] ) ) continue;
+				if ( $row[ 'date' ] == $date and $row[ 'jobid' ]<= $jobid ) continue;
+				$line = $ini[ 'NBU2SM9_LINE' ];
+				$mtext = $ini[ 'NBU2SM9_MESSAGETEXT' ];
+				foreach( $row as $key=>$value ) {
+					if ( is_numeric( $key ) ) continue;
+					$line = str_replace( sprintf( $keymask, strtoupper( $key ) ), trim( $value ), $line );
+					$mtext = str_replace( sprintf( $keymask, strtoupper( $key ) ), trim( $value ), $mtext );
+				}
+				$line = str_replace( sprintf( $keymask, 'MESSAGETEXT' ), trim( $mtext ), $line );
+				$file->write( $line );
+				debug( $debug_level, timestamp( sprintf( 'Ticket for ID %s created', $jobid ) ) );
+				$i++;
+			}
+#			file_put_contents( $lffile_name, json_encode( array( 'jobid' => $row[ 'jobid' ], 'ended' => $row[ 'date' ] ) ) );
+			logfile( display( 'NBU2SM9 tickets:' . $i ) );
 		}
-#		file_put_contents( $lffile_name, json_encode( array( 'jobid' => $row[ 'jobid' ], 'ended' => $row[ 'date' ] ) ) );
-		logfile( display( 'NBU2SM9 tickets:' . $i ) );
 	} catch ( exception $e ) { exception_handler( $e ); }
 	return true;
 }
@@ -379,12 +385,11 @@ function read_files( $interval ) {
 function read_all_images( ) {
 	global $threads;
 	debug( 100, timestamp( 'READ ALL IMAGES' ) );
-	try {	
-		$sql = 'SELECT DISTINCT c.name FROM bppllist_clients c ';
-		$sql .= 'LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=c.masterserver AND ptc.policy=c.policyname) ';
-		$sql .= sprintf( "WHERE c.masterserver='%s' ", nbu( )->masterserver( ) );
-		$sql .= 'AND c.obsoleted IS NULL ';
-		$sql .= 'ORDER BY c.NAME;';
+	try {
+		database( )->execute_query( 'TRUNCATE TABLE bpimmedia;' );
+		database( )->execute_query( 'TRUNCATE TABLE bpimmedia_frags;' );
+		$sql = sprintf( "SELECT DISTINCT c.name FROM bppllist_clients c WHERE c.masterserver='%s' AND c.obsoleted IS NULL ORDER BY c.NAME;", 
+			nbu( )->masterserver( ) );
 		logfile( display( 'Clients:' . database( )->execute_query( $sql ) ) );
 		foreach( database( )->rows( ) as $row ) {
 //			bpimmedia_client( $row[ 'name' ] )->execute( $threads );

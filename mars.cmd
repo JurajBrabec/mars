@@ -28,6 +28,7 @@ if /i "%command%" equ "disable" goto :scheduler-disable
 if /i "%command%" equ "enable" goto :scheduler-enable
 if /i "%command%" equ "status" goto :mars-status
 if /i "%command%" equ "scheduler" goto :mars-scheduler
+if /i "%command%" equ "update" goto :mars-update
 if /i "%command%" equ "install" goto :mars-install
 if /i "%command%" equ "uninstall" goto :mars-uninstall
 if /i "%command%" equ "restart" goto :service-restart
@@ -100,6 +101,10 @@ call "%root%\cmd\scheduler.cmd" %1
 goto :end
 :scheduler-enable
 call :echo Enabling scheduler...
+call "%root%\cmd\scheduler.cmd" %1
+goto :end
+:mars-update
+call :echo Executing update...
 call "%root%\cmd\scheduler.cmd" %1
 goto :end
 :mars-install
