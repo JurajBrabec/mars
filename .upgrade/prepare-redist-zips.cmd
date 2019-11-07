@@ -12,7 +12,7 @@ if not exist "!folder!\cmd" goto :setup
 set "root=%folder%"
 if "%root:~-1%"=="\" set root=%root:~0,-1%
 :begin
-for /f %%i in ('dir /b *.zip') do "%root%\bin\7z\7z.exe" d -r %%i *.pdb *.h *.lib *.sql *.pl php.ini-* data dev extras include manual lib sasl2
+for /f %%i in ('dir /b *.zip') do "%root%\bin\7z\7z.exe" d -r %%i *.pdb *.h *.lib *.sql *.pl php.ini-* data dev extras include manual lib sasl2 mariabackup.exe mysql_install_db.exe mysql_upgrade_wizard.exe
 :end
 popd
 exit /b %errorlevel%

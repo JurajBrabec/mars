@@ -2,7 +2,7 @@
 
 /*
  * MARS 4.1 PHP CODE
- * build 4.1.17 @ 2018-10-25 04:17
+ * build 4.1.19 @ 2019-11-06 04:01:19
  * * rewritten from scratch
  */
 
@@ -745,6 +745,7 @@ class bpimmedia extends nbu {
 	protected function setup( ) {
 		parent::setup( );
 		$this->row_delimiter( '^(?=IMAGE)' );
+		$this->ignore_lines( NULL, 'no entity was found' );
 		$this->_frags( new bpimmedia_frags( ) );
 		$this->_frags->add_fields( static::BACKUPID, '' );
 	}

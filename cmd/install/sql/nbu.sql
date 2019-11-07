@@ -632,7 +632,8 @@ BEGIN
 	RENAME TABLE bpimmedia_frags TO drop_table,temp_table TO bpimmedia_frags;
 	DROP TABLE drop_table;
 	CREATE TABLE temp_table LIKE bpimmedia;
-	INSERT INTO temp_table SELECT i.* FROM bpimmedia i WHERE EXISTS (SELECT * FROM bpimmedia_frags f WHERE f.masterserver=i.masterserver AND f.backupid=i.backupid AND f.fragment_number>0);
+	INSERT INTO temp_table SELECT i.* FROM bpimmedia i WHERE EXISTS (SELECT * FROM bpplclients c WHERE c.masterserver=i.masterserver AND c.name=i.name)
+		AND EXISTS (SELECT * FROM bpimmedia_frags f WHERE f.masterserver=i.masterserver AND f.backupid=i.backupid AND f.fragment_number>0);
 	RENAME TABLE bpimmedia TO drop_table,temp_table TO bpimmedia;
 	DROP TABLE drop_table;
 	CREATE TABLE temp_table LIKE bppllist_clients;
@@ -678,7 +679,7 @@ BEGIN
 	DROP TABLE drop_table;
 	CREATE OR REPLACE TEMPORARY TABLE backupids (backupid VARCHAR(64) NOT NULL PRIMARY KEY);
 	REPLACE INTO backupids (backupid) SELECT backupid FROM bpdbjobs_report WHERE backupid IS NOT NULL;
-	REPLACE INTO backupids (backupid) SELECT backupid FROM bpimagelist WHERE backupid IS NOT NULL;
+	REPLACE INTO backupids (backupid) SELECT backupid FROM bpimmedia WHERE backupid IS NOT NULL;
 	CREATE TABLE temp_table LIKE bpflist_backupid;
 	INSERT INTO temp_table SELECT f.* FROM bpflist_backupid f 
 		WHERE EXISTS (SELECT j.backupid FROM backupids j WHERE j.backupid=f.backupid) 

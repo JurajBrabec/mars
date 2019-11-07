@@ -2,7 +2,7 @@
 
 /*
  * MARS 4.1 PHP CODE
- * build 4.1.17 @ 2018-10-25 04:17
+ * build 4.1.19 @ 2019-11-06 04:01:19
  * * rewritten from scratch
  */
 
@@ -172,7 +172,7 @@ function nbu2sm9( ) {
 		} else {
 			ini_default( 'NBU2SM9_FILE', 'mars_mon.log' );
 			ini_default( 'NBU2SM9_LINE', '<DATE>::<SEVERITY>::<ERRORCODE>::<MESSAGETEXT>::<EVENTNODE>::<EVENTTYPEINSTANCE>::<CORELLATIONKEY>');
-			ini_default( 'NBU2SM9_MESSAGETEXT', '<POLICYTYPE> <JOBTYPE> policy ”<POLICY>” <STATUSTEXT>. <STATE> with JobID <JOBID> schedule “<SCHEDULE>” client <CLIENT> status <ERRORCODE> (<ERRORTEXT>)' );
+			ini_default( 'NBU2SM9_MESSAGETEXT', '<POLICYTYPE> <JOBTYPE> policy "<POLICY>" <STATUSTEXT>. <STATE> with JobID:<JOBID> schedule "<SCHEDULE>" client <CLIENT> status <ERRORCODE> (<ERRORTEXT>)' );
 			$keymask = '<%s>';
 		}
 		ini_default( 'NBU2SM9_FILTER_JOBTYPES', 'Image cleanup' );
