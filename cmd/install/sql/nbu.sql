@@ -1110,7 +1110,12 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_ove
 	COUNT(c.policyname) as policies,
 	GROUP_CONCAT(DISTINCT c.architecture) AS architecture,
 	GROUP_CONCAT(DISTINCT c.os) AS os,
-	j.bsrjobs,j.bsr,j.jobs,j.failures,j.gbytes
+	j.bsrjobs,j.bsr,j.jobs,j.failures,j.gbytes,
+	COUNT(DISTINCT i.backupid) AS images,
+	SUM(DISTINCT IF(i.media_type=0,i.id_path,NULL)) AS vmedia,
+	SUM(DISTINCT IF(i.media_type>0,i.id_path,NULL)) AS pmedia,
+	GROUP_CONCAT(DISTINCT IF(i.media_type>0,i.id_path,NULL) ORDER BY i.id_path) AS pmedia,
+	ROUND(SUM(IF(i.media_type>0,i.kilobytes,0))/1048576,1) AS gbretained
 	FROM
 	(SELECT
 		j.tower,j.customer,j.masterserver,j.client,
@@ -1124,12 +1129,13 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_ove
 		ORDER BY j.tower,j.customer,j.masterserver,j.client
 	) j
 	LEFT JOIN bppllist_clients c ON (c.masterserver=j.masterserver AND c.name=j.client AND c.obsoleted IS NULL)
+	LEFT JOIN nbu_images i ON (i.masterserver=j.masterserver AND i.client=j.client)
 	WHERE c.name IS NOT NULL
 	AND c.policyname NOT REGEXP 'dummy|template'
 	GROUP BY j.tower,j.customer,j.masterserver,j.client
 	ORDER BY j.tower,j.customer,j.masterserver,j.client 
 ;
-
+	
 DROP VIEW IF EXISTS `nbu_overview_customers`;
 CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_overview_customers` AS 
 	SELECT
@@ -1161,7 +1167,12 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_ove
 	ROUND(100*SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0 AND j.status IN (0,1),1,0))/SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0,1,0)),1) AS bsr,
 	COUNT(j.jobid) AS jobs,
 	SUM(IF(j.status>1,1,0)) AS failures,
-	ROUND(SUM(j.kbytes)/1048576,1) AS gbytes
+	ROUND(SUM(j.kbytes)/1048576,1) AS gbytes,
+	(SELECT ROUND(SUM(i.kilobytes/1048576),1) AS TB FROM nbu_images i
+		WHERE i.customer=j.customer
+		AND i.media_type>0
+		AND i.expiration>NOW()
+	) AS gbretained
 	FROM nbu_filtered_jobs j
 	GROUP BY j.customer
 	ORDER BY j.customer 
@@ -2652,6 +2663,11 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_overview_clients', 8, 'jobs', 'All Jobs', 'NUMBER', 'nbu_jobs', 'Show jobs for \'%name%\'', '2017-06-13 10:06:45', '2017-06-13 14:35:00', NULL),
 	('nbu_overview_clients', 9, 'failures', 'Failed', 'NUMBER', 'nbu_jobs', 'Show failed jobs for \'%name%\'', '2017-06-13 10:06:45', '2017-06-13 14:35:10', NULL),
 	('nbu_overview_clients', 10, 'gbytes', 'Written (GB)', 'FLOAT', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
+	('nbu_overview_clients', 11, 'images', 'Images', 'NUMBER', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
+	('nbu_overview_clients', 12, 'vmedia', 'Virtual media', 'NUMBER', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
+	('nbu_overview_clients', 13, 'pmedia', 'Physical media', 'NUMBER', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
+	('nbu_overview_clients', 14, 'labels', 'Physical labels', 'STRING', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
+	('nbu_overview_clients', 15, 'gbretained', 'Retained (GB)', 'FLOAT', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
 	('nbu_overview_customers', 1, 'customer', 'Customer', 'STRING', NULL, NULL, '2017-06-13 10:49:42', '2017-06-13 10:56:09', NULL),
 	('nbu_overview_customers', 2, 'clients', 'Clients', 'NUMBER', 'nbu_clients_distinct', 'Show clients for \'%customer%\'', '2017-06-13 10:49:42', '2017-12-15 09:52:57', NULL),
 	('nbu_overview_customers', 3, 'integ_clients', 'Integ Clients', 'NUMBER', 'nbu_clients_distinct', 'Show Integ clients for \'%customer%\'', '2017-06-13 10:49:42', '2017-12-15 09:53:04', NULL),
@@ -2661,6 +2677,7 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_overview_customers', 7, 'jobs', 'All Jobs', 'NUMBER', 'nbu_jobs', 'Show jobs for \'%customer%\'', '2017-06-13 10:49:42', '2017-10-09 14:42:47', NULL),
 	('nbu_overview_customers', 8, 'failures', 'Failed', 'NUMBER', 'nbu_jobs', 'Show failed jobs for \'%customer%\'', '2017-06-13 10:49:42', '2017-10-09 14:42:51', NULL),
 	('nbu_overview_customers', 9, 'gbytes', 'Written (GB)', 'FLOAT', NULL, NULL, '2017-06-13 10:49:42', '2017-10-09 14:42:52', NULL),
+	('nbu_overview_customers', 10, 'gbretained', 'Retained (GB)', 'FLOAT', NULL, NULL, '2017-06-13 10:49:42', '2017-10-09 14:42:52', NULL),
 	('nbu_overview_jobs', 1, 'masterserver', 'Master Server', 'STRING', NULL, NULL, '2017-06-01 15:20:34', '2017-06-02 09:43:34', NULL),
 	('nbu_overview_jobs', 2, 'jobtype', 'Job type', 'STRING', NULL, NULL, '2017-06-01 15:20:34', '2017-06-13 09:18:28', NULL),
 	('nbu_overview_jobs', 3, 'subtype', 'Sub type', 'STRING', NULL, NULL, '2017-06-01 15:20:47', '2017-06-13 09:18:30', NULL),

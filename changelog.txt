@@ -1,5 +1,9 @@
 MARS 4.1 Change Log
 ======================
+13.11.2019 version 4.1 build #20
+•	Added fields "Retained GB" to "Customers overview" report
+•	Added fields "Images","Virtual Media","Physical Media","Physical labels" and "Retained GB" to "Clients overview" report
+
 6.11.2019 version 4.1 build #19
 •	Finalized ticket generation template
 •	Modified BPIMMEDIA import to skip schedule type 2 (user backup) and policy types 4 and 15 (mssql and oracle)
