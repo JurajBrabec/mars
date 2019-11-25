@@ -17,17 +17,17 @@ set "logfile=%root%\logs\update_php_%build%.log"
 call :echo MARS PHP update %build% part#2 starting...
 call "%root%\mars.cmd" stop http 2>&1
 set result=%errorlevel%
-if "%result%" equ "0" call :remove
-if "%result%" equ "0" call :extract
-if "%result%" equ "0" call :vcredist
-if "%result%" equ "0" (
+if "!result!" equ "0" call :remove
+if "!result!" equ "0" call :extract
+if "!result!" equ "0" call :vcredist
+if "!result!" equ "0" (
 	call "%root%\mars.cmd" start http 2>&1
-	if %errorlevel% gtr 0 set result=%errorlevel%
+	if !errorlevel! gtr 0 set result=!errorlevel!
 )
-if "%result%" equ "0" goto :finish
+if "!result!" equ "0" goto :finish
 :error
-call :echo Error %result%. MARS PHP update %build% failed.
-set errorlevel=%result%
+call :echo Error !result!. MARS PHP update %build% failed.
+set errorlevel=!result!
 goto :end
 :finish
 del /q "%filename%" >nul 2>&1
@@ -60,8 +60,8 @@ goto :eof
 :vcredistinstall
 call :echo Installing Microsoft Visual C++ Redistributable Components %version%...
 start /wait /d "%root%\bin" vc_redist.x64.exe /repair /passive /norestart
-if %errorlevel% equ 1638 ver>nul
-if %errorlevel% equ 3010 ver>nul
+if %errorlevel% equ 1638 ver > nul
+if %errorlevel% equ 3010 ver > nul
 if %errorlevel% gtr 0 call :echo Error %errorlevel% installing Microsoft Visual C++ Redistributable Components %version%.
 goto :eof
 
@@ -72,5 +72,5 @@ goto :eof
 
 :end
 popd
-if "%result%" neq "" exit /b %result%
+if "!result!" neq "" exit /b !result!
 exit /b %errorlevel%

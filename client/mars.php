@@ -182,12 +182,9 @@ function nbu2sm9( ) {
 		
 		is_dir( $ini[ 'NBU2SM9_PATH' ] ) || mkdir( $ini[ 'NBU2SM9_PATH' ], 0777, true );
 		$file_name = os( )->path( array( $ini[ 'NBU2SM9_PATH' ] , $ini[ 'NBU2SM9_FILE' ] ) );
-		$lffile_name = os( )->path( array( $ini[ 'NBU2SM9_PATH' ] , 'LastFailure.json' ) );
 		$lastfailure = array( 'jobid' => 0, 'ended' => date( 'Y-m-d H:i:s', 0 ) );
-		file_exists( $lffile_name ) && $lastfailure = json_decode( file_get_contents( $lffile_name ), true );
-		file_exists( 'tmp\LastFailure.json' ) && $lastfailure = json_decode( file_get_contents( 'tmp\LastFailure.json' ), true ) && unlink( 'tmp\LastFailure.json' );
-		$date = $lastfailure[ 'ended' ];
 		$jobid = $lastfailure[ 'jobid' ];
+		$date = $lastfailure[ 'ended' ];
 		$lines = 1;
 		if ( file_exists( $file_name ) ) {
 			$f = @fopen( $file_name, 'rb' );
@@ -253,7 +250,6 @@ function nbu2sm9( ) {
 				debug( $debug_level, timestamp( sprintf( 'Ticket for ID %s created', $jobid ) ) );
 				$i++;
 			}
-#			file_put_contents( $lffile_name, json_encode( array( 'jobid' => $row[ 'jobid' ], 'ended' => $row[ 'date' ] ) ) );
 			logfile( display( 'NBU2SM9 tickets:' . $i ) );
 		}
 	} catch ( exception $e ) { exception_handler( $e ); }
@@ -390,8 +386,10 @@ function read_all_images( ) {
 		foreach( database( )->rows( ) as $row ) {
 			display( sprintf( '%s/%s: %s (%s%%)', $i, $count, $row[ 'name' ], round( 100 * $i / $count, 1 ) ) );
 			database( )->execute_query( sprintf( "UPDATE bpimmedia SET version=0 WHERE masterserver='%s' AND name='%s';", nbu( )->masterserver( ), $row[ 'name' ] ) );
+			database( )->execute_query( sprintf( "UPDATE bpimmedia_frags SET kilobytes=0 WHERE masterserver='%s' AND backupid REGEXP '%s_';", nbu( )->masterserver( ), $row[ 'name' ] ) );
 			try { handler( bpimmedia_client( $row[ 'name' ] )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
 			database( )->execute_query( sprintf( "DELETE FROM bpimmedia WHERE masterserver='%s' AND name='%s' AND version=0;", nbu( )->masterserver( ), $row[ 'name' ] ) );
+			database( )->execute_query( sprintf( "DELETE FROM bpimmedia_frags WHERE masterserver='%s' AND backupid REGEXP '%s_' AND kilobytes=0;", nbu( )->masterserver( ), $row[ 'name' ] ) );
 			$i++;
 		}
 	} catch ( exception $e ) { exception_handler( $e ); }
@@ -472,7 +470,6 @@ try {
 			if ( due( 'FILES', 'NBUFILES_TIME' ) ) read_files( $hours );
 			if ( due( 'ALLIMAGES' ) ) read_all_images( );
 			if ( due( 'IMAGES', 'NBUIMAGES_TIME' ) ) bpimmedia( $days )->execute( $threads );
-#			if ( due( 'IMAGES', 'NBUIMAGES_TIME' ) ) bpimagelist_hoursago( $hours )->execute( $threads );
 			if ( due( 'SLPS', 'NBUSLP_TIME' ) ) nbstl( )->execute( $threads );
 			$threads->execute( );
 			if ( due( 'VAULTS', 'NBUVAULT_TIME' ) ) try { handler( vault_xml( os( )->path( array ( $ini[ 'NBU_DATA_HOME' ], 'db', 'vault' ) ) )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }

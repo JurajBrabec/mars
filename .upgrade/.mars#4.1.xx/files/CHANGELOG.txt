@@ -1,5 +1,8 @@
 MARS 4.1 Change Log
 ======================
+25.11.2019 version 4.1 build #21
+•	Fix for BPIMMEDIA all images import.	
+
 13.11.2019 version 4.1 build #20
 •	Added fields "Retained GB" to "Customers overview" report
 •	Added fields "Images","Virtual Media","Physical Media","Physical labels" and "Retained GB" to "Clients overview" report

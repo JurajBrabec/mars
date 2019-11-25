@@ -17,18 +17,18 @@ set "logfile=%root%\logs\update_db_%build%.log"
 call :echo MARS DB (MariaDB) update %build% part#2 starting...
 call "%root%\mars.cmd" stop db 2>&1
 set result=%errorlevel%
-if "%result%" equ "0" call :remove
-if "%result%" equ "0" call :extract
-if "%result%" equ "0" call :rename
-if "%result%" equ "0" call :move
-if "%result%" equ "0" (
+if "!result!" equ "0" call :remove
+if "!result!" equ "0" call :extract
+if "!result!" equ "0" call :rename
+if "!result!" equ "0" call :move
+if "!result!" equ "0" (
 	call "%root%\mars.cmd" start db 2>&1
-	if %errorlevel% gtr 0 set result=%errorlevel%
+	if !errorlevel! gtr 0 set result=!errorlevel!
 )
-if "%result%" equ "0" call :update
-if "%result%" equ "0" goto :finish
-call :echo Error %result%. MARS DB (MariaDB) update %build% failed.
-set errorlevel=%result%
+if "!result!" equ "0" call :update
+if "!result!" equ "0" goto :finish
+call :echo Error !result!. MARS DB (MariaDB) update %build% failed.
+set errorlevel=!result!
 goto :end
 :finish
 del /q "%filename%" >nul 2>&1
@@ -83,5 +83,5 @@ goto :eof
 
 :end
 popd
-if "%result%" neq "" exit /b %result%
+if "!result!" neq "" exit /b !result!
 exit /b %errorlevel%

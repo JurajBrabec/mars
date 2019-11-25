@@ -871,7 +871,7 @@ class bpimmedia_frags extends nbu {
 	protected function setup( ) {
 		parent::setup( );
 		$this->row_delimiter( '^(?=FRAG)' );
-		$this->ignore_lines( NULL, '^(IMAGE|HISTO)' );
+		$this->ignore_lines( NULL, '^(IMAGE|HISTO|no entity was found)' );
 	}
 
 	protected function parse_split( $split ) {
