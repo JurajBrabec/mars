@@ -9,15 +9,15 @@
 **/log
 **/logs
 **/tmp
-**/cmd/dump
+**/dump
 
 # Audit folder
 **/.audit
-**/.qrs_audit
+/.qrs_audit
 
 # Upgrade directory
-**/.*
+/.*
 !**/.upgrade
 
 # Test webinterface
-**/www/test
+/www/test
