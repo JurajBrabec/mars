@@ -316,7 +316,8 @@ function nbu_test( $multi_thread = 0 ) {
 #	$t = bpflist_backupid( 'test_0' );
 #	$t = nbstl( );
 #	$t = bpimmedia( 1 );
-	$t = bpimmedia_client( 'test' );
+#	$t = bpimmedia_client( 'test' );
+	$t = nbdevquery_listdv_puredisk( );
     if ( $multi_thread == 0 ) {
 		$t->execute( );
 		nbu_process( $t );

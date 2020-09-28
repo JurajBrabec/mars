@@ -1857,6 +1857,84 @@ class bpretlevel extends nbu {
 	}
 }
 
+### NBDEVQUERY
+
+class nbdevquery_listdv_puredisk extends nbu {
+	const WIN_BIN				= 'admincmd\\nbdevquery';
+	const ARGUMENTS				= '-listdv -stype PureDisk -l';
+ 	const VERSION				= 'version';
+	const DISKPOOL				= 'diskpool';
+	const STYPE					= 'stype';
+	const NAME					= 'name';
+	const DISK_MEDIA_ID			= 'disk_media_id';
+	const TOTAL_CAPACITY		= 'total_capacity';
+	const FREE_SPACE			= 'free_space';
+	const USED					= 'used';
+	const NBU_STATE				= 'nbu_state';
+	const STS_STATE				= 'sts_state';
+	const NUM_WRITE_MOUNTS		= 'num_write_mounts';
+	const ACTIVE_READ_MOUNTS	= 'active_read_streams';
+	const ACTIVE_WRITE_STREAMS	= 'active_write_streams';
+	const FLAGS					= 'flags';
+	const NUM_READ_MOUNTS		= 'num_read_mounts';
+	const UPDATED				= 'updated';
+	const OBSOLETED				= 'obsoleted';
+	
+	private $updated			= '';
+	private $devices			= array( );
+
+	public function updated( $value = NULL ) { return _var( $this->updated, func_get_args( ) ); }
+	public function devices( $field = NULL, $value = NULL) { return _arr( $this->devices, func_get_args( ) ); }
+	
+	public static function pattern( ) {
+		$pattern = array(
+			text::P(static::VERSION, text::CSV ),
+			text::P(static::DISKPOOL, text::CSV ),
+			text::P(static::STYPE, text::CSV ),
+			text::P(static::NAME, text::CSV ),
+			text::P(static::DISK_MEDIA_ID, text::CSV ),
+			text::P(static::TOTAL_CAPACITY, text::CSV ),
+			text::P(static::FREE_SPACE, text::CSV ),
+			text::P(static::USED, text::CSV ),
+			text::P(static::NBU_STATE, text::CSV ),
+			text::P(static::STS_STATE, text::CSV ),
+			text::P(static::NUM_WRITE_MOUNTS, text::CSV ),
+			text::P(static::ACTIVE_READ_MOUNTS, text::CSV ),
+			text::P(static::ACTIVE_WRITE_STREAMS, text::CSV ),
+			text::P(static::FLAGS, text::CSV ),
+			text::P(static::NUM_READ_MOUNTS, text::CSV )
+		);
+		return sprintf( static::PATTERN, implode( text::SPACES, $pattern ) );
+	}
+
+	protected function setup( ) {
+		parent::setup( );
+		$this->add_fields( static::UPDATED, $this->updated( date( 'Y-m-d H:i:s' ) ) );
+		$this->add_fields( static::OBSOLETED, NULL );
+	}
+
+	protected function parse_split( $split ) {
+		$split = str_replace( '*NULL*', '', $split );
+		return parent::parse_split( $split );	
+	}
+
+	protected function parse_rows( ) {
+		parent::parse_rows( );
+		foreach ( $this->rows( ) as $row ) $this->devices( $row[ static::DISKPOOL ], $row );
+	}
+
+	public function sql( $table = NULL, $rows = NULL ) {
+		$result = parent::sql( $table, $rows );
+		$result[ ] = sprintf( "update %s set %s=%s where %s='%s' and %s is null and %s<'%s';", $table,
+			static::OBSOLETED, static::UPDATED, 
+			static::MASTERSERVER, nbu( )->masterserver( ), 
+			static::OBSOLETED, 
+			static::UPDATED, $this->updated( ) );
+		return $result;
+	}
+	
+}
+
 #-----------------------------------
 function bpdbjobs_summary( ) { return new bpdbjobs_summary( ); }
 function bpplclients( ) { return new bpplclients( ); }
@@ -1871,6 +1949,7 @@ function bppllist_schedules( ) { return new bppllist_schedules( ); }
 function vault_xml( $home ) { return new vault_xml( $home ); }
 function bpretlevel( ) { return new bpretlevel( ); }
 function nbstl( ) { return new nbstl( ); }
+function nbdevquery_listdv_puredisk( ) { return new nbdevquery_listdv_puredisk( ); }
 
 function nbu( ) { global $nbu; return $nbu; }
 

@@ -1,5 +1,33 @@
 MARS 4.1 Change Log
 ======================
+31.07.2020 version 4.1 build #30
+•	Fixed MARS30 host parsing in specification read
+
+03.06.2020 version 4.1 build #29
+•	Fixed Policies/Schedules/Clients reports
+
+7.05.2020 version 4.1 build #28
+•	Fix for policy name length
+
+26.05.2020 version 4.1 build #27
+•	List of clients (INTEG) report fix
+•	Syntax changes
+
+23.04.2020 version 4.1 build #26
+•	Fix missing "Devices/Pure Disks" report 
+
+22.04.2020 version 4.1 build #25
+•	Fix "Overview clients" report sorting
+
+21.04.2020 version 4.1 build #24
+•	Fixed "Overview clients" report
+
+8.04.2020 version 4.1 build #23
+•	Added NBU_BW_JOBS and rewerked BSR/job/overview reports from scratch
+
+5.01.2020 version 4.1 build #22
+•	Added "Devices/Pure Disks" report.
+
 25.11.2019 version 4.1 build #21
 •	Fix for BPIMMEDIA all images import.	
 

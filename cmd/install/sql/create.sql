@@ -14,13 +14,13 @@ GRANT PROCESS ON *.* TO 'operator'@'%';
 GRANT PROCESS ON *.* TO 'administrator'@'%';
 
 DROP DATABASE IF EXISTS `mars40`;
-CREATE DATABASE IF NOT EXISTS `mars40` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE=utf8_general_ci;
+CREATE DATABASE `mars40` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE=utf8_general_ci;
 GRANT SELECT, INSERT, UPDATE, EXECUTE, EVENT ON mars40.* TO 'operator'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE ON mars40.* TO 'script'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, EVENT ON mars40.* TO 'administrator'@'%';
 
 DROP DATABASE IF EXISTS `mars30`;
-CREATE DATABASE IF NOT EXISTS `mars30` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE=utf8_general_ci;
+CREATE DATABASE `mars30` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE=utf8_general_ci;
 GRANT SELECT, INSERT, UPDATE, EVENT ON mars30.* TO 'operator'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE ON mars30.* TO 'script'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, EVENT ON mars30.* TO 'administrator'@'%';
@@ -29,8 +29,7 @@ FLUSH PRIVILEGES;
 USE `mars40`;
 
 DELIMITER //
-DROP FUNCTION IF EXISTS `f_customer`//
-CREATE DEFINER=`root`@`%` FUNCTION `f_customer`() RETURNS varchar(64) CHARSET utf8
+CREATE OR REPLACE DEFINER=CURRENT_USER FUNCTION `f_customer`() RETURNS varchar(64) CHARSET utf8
     NO SQL
     DETERMINISTIC
     COMMENT 'Customer filter function'
@@ -38,8 +37,7 @@ BEGIN
 RETURN NULLIF(@customer,'');
 END//
 
-DROP FUNCTION IF EXISTS `f_from`//
-CREATE DEFINER=`root`@`%` FUNCTION `f_from`() RETURNS int(11)
+CREATE OR REPLACE DEFINER=CURRENT_USER FUNCTION `f_from`() RETURNS int(11)
     NO SQL
     DETERMINISTIC
     COMMENT 'Datetime from filter function'
@@ -47,8 +45,7 @@ BEGIN
 RETURN UNIX_TIMESTAMP(IFNULL(NULLIF(@datetime_from,''),DATE(SUBDATE(NOW(), interval 1 MONTH))));
 END//
 
-DROP FUNCTION IF EXISTS `f_to`//
-CREATE DEFINER=`root`@`%` FUNCTION `f_to`() RETURNS int(11)
+CREATE OR REPLACE DEFINER=CURRENT_USER FUNCTION `f_to`() RETURNS int(11)
     NO SQL
     DETERMINISTIC
     COMMENT 'Datetime to filter function'
@@ -56,8 +53,7 @@ BEGIN
 RETURN UNIX_TIMESTAMP(IFNULL(NULLIF(@datetime_to,''),DATE(ADDDATE(NOW(), interval 1 DAY))) - INTERVAL 1 SECOND);
 END//
 
-DROP FUNCTION IF EXISTS `f_tower`//
-CREATE DEFINER=`root`@`%` FUNCTION `f_tower`() RETURNS varchar(32) CHARSET utf8
+CREATE OR REPLACE DEFINER=CURRENT_USER FUNCTION `f_tower`() RETURNS varchar(32) CHARSET utf8
     NO SQL
     DETERMINISTIC
     COMMENT 'Tower filter function'
@@ -66,8 +62,7 @@ RETURN NULLIF(@tower,'');
 END//
 DELIMITER ;
 
-DROP TABLE IF EXISTS `core_admin_fields`;
-CREATE TABLE `core_admin_fields` (
+CREATE OR REPLACE TABLE `core_admin_fields` (
 	`source` VARCHAR(32) NOT NULL,
 	`ord` TINYINT(3) UNSIGNED NOT NULL,
 	`name` VARCHAR(32) NOT NULL,
@@ -78,8 +73,7 @@ CREATE TABLE `core_admin_fields` (
 	PRIMARY KEY (`source`, `ord`, `name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of predefined Admin report fields';
 
-DROP TABLE IF EXISTS `core_admin_sources`;
-CREATE TABLE `core_admin_sources` (
+CREATE OR REPLACE TABLE `core_admin_sources` (
 	`ord` TINYINT(3) UNSIGNED NOT NULL,
 	`name` VARCHAR(32) NOT NULL,
 	`title` VARCHAR(32) NOT NULL,
@@ -90,8 +84,7 @@ CREATE TABLE `core_admin_sources` (
 	PRIMARY KEY (`ord`, `name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of predefined Admin report sources';
 
-DROP TABLE IF EXISTS `core_fields`;
-CREATE TABLE IF NOT EXISTS `core_fields` (
+CREATE OR REPLACE TABLE `core_fields` (
   `source` varchar(32) NOT NULL,
   `ord` tinyint(3) unsigned NOT NULL,
   `name` varchar(32) NOT NULL,
@@ -105,8 +98,7 @@ CREATE TABLE IF NOT EXISTS `core_fields` (
   PRIMARY KEY (`source`,`ord`,`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of predefined report fields';
 
-DROP TABLE IF EXISTS `core_filters`;
-CREATE TABLE IF NOT EXISTS `core_filters` (
+CREATE OR REPLACE TABLE `core_filters` (
   `report` varchar(32) NOT NULL,
   `ord` tinyint(3) unsigned NOT NULL,
   `source` varchar(32) NOT NULL,
@@ -119,8 +111,7 @@ CREATE TABLE IF NOT EXISTS `core_filters` (
   PRIMARY KEY (`report`,`ord`,`source`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of predefined report filters';
 
-DROP TABLE IF EXISTS `core_formats`;
-CREATE TABLE IF NOT EXISTS `core_formats` (
+CREATE OR REPLACE TABLE `core_formats` (
   `report` varchar(64) NOT NULL,
   `ord` tinyint(3) unsigned NOT NULL,
   `source` varchar(64) NOT NULL,
@@ -136,8 +127,7 @@ CREATE TABLE IF NOT EXISTS `core_formats` (
   PRIMARY KEY (`report`,`ord`,`source`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of predefined report formats';
 
-DROP TABLE IF EXISTS `core_links`;
-CREATE TABLE IF NOT EXISTS `core_links` (
+CREATE OR REPLACE TABLE `core_links` (
   `source` varchar(32) NOT NULL,
   `field` varchar(32) NOT NULL,
   `ord` tinyint(3) unsigned NOT NULL,
@@ -151,8 +141,7 @@ CREATE TABLE IF NOT EXISTS `core_links` (
   PRIMARY KEY (`source`,`field`,`ord`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of predefined report links';
 
-DROP TABLE IF EXISTS `core_reports`;
-CREATE TABLE IF NOT EXISTS `core_reports` (
+CREATE OR REPLACE TABLE `core_reports` (
   `ord` tinyint(3) unsigned NOT NULL,
   `name` varchar(32) NOT NULL,
   `category` varchar(32) DEFAULT NULL,
@@ -163,8 +152,7 @@ CREATE TABLE IF NOT EXISTS `core_reports` (
   PRIMARY KEY (`ord`,`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of predefined reports';
 
-DROP TABLE IF EXISTS `core_sorts`;
-CREATE TABLE IF NOT EXISTS `core_sorts` (
+CREATE OR REPLACE TABLE `core_sorts` (
   `report` varchar(32) NOT NULL,
   `ord` tinyint(3) unsigned NOT NULL,
   `source` varchar(32) NOT NULL,
@@ -176,8 +164,7 @@ CREATE TABLE IF NOT EXISTS `core_sorts` (
   PRIMARY KEY (`report`,`ord`,`source`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of predefined report sorts';
 
-DROP TABLE IF EXISTS `core_sources`;
-CREATE TABLE IF NOT EXISTS `core_sources` (
+CREATE OR REPLACE TABLE `core_sources` (
   `report` varchar(32) NOT NULL,
   `ord` tinyint(3) unsigned NOT NULL,
   `name` varchar(32) NOT NULL,

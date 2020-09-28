@@ -4,14 +4,13 @@
 
 USE `mars40`;
 
-DROP TABLE IF EXISTS `bpdbjobs_report`;
-CREATE TABLE `bpdbjobs_report` (
+CREATE OR REPLACE TABLE `bpdbjobs_report` (
 	`masterserver` VARCHAR(64) NOT NULL,
 	`jobid` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`jobtype` TINYINT(3) UNSIGNED NOT NULL,
 	`state` TINYINT(3) UNSIGNED NOT NULL,
 	`status` SMALLINT(5) UNSIGNED NULL DEFAULT NULL,
-	`policy` VARCHAR(64) NULL DEFAULT NULL,
+	`policy` VARCHAR(96) NULL DEFAULT NULL,
 	`schedule` VARCHAR(64) NULL DEFAULT NULL,
 	`client` VARCHAR(64) NULL DEFAULT NULL,
 	`server` VARCHAR(64) NULL DEFAULT NULL,
@@ -32,15 +31,15 @@ CREATE TABLE `bpdbjobs_report` (
 	`scheduletype` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`priority` MEDIUMINT(8) UNSIGNED NULL DEFAULT NULL,
 	`group` VARCHAR(32) NULL DEFAULT NULL,
-	`retentionlevel` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
-	`retentionperiod` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
+	`retentionlevel` TINYINT(3) NULL DEFAULT NULL,
+	`retentionperiod` TINYINT(3) NULL DEFAULT NULL,
 	`compression` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`kbytestobewritten` BIGINT(20) UNSIGNED NULL DEFAULT NULL,
 	`filestobewritten` MEDIUMINT(8) UNSIGNED NULL DEFAULT NULL,
 	`filelistcount` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`trycount` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`parentjob` INT(10) UNSIGNED NULL DEFAULT NULL,
-	`kbpersec` MEDIUMINT(8) UNSIGNED NULL DEFAULT NULL,
+	`kbpersec` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`copy` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`robot` VARCHAR(32) NULL DEFAULT NULL,
 	`vault` VARCHAR(32) NULL DEFAULT NULL,
@@ -48,7 +47,7 @@ CREATE TABLE `bpdbjobs_report` (
 	`session` VARCHAR(32) NULL DEFAULT NULL,
 	`ejecttapes` VARCHAR(32) NULL DEFAULT NULL,
 	`srcstunit` VARCHAR(32) NULL DEFAULT NULL,
-	`srcserver` VARCHAR(32) NULL DEFAULT NULL,
+	`srcserver` VARCHAR(64) NULL DEFAULT NULL,
 	`srcmedia` VARCHAR(32) NULL DEFAULT NULL,
 	`dstmedia` VARCHAR(32) NULL DEFAULT NULL,
 	`stream` TINYINT(4) NULL DEFAULT NULL,
@@ -87,12 +86,11 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-DROP TABLE IF EXISTS `bpdbjobs_summary`;
-CREATE TABLE `bpdbjobs_summary` (
+CREATE OR REPLACE TABLE `bpdbjobs_summary` (
 	`masterserver` VARCHAR(64) NOT NULL,
-	`queued` TINYINT(3) UNSIGNED NOT NULL,
-	`waiting` TINYINT(3) UNSIGNED NOT NULL,
-	`active` TINYINT(3) UNSIGNED NOT NULL,
+	`queued` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`waiting` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`active` MEDIUMINT(8) UNSIGNED NOT NULL,
 	`successful` MEDIUMINT(8) UNSIGNED NOT NULL,
 	`partial` MEDIUMINT(8) UNSIGNED NOT NULL,
 	`failed` MEDIUMINT(8) UNSIGNED NOT NULL,
@@ -106,7 +104,7 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-CREATE TABLE `bpflist_backupid` (
+CREATE OR REPLACE TABLE `bpflist_backupid` (
 	`masterserver` VARCHAR(64) NOT NULL,
 	`image_version` TINYINT(3) UNSIGNED NOT NULL,
 	`client_type` TINYINT(3) UNSIGNED NOT NULL,
@@ -116,15 +114,15 @@ CREATE TABLE `bpflist_backupid` (
 	`client` VARCHAR(64) NOT NULL,
 	`policy_name` VARCHAR(64) NOT NULL,
 	`backupid` VARCHAR(64) NOT NULL,
-	`peer_name` VARCHAR(8) NOT NULL,
+	`peer_name` VARCHAR(8) NULL,
 	`lines` TINYINT(3) UNSIGNED NOT NULL,
 	`options` TINYINT(3) UNSIGNED NOT NULL,
 	`user_name` VARCHAR(8) NOT NULL,
 	`group_name` VARCHAR(8) NOT NULL,
 	`raw_partition_id` TINYINT(3) UNSIGNED NOT NULL,
-	`jobid` INT(10) UNSIGNED NOT NULL,
+	`jobid` INT(10) UNSIGNED NULL,
 	`file_number` MEDIUMINT(8) UNSIGNED NOT NULL,
-	`compressed_size` TINYINT(3) UNSIGNED NOT NULL,
+	`compressed_size` MEDIUMINT(8) UNSIGNED NOT NULL,
 	`path_length` TINYINT(3) UNSIGNED NOT NULL,
 	`data_length` TINYINT(3) UNSIGNED NOT NULL,
 	`block` MEDIUMINT(8) UNSIGNED NOT NULL,
@@ -147,8 +145,7 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-DROP TABLE IF EXISTS `bpimmedia`;
-CREATE TABLE `bpimmedia` (
+CREATE OR REPLACE TABLE `bpimmedia` (
 	`masterserver` VARCHAR(64) NOT NULL,
 	`name` VARCHAR(64) NOT NULL,
 	`version` TINYINT(3) UNSIGNED NOT NULL,
@@ -172,8 +169,7 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-DROP TABLE IF EXISTS `bpimmedia_frags`;
-CREATE TABLE `bpimmedia_frags` (
+CREATE OR REPLACE TABLE `bpimmedia_frags` (
 	`masterserver` VARCHAR(64) NOT NULL,
 	`backupid` VARCHAR(64) NOT NULL,
 	`copy_number` TINYINT(3) UNSIGNED NOT NULL,
@@ -205,8 +201,7 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-DROP TABLE IF EXISTS `bpplclients`;
-CREATE TABLE `bpplclients` (
+CREATE OR REPLACE TABLE `bpplclients` (
 	`masterserver` VARCHAR(64) NOT NULL,
 	`name` VARCHAR(64) NOT NULL,
 	`architecture` VARCHAR(64) NOT NULL,
@@ -225,10 +220,9 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-DROP TABLE IF EXISTS `bppllist_clients`;
-CREATE TABLE `bppllist_clients` (
+CREATE OR REPLACE TABLE `bppllist_clients` (
 	`masterserver` VARCHAR(64) NOT NULL,
-	`policyname` VARCHAR(64) NOT NULL,
+	`policyname` VARCHAR(96) NOT NULL,
 	`name` VARCHAR(64) NOT NULL,
 	`architecture` VARCHAR(64) NOT NULL,
 	`os` VARCHAR(64) NOT NULL,
@@ -246,11 +240,10 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-DROP TABLE IF EXISTS `bppllist_policies`;
-CREATE TABLE `bppllist_policies` (
+CREATE OR REPLACE TABLE `bppllist_policies` (
 	`masterserver` VARCHAR(64) NOT NULL,
-	`name` VARCHAR(64) NOT NULL,
-	`internalname` VARCHAR(64) NULL DEFAULT NULL,
+	`name` VARCHAR(96) NOT NULL,
+	`internalname` VARCHAR(32) NULL DEFAULT NULL,
 	`options` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`protocolversion` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`timezoneoffset` INT(10) UNSIGNED NULL DEFAULT NULL,
@@ -268,6 +261,7 @@ CREATE TABLE `bppllist_policies` (
 	`active` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`tir` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`blocklevelincrementals` INT(10) UNSIGNED NULL DEFAULT NULL,
+	`extsecinfo` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`individualfilerestore` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`streaming` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`frozenimage` INT(10) UNSIGNED NULL DEFAULT NULL,
@@ -282,18 +276,24 @@ CREATE TABLE `bppllist_policies` (
 	`offhostbackup` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`alternateclient` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`datamover` INT(10) UNSIGNED NULL DEFAULT NULL,
-	`datamovertype` INT(10) UNSIGNED NULL DEFAULT NULL,
-	`bmr` INT(10) NULL DEFAULT NULL,
+	`datamovertype` INT(10) NULL DEFAULT NULL,
+	`bmr` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`lifecycle` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`granularrestore` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`jobsubtype` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`vm` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`ignorecsdedup` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`exchangedbsource` INT(10) UNSIGNED NULL DEFAULT NULL,
+	`generation` INT(10) UNSIGNED NULL DEFAULT NULL,
+	`applicationdiscovery` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`accelerator` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`granularrestore1` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`discoverylifetime` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`fastbackup` INT(10) UNSIGNED NULL DEFAULT NULL,
+	`optimizedbackup` INT(10) UNSIGNED NULL DEFAULT NULL,
+	`clientlisttype` INT(10) UNSIGNED NULL DEFAULT NULL,
+	`selectlisttype` INT(10) UNSIGNED NULL DEFAULT NULL,
+	`appconsistent` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`key` VARCHAR(64) NULL DEFAULT NULL,
 	`res` VARCHAR(128) NULL DEFAULT NULL,
 	`pool` VARCHAR(128) NULL DEFAULT NULL,
@@ -304,10 +304,10 @@ CREATE TABLE `bppllist_policies` (
 	`names` VARCHAR(64) NULL DEFAULT NULL,
 	`bcmd` VARCHAR(64) NULL DEFAULT NULL,
 	`rcmd` VARCHAR(64) NULL DEFAULT NULL,
-	`applicationdefined` TEXT NULL,
+	`applicationdefined` TEXT NULL DEFAULT NULL,
 	`orabkupdatafileargs` VARCHAR(128) NULL DEFAULT NULL,
 	`orabkuparchlogargs` VARCHAR(128) NULL DEFAULT NULL,
-	`include` VARCHAR(256) NULL DEFAULT NULL,
+	`include` TEXT NULL DEFAULT NULL,
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	`obsoleted` TIMESTAMP NULL DEFAULT NULL,
@@ -319,10 +319,9 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-DROP TABLE IF EXISTS `bppllist_schedules`;
-CREATE TABLE `bppllist_schedules` (
+CREATE OR REPLACE TABLE `bppllist_schedules` (
 	`masterserver` VARCHAR(64) NOT NULL,
-	`policyname` VARCHAR(64) NOT NULL,
+	`policyname` VARCHAR(96) NOT NULL,
 	`name` VARCHAR(64) NOT NULL,
 	`backuptype` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`multiplexingcopies` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
@@ -373,8 +372,7 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-DROP TABLE IF EXISTS `bpretlevel`;
-CREATE TABLE `bpretlevel` (
+CREATE OR REPLACE TABLE `bpretlevel` (
 	`masterserver` VARCHAR(64) NOT NULL,
 	`level` SMALLINT(3) NOT NULL,
 	`days` SMALLINT(6) NOT NULL,
@@ -387,8 +385,28 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-DROP TABLE IF EXISTS `nbstl`;
-CREATE TABLE `nbstl` (
+CREATE OR REPLACE TABLE `mars_bw_jobs` (
+	`masterserver` VARCHAR(64) NOT NULL COLLATE 'utf8_general_ci',
+	`policy` VARCHAR(64) NOT NULL COLLATE 'utf8_general_ci',
+	`schedule` VARCHAR(64) NOT NULL COLLATE 'utf8_general_ci',
+	`client` VARCHAR(64) NOT NULL COLLATE 'utf8_general_ci',
+	`bw_day` DATE NOT NULL,
+	`jobs` INT(11) NOT NULL,
+	`mb` FLOAT(12) NULL DEFAULT NULL,
+	`in_bsr` INT(11) NULL DEFAULT NULL,
+	`mb_in_bsr` FLOAT(12) NULL DEFAULT NULL,
+	`bsr` FLOAT(12) NULL DEFAULT NULL,
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`obsoleted` TIMESTAMP NULL DEFAULT NULL,
+	PRIMARY KEY (`masterserver`, `policy`, `schedule`, `client`, `bw_day`) USING BTREE
+)
+COMMENT='Backup day jobs'
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+;
+
+CREATE OR REPLACE TABLE `nbstl` (
 	`masterserver` VARCHAR(64) NOT NULL,
 	`slpname` VARCHAR(64) NOT NULL,
 	`dataclassification` VARCHAR(64) NULL DEFAULT NULL,
@@ -421,8 +439,7 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-DROP TABLE IF EXISTS `nbu_codes`;
-CREATE TABLE `nbu_codes` (
+CREATE OR REPLACE TABLE `nbu_codes` (
 	`field` VARCHAR(32) NOT NULL,
 	`code` SMALLINT(6) NOT NULL,
 	`description` VARCHAR(128) NOT NULL,
@@ -433,12 +450,14 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-DROP TABLE IF EXISTS `nbu_policy_tower_customer`;
-CREATE TABLE `nbu_policy_tower_customer` (
+CREATE OR REPLACE TABLE `nbu_policy_tower_customer` (
 	`masterserver` VARCHAR(64) NOT NULL,
 	`policy` VARCHAR(64) NOT NULL,
 	`tower` VARCHAR(32) NULL DEFAULT NULL,
 	`customer` VARCHAR(64) NULL DEFAULT NULL,
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`obsoleted` TIMESTAMP NULL DEFAULT NULL,
 	PRIMARY KEY (`masterserver`,`policy`)
 )
 COMMENT='Policy-Tower-Customer inter-table'
@@ -446,8 +465,34 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-DROP TABLE IF EXISTS `vault_item_xml`;
-CREATE TABLE `vault_item_xml` (
+CREATE OR REPLACE TABLE `nbdevquery_listdv_puredisk` (
+	`masterserver` VARCHAR(64) NOT NULL,
+	`version` VARCHAR(32) NULL DEFAULT NULL,
+	`diskpool` VARCHAR(64) NULL DEFAULT NULL,
+	`stype` VARCHAR(32) NULL DEFAULT NULL,
+	`name` VARCHAR(32) NULL DEFAULT NULL,
+	`disk_media_id` VARCHAR(32) NULL DEFAULT NULL,
+	`total_capacity` FLOAT UNSIGNED NULL DEFAULT NULL,
+	`free_space` FLOAT UNSIGNED NULL DEFAULT NULL,
+	`used` FLOAT UNSIGNED NULL DEFAULT NULL,
+	`nbu_state` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
+	`sts_state` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
+	`num_write_mounts` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
+	`active_read_streams` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
+	`active_write_streams` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
+	`flags` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
+	`num_read_mounts` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`obsoleted` TIMESTAMP NULL DEFAULT NULL,
+	PRIMARY KEY (`masterserver`, `diskpool`)
+)
+COMMENT='nbdevquery -listdv -dtype puredisk'
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+;
+
+CREATE OR REPLACE TABLE `vault_item_xml` (
 	`masterserver` VARCHAR(64) NOT NULL,
 	`profile` VARCHAR(32) NOT NULL,
 	`type` VARCHAR(32) NOT NULL,
@@ -462,8 +507,7 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
-DROP TABLE IF EXISTS `vault_xml`;
-CREATE TABLE `vault_xml` (
+CREATE OR REPLACE TABLE `vault_xml` (
 	`masterserver` VARCHAR(64) NOT NULL,
 	`robot_id` TINYINT(3) UNSIGNED NOT NULL,
 	`robot_lastmod` BIGINT(20) UNSIGNED NOT NULL,
@@ -540,15 +584,13 @@ ENGINE=InnoDB
 
 DELIMITER //
 
-DROP EVENT IF EXISTS nbu_event //
-CREATE DEFINER=root@'%' EVENT nbu_event
+CREATE OR REPLACE DEFINER=CURRENT_USER EVENT nbu_event
 ON SCHEDULE EVERY 5 MINUTE STARTS '2017-01-01' ON COMPLETION PRESERVE DISABLE COMMENT '' DO
 BEGIN
 	CALL nbu_routine();
 END //
 
-DROP FUNCTION IF EXISTS `nbu_code` //
-CREATE DEFINER=`root`@`%` FUNCTION `nbu_code`(
+CREATE OR REPLACE DEFINER=CURRENT_USER FUNCTION `nbu_code`(
 	`_field` VARCHAR(32),
 	`_code` INT
 )
@@ -564,8 +606,39 @@ SELECT description INTO @description FROM nbu_codes WHERE field=_field and code=
 RETURN IFNULL(@description,_code);
 END //
 
-DROP PROCEDURE IF EXISTS `nbu_routine` //
-CREATE DEFINER=`root`@`%` PROCEDURE `nbu_routine`()
+CREATE OR REPLACE DEFINER=CURRENT_USER PROCEDURE `nbu_collect_bw_jobs`(
+	IN `daysback` INT
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'BW Jobs collection routine'
+BEGIN
+INSERT INTO mars_bw_jobs (masterserver,policy,schedule,CLIENT,bw_day,jobs,mb,in_bsr,mb_in_bsr,bsr) (
+	SELECT 
+		j.masterserver,j.policy,j.schedule,j.client,j.bw_day,
+		COUNT(j.jobid) AS jobs,
+		ROUND(SUM(j.kbytes/1000),1) AS mb,
+		SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0,1,0)) as in_bsr,
+		ROUND(SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0,j.kbytes/1000,0)),1) as mb_in_bsr,
+		IF(SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0,1,0))=0,NULL,
+			ROUND(SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0 AND j.status IN (0,1),100,0))/SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0,1,0)),1)) AS bsr
+		FROM (
+			SELECT 
+				j.masterserver,j.policy,j.schedule,j.client,j.jobid,j.jobtype,j.state,j.status,j.kbytes,
+				DATE(FROM_UNIXTIME(j.started-TIME_TO_SEC(s.value))) AS bw_day,
+				IF(j.jobid=j.parentjob,(SELECT COUNT(r.jobid) FROM bpdbjobs_report r WHERE r.masterserver=j.masterserver AND r.parentjob=j.jobid)-1,NULL) AS childjobs
+				FROM bpdbjobs_report j
+					LEFT JOIN config_settings s ON (s.name='bw_start')
+				WHERE j.masterserver IS NOT NULL AND j.policy IS NOT NULL AND J.schedule IS NOT NULL AND J.client IS NOT NULL
+				AND j.started>UNIX_TIMESTAMP(ADDTIME(DATE(NOW()-INTERVAL daysback DAY-INTERVAL TIME_TO_SEC(s.value) SECOND),TIME(s.value)))
+		) j
+		GROUP BY j.masterserver,j.policy,j.schedule,j.client,j.bw_day
+) ON DUPLICATE KEY UPDATE jobs=VALUES(jobs), mb=values(mb), in_bsr=VALUES(in_bsr), mb_in_bsr=VALUES(mb_in_bsr), bsr=VALUES(bsr),obsoleted=NULL;
+END //
+
+CREATE OR REPLACE DEFINER=CURRENT_USER PROCEDURE `nbu_routine`()
 LANGUAGE SQL NOT DETERMINISTIC MODIFIES SQL DATA SQL SECURITY DEFINER
 COMMENT 'NBU Routine'
 BEGIN
@@ -580,18 +653,33 @@ BEGIN
 		SELECT p.masterserver,p.name,t.name,c.name FROM bppllist_policies p
 			LEFT JOIN config_towers t ON (p.name REGEXP t.policyname AND t.obsoleted IS NULL)
 			LEFT JOIN config_customers c ON (p.name REGEXP c.policyname AND c.obsoleted IS NULL)
-	ON DUPLICATE KEY UPDATE tower=VALUES(tower),customer=VALUES(customer);
+	ON DUPLICATE KEY UPDATE tower=VALUES(tower),customer=VALUES(customer),updated=NOW(),obsoleted=NULL;
 	INSERT INTO nbu_policy_tower_customer (masterserver,policy,tower,customer)
 		SELECT j.masterserver,j.policy,t.name,c.name FROM (SELECT DISTINCT j.masterserver,j.policy FROM bpdbjobs_report j WHERE j.policy IS NOT NULL) j
 			LEFT JOIN config_towers t ON (j.policy REGEXP t.policyname AND t.obsoleted IS NULL)
 			LEFT JOIN config_customers c ON (j.policy REGEXP c.policyname AND c.obsoleted IS NULL)
-		ON DUPLICATE KEY UPDATE tower=VALUES(tower),customer=VALUES(customer);
+		ON DUPLICATE KEY UPDATE tower=VALUES(tower),customer=VALUES(customer),updated=NOW(),obsoleted=NULL;
+	UPDATE nbu_policy_tower_customer SET obsoleted=NOW() WHERE updated<NOW()-INTERVAL 1 DAY;
+	SET @daysback=1;
+	IF UNIX_TIMESTAMP(NOW())%(60*15) BETWEEN 540 AND 660 THEN 
+		SET @daysback=2;
+	END IF;
+	IF UNIX_TIMESTAMP(NOW())%(60*60) BETWEEN 540 AND 660 THEN 
+		SET @daysback=3;
+	END IF;
+	IF UNIX_TIMESTAMP(NOW())%(60*60*24) BETWEEN 540 AND 660 THEN 
+		SET @daysback=7;
+	END IF;
+	SELECT COUNT(*) INTO @count FROM mars_bw_jobs;
+	IF @count=0 THEN 
+		SET @daysback=100;
+	END IF;
+	CALL nbu_collect_bw_jobs(@daysback);
 	ALTER EVENT nbu_event ENABLE;
 	REPLACE INTO config_settings (name,value) VALUES ('routine',TIMESTAMPDIFF(SECOND,@start,NOW()));
 END //
 
-DROP PROCEDURE IF EXISTS `nbu_maintenance` //
-CREATE DEFINER=`root`@`%` PROCEDURE `nbu_maintenance`()
+CREATE OR REPLACE DEFINER=CURRENT_USER PROCEDURE `nbu_maintenance`()
 LANGUAGE SQL NOT DETERMINISTIC MODIFIES SQL DATA SQL SECURITY DEFINER
 COMMENT 'NBU Maintenance'
 BEGIN
@@ -602,8 +690,7 @@ BEGIN
 	END;
 	SET @start=NOW();
 	ALTER EVENT nbu_event DISABLE;
-	SET @months=3;
-	SET @backup_jobs=1;
+	SET @backup_jobs=0;
 	DROP TABLE IF EXISTS drop_table;
 	DROP TABLE IF EXISTS temp_table;
 	CREATE TABLE temp_table LIKE config_customers;
@@ -657,8 +744,16 @@ BEGIN
 	RENAME TABLE nbstl TO drop_table,temp_table TO nbstl;
 	DROP TABLE drop_table;
 	CREATE TABLE temp_table LIKE nbu_policy_tower_customer;
-	INSERT INTO temp_table SELECT * FROM nbu_policy_tower_customer ORDER BY masterserver,policy;
+	INSERT INTO temp_table SELECT * FROM nbu_policy_tower_customer WHERE obsoleted IS NULL ORDER BY masterserver,policy;
 	RENAME TABLE nbu_policy_tower_customer TO drop_table,temp_table TO nbu_policy_tower_customer;
+	DROP TABLE drop_table;
+	CREATE TABLE temp_table LIKE nbdevquery_listdv_puredisk;
+	INSERT INTO temp_table SELECT * FROM nbdevquery_listdv_puredisk WHERE obsoleted IS NULL ORDER BY masterserver,diskpool;
+	RENAME TABLE nbdevquery_listdv_puredisk TO drop_table,temp_table TO nbdevquery_listdv_puredisk;
+	DROP TABLE drop_table;
+	CREATE TABLE temp_table LIKE mars_bw_jobs;
+	INSERT INTO temp_table SELECT * FROM mars_bw_jobs WHERE obsoleted IS NULL ORDER BY bw_day,masterserver,client;
+	RENAME TABLE mars_bw_jobs TO drop_table,temp_table TO mars_bw_jobs;
 	DROP TABLE drop_table;
 	CREATE TABLE temp_table LIKE vault_xml;
 	INSERT INTO temp_table SELECT * FROM vault_xml WHERE obsoleted IS NULL ORDER BY masterserver,profile_id;
@@ -671,10 +766,10 @@ BEGIN
 	IF @backup_jobs=1 THEN
 		CREATE DATABASE IF NOT EXISTS mars_backup;
 		CREATE TABLE IF NOT EXISTS mars_backup.bpdbjobs_report LIKE bpdbjobs_report;
-		REPLACE INTO mars_backup.bpdbjobs_report SELECT * FROM bpdbjobs_report WHERE started<UNIX_TIMESTAMP(NOW()-INTERVAL @months MONTH) ORDER BY masterserver,jobid;
+		REPLACE INTO mars_backup.bpdbjobs_report SELECT * FROM bpdbjobs_report WHERE started<UNIX_TIMESTAMP(NOW()-INTERVAL IFNULL(retentionperiod,0) DAY) ORDER BY masterserver,jobid;
 	END IF;
 	CREATE TABLE temp_table LIKE bpdbjobs_report;
-	INSERT INTO temp_table SELECT * FROM bpdbjobs_report WHERE started>=UNIX_TIMESTAMP(NOW()-INTERVAL @months MONTH) ORDER BY masterserver,jobid;
+	INSERT INTO temp_table SELECT * FROM bpdbjobs_report WHERE started>=UNIX_TIMESTAMP(NOW()-INTERVAL IFNULL(retentionperiod,0) DAY) ORDER BY masterserver,jobid;
 	RENAME TABLE bpdbjobs_report TO drop_table,temp_table TO bpdbjobs_report;
 	DROP TABLE drop_table;
 	CREATE OR REPLACE TEMPORARY TABLE backupids (backupid VARCHAR(64) NOT NULL PRIMARY KEY);
@@ -693,8 +788,306 @@ END //
 
 DELIMITER ;
 
-DROP VIEW IF EXISTS `nbu_filtered_jobs`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_filtered_jobs` AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bw_jobs` AS 
+SELECT j.bw_day,
+COUNT(DISTINCT ptc.tower) AS towers,
+COUNT(DISTINCT ptc.customer) AS customers,
+COUNT(DISTINCT ptc.masterserver) AS masterservers,
+COUNT(DISTINCT c1.description) AS policytypes,
+COUNT(DISTINCT ptc.policy) AS policies,
+COUNT(DISTINCT c2.description) AS scheduletypes,
+COUNT(DISTINCT j.schedule) AS schedules,
+COUNT(DISTINCT j.client) AS clients,
+SUM(j.jobs) AS jobs,
+ROUND(SUM(j.mb/1000),1) AS gb,
+SUM(j.in_bsr) AS in_bsr,
+ROUND(SUM(j.mb_in_bsr)/100,1) AS gb_in_bsr,
+ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+FROM mars_bw_jobs j
+	LEFT JOIN nbu_policy_tower_customer ptc ON (j.masterserver=ptc.masterserver AND j.policy=ptc.policy)
+	LEFT JOIN bppllist_policies p ON (p.masterserver=ptc.masterserver AND p.name=ptc.policy)
+	LEFT JOIN bppllist_schedules s ON (s.masterserver=ptc.masterserver AND s.policyname=ptc.policy AND s.name=j.schedule)
+	LEFT JOIN nbu_codes c1 ON (c1.field='policytype' AND c1.code=p.policytype)
+	LEFT JOIN nbu_codes c2 ON (c2.field='scheduletype' AND c2.code=s.backuptype)
+	LEFT JOIN config_settings cs ON (cs.name='bw_start')
+	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
+	AND UNIX_TIMESTAMP(j.bw_day)+TIME_TO_SEC(cs.value) BETWEEN f_from() AND f_to()
+	GROUP BY j.bw_day
+	ORDER BY j.bw_day DESC
+;
+
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bw_jobs_detail` AS 
+SELECT j.bw_day,
+ptc.tower,ptc.customer,ptc.masterserver,
+c1.description as policytype,ptc.policy,
+c2.description AS scheduletype,j.schedule,
+j.client,j.jobs,j.mb,j.in_bsr,j.mb_in_bsr,j.bsr
+FROM mars_bw_jobs j
+	LEFT JOIN nbu_policy_tower_customer ptc ON (j.masterserver=ptc.masterserver AND j.policy=ptc.policy)
+	LEFT JOIN bppllist_policies p ON (p.masterserver=ptc.masterserver AND p.name=ptc.policy)
+	LEFT JOIN bppllist_schedules s ON (s.masterserver=ptc.masterserver AND s.policyname=ptc.policy AND s.name=j.schedule)
+	LEFT JOIN nbu_codes c1 ON (c1.field='policytype' AND c1.code=p.policytype)
+	LEFT JOIN nbu_codes c2 ON (c2.field='scheduletype' AND c2.code=s.backuptype)
+	LEFT JOIN config_settings cs ON (cs.name='bw_start')
+	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
+	AND UNIX_TIMESTAMP(j.bw_day)+TIME_TO_SEC(cs.value) BETWEEN f_from() AND f_to()
+	ORDER BY j.bw_day DESC,ptc.tower,ptc.customer,ptc.masterserver,ptc.policy,j.schedule,j.client 
+;
+
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bw_jobs_towers` AS 
+SELECT j.bw_day,
+ptc.tower,
+COUNT(DISTINCT ptc.customer) AS customers,
+COUNT(DISTINCT ptc.masterserver) AS masterservers,
+COUNT(DISTINCT c1.description) AS policytypes,
+COUNT(DISTINCT ptc.policy) AS policies,
+COUNT(DISTINCT c2.description) AS scheduletypes,
+COUNT(DISTINCT j.schedule) AS schedules,
+COUNT(DISTINCT j.client) AS clients,
+SUM(j.jobs) AS jobs,
+ROUND(SUM(j.mb/1000),1) AS gb,
+SUM(j.in_bsr) AS in_bsr,
+ROUND(SUM(j.mb_in_bsr)/100,1) AS gb_in_bsr,
+ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+FROM mars_bw_jobs j
+	LEFT JOIN nbu_policy_tower_customer ptc ON (j.masterserver=ptc.masterserver AND j.policy=ptc.policy)
+	LEFT JOIN bppllist_policies p ON (p.masterserver=ptc.masterserver AND p.name=ptc.policy)
+	LEFT JOIN bppllist_schedules s ON (s.masterserver=ptc.masterserver AND s.policyname=ptc.policy AND s.name=j.schedule)
+	LEFT JOIN nbu_codes c1 ON (c1.field='policytype' AND c1.code=p.policytype)
+	LEFT JOIN nbu_codes c2 ON (c2.field='scheduletype' AND c2.code=s.backuptype)
+	LEFT JOIN config_settings cs ON (cs.name='bw_start')
+	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
+	AND UNIX_TIMESTAMP(j.bw_day)+TIME_TO_SEC(cs.value) BETWEEN f_from() AND f_to()
+	GROUP BY j.bw_day,ptc.tower
+	ORDER BY j.bw_day DESC,ptc.tower
+;
+
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bw_jobs_customers` AS 
+SELECT j.bw_day,
+COUNT(DISTINCT ptc.tower) AS towers,
+ptc.customer,
+COUNT(DISTINCT ptc.masterserver) AS masterservers,
+COUNT(DISTINCT c1.description) AS policytypes,
+COUNT(DISTINCT ptc.policy) AS policies,
+COUNT(DISTINCT c2.description) AS scheduletypes,
+COUNT(DISTINCT j.schedule) AS schedules,
+COUNT(DISTINCT j.client) AS clients,
+SUM(j.jobs) AS jobs,
+ROUND(SUM(j.mb/1000),1) AS gb,
+SUM(j.in_bsr) AS in_bsr,
+ROUND(SUM(j.mb_in_bsr)/100,1) AS gb_in_bsr,
+ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+FROM mars_bw_jobs j
+	LEFT JOIN nbu_policy_tower_customer ptc ON (j.masterserver=ptc.masterserver AND j.policy=ptc.policy)
+	LEFT JOIN bppllist_policies p ON (p.masterserver=ptc.masterserver AND p.name=ptc.policy)
+	LEFT JOIN bppllist_schedules s ON (s.masterserver=ptc.masterserver AND s.policyname=ptc.policy AND s.name=j.schedule)
+	LEFT JOIN nbu_codes c1 ON (c1.field='policytype' AND c1.code=p.policytype)
+	LEFT JOIN nbu_codes c2 ON (c2.field='scheduletype' AND c2.code=s.backuptype)
+	LEFT JOIN config_settings cs ON (cs.name='bw_start')
+	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
+	AND UNIX_TIMESTAMP(j.bw_day)+TIME_TO_SEC(cs.value) BETWEEN f_from() AND f_to()
+	GROUP BY j.bw_day,ptc.customer
+	ORDER BY j.bw_day DESC,ptc.customer
+;
+
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bw_jobs_masterservers` AS 
+SELECT j.bw_day,
+COUNT(DISTINCT ptc.tower) AS towers,
+COUNT(DISTINCT ptc.customer) AS customers,
+ptc.masterserver,
+COUNT(DISTINCT c1.description) AS policytypes,
+COUNT(DISTINCT ptc.policy) AS policies,
+COUNT(DISTINCT c2.description) AS scheduletypes,
+COUNT(DISTINCT j.schedule) AS schedules,
+COUNT(DISTINCT j.client) AS clients,
+SUM(j.jobs) AS jobs,
+ROUND(SUM(j.mb/1000),1) AS gb,
+SUM(j.in_bsr) AS in_bsr,
+ROUND(SUM(j.mb_in_bsr)/100,1) AS gb_in_bsr,
+ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+FROM mars_bw_jobs j
+	LEFT JOIN nbu_policy_tower_customer ptc ON (j.masterserver=ptc.masterserver AND j.policy=ptc.policy)
+	LEFT JOIN bppllist_policies p ON (p.masterserver=ptc.masterserver AND p.name=ptc.policy)
+	LEFT JOIN bppllist_schedules s ON (s.masterserver=ptc.masterserver AND s.policyname=ptc.policy AND s.name=j.schedule)
+	LEFT JOIN nbu_codes c1 ON (c1.field='policytype' AND c1.code=p.policytype)
+	LEFT JOIN nbu_codes c2 ON (c2.field='scheduletype' AND c2.code=s.backuptype)
+	LEFT JOIN config_settings cs ON (cs.name='bw_start')
+	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
+	AND UNIX_TIMESTAMP(j.bw_day)+TIME_TO_SEC(cs.value) BETWEEN f_from() AND f_to()
+	GROUP BY j.bw_day,ptc.masterserver
+	ORDER BY j.bw_day DESC,ptc.masterserver
+;
+
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bw_jobs_policytypes` AS 
+SELECT j.bw_day,
+COUNT(DISTINCT ptc.tower) AS towers,
+COUNT(DISTINCT ptc.customer) AS customers,
+COUNT(DISTINCT ptc.masterserver) AS masterservers,
+c1.description AS policytype,
+COUNT(DISTINCT ptc.policy) AS policies,
+COUNT(DISTINCT c2.description) AS scheduletypes,
+COUNT(DISTINCT j.schedule) AS schedules,
+COUNT(DISTINCT j.client) AS clients,
+SUM(j.jobs) AS jobs,
+ROUND(SUM(j.mb/1000),1) AS gb,
+SUM(j.in_bsr) AS in_bsr,
+ROUND(SUM(j.mb_in_bsr)/100,1) AS gb_in_bsr,
+ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+FROM mars_bw_jobs j
+	LEFT JOIN nbu_policy_tower_customer ptc ON (j.masterserver=ptc.masterserver AND j.policy=ptc.policy)
+	LEFT JOIN bppllist_policies p ON (p.masterserver=ptc.masterserver AND p.name=ptc.policy)
+	LEFT JOIN bppllist_schedules s ON (s.masterserver=ptc.masterserver AND s.policyname=ptc.policy AND s.name=j.schedule)
+	LEFT JOIN nbu_codes c1 ON (c1.field='policytype' AND c1.code=p.policytype)
+	LEFT JOIN nbu_codes c2 ON (c2.field='scheduletype' AND c2.code=s.backuptype)
+	LEFT JOIN config_settings cs ON (cs.name='bw_start')
+	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
+	AND UNIX_TIMESTAMP(j.bw_day)+TIME_TO_SEC(cs.value) BETWEEN f_from() AND f_to()
+	GROUP BY j.bw_day,c1.description
+	ORDER BY j.bw_day DESC,c1.description
+;
+
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bw_jobs_policies` AS 
+SELECT j.bw_day,
+COUNT(DISTINCT ptc.tower) AS towers,
+COUNT(DISTINCT ptc.customer) AS customers,
+COUNT(DISTINCT ptc.masterserver) AS masterservers,
+COUNT(DISTINCT c1.description) AS policytypes,
+ptc.policy,
+COUNT(DISTINCT c2.description) AS scheduletypes,
+COUNT(DISTINCT j.schedule) AS schedules,
+COUNT(DISTINCT j.client) AS clients,
+SUM(j.jobs) AS jobs,
+ROUND(SUM(j.mb/1000),1) AS gb,
+SUM(j.in_bsr) AS in_bsr,
+ROUND(SUM(j.mb_in_bsr)/100,1) AS gb_in_bsr,
+ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+FROM mars_bw_jobs j
+	LEFT JOIN nbu_policy_tower_customer ptc ON (j.masterserver=ptc.masterserver AND j.policy=ptc.policy)
+	LEFT JOIN bppllist_policies p ON (p.masterserver=ptc.masterserver AND p.name=ptc.policy)
+	LEFT JOIN bppllist_schedules s ON (s.masterserver=ptc.masterserver AND s.policyname=ptc.policy AND s.name=j.schedule)
+	LEFT JOIN nbu_codes c1 ON (c1.field='policytype' AND c1.code=p.policytype)
+	LEFT JOIN nbu_codes c2 ON (c2.field='scheduletype' AND c2.code=s.backuptype)
+	LEFT JOIN config_settings cs ON (cs.name='bw_start')
+	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
+	AND UNIX_TIMESTAMP(j.bw_day)+TIME_TO_SEC(cs.value) BETWEEN f_from() AND f_to()
+	GROUP BY j.bw_day,ptc.policy
+	ORDER BY j.bw_day DESC,ptc.policy
+;
+
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bw_jobs_scheduletypes` AS 
+SELECT j.bw_day,
+COUNT(DISTINCT ptc.tower) AS towers,
+COUNT(DISTINCT ptc.customer) AS customers,
+COUNT(DISTINCT ptc.masterserver) AS masterservers,
+COUNT(DISTINCT c1.description) AS policytypes,
+COUNT(DISTINCT ptc.policy) AS policies,
+c2.description AS scheduletype,
+COUNT(DISTINCT j.schedule) AS schedules,
+COUNT(DISTINCT j.client) AS clients,
+SUM(j.jobs) AS jobs,
+ROUND(SUM(j.mb/1000),1) AS gb,
+SUM(j.in_bsr) AS in_bsr,
+ROUND(SUM(j.mb_in_bsr)/100,1) AS gb_in_bsr,
+ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+FROM mars_bw_jobs j
+	LEFT JOIN nbu_policy_tower_customer ptc ON (j.masterserver=ptc.masterserver AND j.policy=ptc.policy)
+	LEFT JOIN bppllist_policies p ON (p.masterserver=ptc.masterserver AND p.name=ptc.policy)
+	LEFT JOIN bppllist_schedules s ON (s.masterserver=ptc.masterserver AND s.policyname=ptc.policy AND s.name=j.schedule)
+	LEFT JOIN nbu_codes c1 ON (c1.field='policytype' AND c1.code=p.policytype)
+	LEFT JOIN nbu_codes c2 ON (c2.field='scheduletype' AND c2.code=s.backuptype)
+	LEFT JOIN config_settings cs ON (cs.name='bw_start')
+	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
+	AND UNIX_TIMESTAMP(j.bw_day)+TIME_TO_SEC(cs.value) BETWEEN f_from() AND f_to()
+	GROUP BY j.bw_day,c2.description
+	ORDER BY j.bw_day DESC,c2.description
+;
+
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bw_jobs_schedules` AS 
+SELECT j.bw_day,
+COUNT(DISTINCT ptc.tower) AS towers,
+COUNT(DISTINCT ptc.customer) AS customers,
+COUNT(DISTINCT ptc.masterserver) AS masterservers,
+COUNT(DISTINCT c1.description) AS policytypes,
+COUNT(DISTINCT ptc.policy) AS policies,
+COUNT(DISTINCT c2.description) AS scheduletypes,
+j.schedule,
+COUNT(DISTINCT j.client) AS clients,
+SUM(j.jobs) AS jobs,
+ROUND(SUM(j.mb/1000),1) AS gb,
+SUM(j.in_bsr) AS in_bsr,
+ROUND(SUM(j.mb_in_bsr)/100,1) AS gb_in_bsr,
+ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+FROM mars_bw_jobs j
+	LEFT JOIN nbu_policy_tower_customer ptc ON (j.masterserver=ptc.masterserver AND j.policy=ptc.policy)
+	LEFT JOIN bppllist_policies p ON (p.masterserver=ptc.masterserver AND p.name=ptc.policy)
+	LEFT JOIN bppllist_schedules s ON (s.masterserver=ptc.masterserver AND s.policyname=ptc.policy AND s.name=j.schedule)
+	LEFT JOIN nbu_codes c1 ON (c1.field='policytype' AND c1.code=p.policytype)
+	LEFT JOIN nbu_codes c2 ON (c2.field='scheduletype' AND c2.code=s.backuptype)
+	LEFT JOIN config_settings cs ON (cs.name='bw_start')
+	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
+	AND UNIX_TIMESTAMP(j.bw_day)+TIME_TO_SEC(cs.value) BETWEEN f_from() AND f_to()
+	GROUP BY j.bw_day,j.schedule
+	ORDER BY j.bw_day DESC,j.schedule
+;
+
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bw_jobs_clients` AS 
+SELECT j.bw_day,
+COUNT(DISTINCT ptc.tower) AS towers,
+COUNT(DISTINCT ptc.customer) AS customers,
+COUNT(DISTINCT ptc.masterserver) AS masterservers,
+COUNT(DISTINCT c1.description) AS policytypes,
+COUNT(DISTINCT ptc.policy) AS policies,
+COUNT(DISTINCT c2.description) AS scheduletypes,
+COUNT(DISTINCT j.schedule) AS schedules,
+j.client,
+SUM(j.jobs) AS jobs,
+ROUND(SUM(j.mb/1000),1) AS gb,
+SUM(j.in_bsr) AS in_bsr,
+ROUND(SUM(j.mb_in_bsr)/100,1) AS gb_in_bsr,
+ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+FROM mars_bw_jobs j
+	LEFT JOIN nbu_policy_tower_customer ptc ON (j.masterserver=ptc.masterserver AND j.policy=ptc.policy)
+	LEFT JOIN bppllist_policies p ON (p.masterserver=ptc.masterserver AND p.name=ptc.policy)
+	LEFT JOIN bppllist_schedules s ON (s.masterserver=ptc.masterserver AND s.policyname=ptc.policy AND s.name=j.schedule)
+	LEFT JOIN nbu_codes c1 ON (c1.field='policytype' AND c1.code=p.policytype)
+	LEFT JOIN nbu_codes c2 ON (c2.field='scheduletype' AND c2.code=s.backuptype)
+	LEFT JOIN config_settings cs ON (cs.name='bw_start')
+	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
+	AND UNIX_TIMESTAMP(j.bw_day)+TIME_TO_SEC(cs.value) BETWEEN f_from() AND f_to()
+	GROUP BY j.bw_day,j.client
+	ORDER BY j.bw_day DESC,j.client
+;
+
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bw_jobs` AS 
+SELECT j.bw_day,
+ptc.tower,ptc.customer,ptc.masterserver,
+c1.description as policytype,ptc.policy,
+c2.description AS scheduletype,j.schedule,
+j.client,j.jobs,j.mb,j.in_bsr,j.mb_in_bsr,j.bsr
+FROM mars_bw_jobs j
+	LEFT JOIN nbu_policy_tower_customer ptc ON (j.masterserver=ptc.masterserver AND j.policy=ptc.policy)
+	LEFT JOIN bppllist_policies p ON (p.masterserver=ptc.masterserver AND p.name=ptc.policy)
+	LEFT JOIN bppllist_schedules s ON (s.masterserver=ptc.masterserver AND s.policyname=ptc.policy AND s.name=j.schedule)
+	LEFT JOIN nbu_codes c1 ON (c1.field='policytype' AND c1.code=p.policytype)
+	LEFT JOIN nbu_codes c2 ON (c2.field='scheduletype' AND c2.code=s.backuptype)
+	LEFT JOIN config_settings cs ON (cs.name='bw_start')
+	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
+	AND UNIX_TIMESTAMP(j.bw_day)+TIME_TO_SEC(cs.value) BETWEEN f_from() AND f_to()
+	ORDER BY j.bw_day DESC,ptc.tower,ptc.customer,ptc.masterserver,ptc.policy,j.schedule,j.client 
+;
+
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_filtered_jobs` AS 
 SELECT 
 	j.masterserver,j.jobid,j.parentjob,
 	IF(j.jobid=j.parentjob,(SELECT COUNT(r.jobid) FROM bpdbjobs_report r WHERE r.masterserver=j.masterserver AND r.parentjob=j.jobid)-1,NULL) AS childjobs,
@@ -714,8 +1107,7 @@ SELECT
 	ORDER BY j.jobid 
 ;
 
-DROP VIEW IF EXISTS `nbu_jobs`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_jobs` AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_jobs` AS 
 SELECT 
 	b.masterserver,b.jobid,b.parentjob,b.childjobs,
 	nbu_code('jobtype',b.jobtype) AS jobtype,
@@ -728,14 +1120,16 @@ SELECT
 	b.schedule,
 	nbu_code('scheduletype',b.scheduletype) AS scheduletype,
 	b.client,
-	b.server,from_unixtime(b.started) AS started,sec_to_time(b.elapsed) AS elapsed,from_unixtime(b.ended) AS ended,
+	b.server,
+	DATE(FROM_UNIXTIME(b.started-TIME_TO_SEC(s.value))) AS bw_day,
+	from_unixtime(b.started) AS started,sec_to_time(b.elapsed) AS elapsed,from_unixtime(b.ended) AS ended,
 	b.backupid,b.stunit,b.priority,b.tries,b.kbytes,b.files,b.owner,b.group,
 	b.retentionlevel,b.retentionperiod,b.restartable,b.kbpersec
 	FROM nbu_filtered_jobs b
+	LEFT JOIN config_settings s ON (s.name='bw_start')
 ;
 
-DROP VIEW IF EXISTS `nbu_bsr_jobs`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_bsr_jobs` AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bsr_jobs` AS 
 SELECT 
 	b.masterserver,b.jobid,b.parentjob,b.childjobs,
 	nbu_code('jobtype',b.jobtype) AS jobtype,
@@ -760,187 +1154,184 @@ SELECT
 		AND IFNULL(b.childjobs,0)=0 
 ;
 
-DROP VIEW IF EXISTS `nbu_bsr`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_bsr` AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bsr` AS 
 SELECT 
-	j.bw_day AS day,
-	COUNT(j.jobid) AS jobs,
-	ROUND(SUM(IF(j.status=0 OR j.status=1,100,IF(j.status>1,0,j.status)))/COUNT(j.jobid),1) AS bsr
-	FROM nbu_bsr_jobs j
+	j.bw_day AS DAY,
+	SUM(j.in_bsr) AS jobs,
+	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+	FROM nbu_bw_jobs j
 	GROUP BY j.bw_day
-	ORDER BY j.bw_day DESC
+	ORDER BY j.bw_day DESC 
 ;
 
-DROP VIEW IF EXISTS `nbu_bsr_client`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_bsr_client` AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bsr_client` AS 
 SELECT 
-	j.bw_day AS day,
+	j.bw_day AS DAY,
 	j.client,
-	COUNT(j.jobid) AS jobs,
-	ROUND(SUM(IF(j.status=0 OR j.status=1,100,IF(j.status>1,0,j.status)))/COUNT(j.jobid),1) AS bsr
-	FROM nbu_bsr_jobs j
-	GROUP BY j.bw_day,j.client 
-	ORDER BY j.bw_day DESC,j.client 
+	SUM(j.in_bsr) AS jobs,
+	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+	FROM nbu_bw_jobs j
+	GROUP BY j.bw_day,j.client
+	ORDER BY j.bw_day DESC,j.client
 ;
 
-DROP VIEW IF EXISTS `nbu_bsr_customer`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_bsr_customer` AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bsr_customer` AS 
 SELECT 
-	j.bw_day AS day,
+	j.bw_day AS DAY,
 	j.customer,
-	COUNT(j.jobid) AS jobs,
-	ROUND(SUM(IF(j.status=0 OR j.status=1,100,IF(j.status>1,0,j.status)))/COUNT(j.jobid),1) AS bsr
-	FROM nbu_bsr_jobs j
-	GROUP BY j.bw_day,j.customer 
+	SUM(j.in_bsr) AS jobs,
+	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+	FROM nbu_bw_jobs j
+	GROUP BY j.bw_day,j.customer
 	ORDER BY j.bw_day DESC,j.customer
 ;
 
-DROP VIEW IF EXISTS `nbu_bsr_policy`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_bsr_policy` AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bsr_policy` AS 
 SELECT 
-	j.bw_day AS day,
+	j.bw_day AS DAY,
 	j.policytype AS policy,
-	COUNT(j.jobid) AS jobs,
-	ROUND(SUM(IF(j.status=0 OR j.status=1,100,IF(j.status>1,0,j.status)))/COUNT(j.jobid),1) AS bsr
-	FROM nbu_bsr_jobs j
+	SUM(j.in_bsr) AS jobs,
+	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+	FROM nbu_bw_jobs j
 	GROUP BY j.bw_day,j.policytype
 	ORDER BY j.bw_day DESC,j.policytype
 ;
 
-DROP VIEW IF EXISTS `nbu_bsr_schedule`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_bsr_schedule` AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bsr_schedule` AS 
 SELECT 
-	j.bw_day AS day,
+	j.bw_day AS DAY,
 	j.scheduletype AS schedule,
-	COUNT(j.jobid) AS jobs,
-	ROUND(SUM(IF(j.status=0 OR j.status=1,100,IF(j.status>1,0,j.status)))/COUNT(j.jobid),1) AS bsr
-	FROM nbu_bsr_jobs j
-	GROUP BY j.bw_day,j.scheduletype 
-	ORDER BY j.bw_day DESC,j.scheduletype 
+	SUM(j.in_bsr) AS jobs,
+	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+	FROM nbu_bw_jobs j
+	GROUP BY j.bw_day,j.scheduletype
+	ORDER BY j.bw_day DESC,j.scheduletype
 ;
 
-DROP VIEW IF EXISTS `nbu_bsr_type`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_bsr_type` AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bsr_type` AS 
 SELECT 
-	j.bw_day AS day,
-	j.jobtype AS type,
-	COUNT(j.jobid) AS jobs,
-	ROUND(SUM(IF(j.status=0 OR j.status=1,100,IF(j.status>1,0,j.status)))/COUNT(j.jobid),1) AS bsr
-	FROM nbu_bsr_jobs j
-	GROUP BY j.bw_day,j.jobtype
-	ORDER BY j.bw_day DESC,j.jobtype
+	j.bw_day AS DAY,
+	CONCAT(j.policytype,'/',j.scheduletype) AS type,
+	SUM(j.in_bsr) AS jobs,
+	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+	FROM nbu_bw_jobs j
+	GROUP BY j.bw_day,j.policytype,j.scheduletype
+	ORDER BY j.bw_day DESC,j.policytype,j.scheduletype
 ;
 
-DROP VIEW IF EXISTS `nbu_gbsr`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_gbsr` AS 
-select 
-count(j.jobid) as jobs,
-round(sum(if(j.status=0 or j.status=1,100,if(j.status>1,0,j.status)))/count(j.jobid),1) as bsr
-from nbu_bsr_jobs j
-having jobs>0
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_gbsr` AS 
+SELECT 
+	MIN(j.bw_day) AS `from`,
+	MAX(j.bw_day) AS `to`,
+	SUM(j.in_bsr) AS jobs,
+	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+	FROM nbu_bw_jobs j
 ;
 
-DROP VIEW IF EXISTS `nbu_gbsr_client`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_gbsr_client` AS 
-select 
-j.client,
-count(j.jobid) as jobs,
-round(sum(if(j.status=0 or j.status=1,100,if(j.status>1,0,j.status)))/count(j.jobid),1) as bsr
-from nbu_bsr_jobs j
-group by j.client 
-order by j.client 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_gbsr_client` AS 
+SELECT 
+	MIN(j.bw_day) AS `from`,
+	MAX(j.bw_day) AS `to`,
+	j.client,
+	SUM(j.in_bsr) AS jobs,
+	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+	FROM nbu_bw_jobs j
+	GROUP BY j.client
+	ORDER BY j.client
 ;
 
-DROP VIEW IF EXISTS `nbu_gbsr_customer`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_gbsr_customer` AS 
-select 
-j.customer,
-count(j.jobid) as jobs,
-round(sum(if(j.status=0 or j.status=1,100,if(j.status>1,0,j.status)))/count(j.jobid),1) as bsr
-from nbu_bsr_jobs j
-group by j.customer 
-order by j.customer 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_gbsr_customer` AS 
+SELECT 
+	MIN(j.bw_day) AS `from`,
+	MAX(j.bw_day) AS `to`,
+	j.customer,
+	SUM(j.in_bsr) AS jobs,
+	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+	FROM nbu_bw_jobs j
+	GROUP BY j.customer
+	ORDER BY j.customer
 ;
 
-DROP VIEW IF EXISTS `nbu_gbsr_policy`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_gbsr_policy` AS 
-select 
-j.policytype as policy,
-count(j.jobid) as jobs,
-round(sum(if(j.status=0 or j.status=1,100,if(j.status>1,0,j.status)))/count(j.jobid),1) as bsr
-from nbu_bsr_jobs j
-group by j.policytype
-order by j.policytype 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_gbsr_policy` AS 
+SELECT 
+	MIN(j.bw_day) AS `from`,
+	MAX(j.bw_day) AS `to`,
+	j.policytype AS policy,
+	SUM(j.in_bsr) AS jobs,
+	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+	FROM nbu_bw_jobs j
+	GROUP BY j.policytype
+	ORDER BY j.policytype
 ;
 
-DROP VIEW IF EXISTS `nbu_gbsr_schedule`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_gbsr_schedule` AS 
-select 
-j.scheduletype as schedule,
-count(j.jobid) as jobs,
-round(sum(if(j.status=0 or j.status=1,100,if(j.status>1,0,j.status)))/count(j.jobid),1) as bsr
-from nbu_bsr_jobs j
-group by j.scheduletype
-order by j.scheduletype 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_gbsr_schedule` AS 
+SELECT 
+	MIN(j.bw_day) AS `from`,
+	MAX(j.bw_day) AS `to`,
+	j.scheduletype AS schedule,
+	SUM(j.in_bsr) AS jobs,
+	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+	FROM nbu_bw_jobs j
+	GROUP BY j.scheduletype
+	ORDER BY j.scheduletype
 ;
 
-DROP VIEW IF EXISTS `nbu_gbsr_type`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_gbsr_type` AS 
-select 
-j.jobtype as type,
-count(j.jobid) as jobs,
-round(sum(if(j.status=0 or j.status=1,100,if(j.status>1,0,j.status)))/count(j.jobid),1) as bsr
-from nbu_bsr_jobs j
-group by j.jobtype
-order by j.jobtype 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_gbsr_type` AS 
+SELECT 
+	MIN(j.bw_day) AS `from`,
+	MAX(j.bw_day) AS `to`,
+	CONCAT(j.policytype,'/',j.scheduletype) AS type,
+	SUM(j.in_bsr) AS jobs,
+	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
+	FROM nbu_bw_jobs j
+	GROUP BY j.policytype,j.scheduletype
+	ORDER BY j.policytype,j.scheduletype
 ;
 
-DROP VIEW IF EXISTS `nbu_clients`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_clients` AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_clients` AS 
 SELECT
 	c.masterserver,
 	ptc.tower,ptc.customer,
-	IF(p.policytype IN (4,6,7,8,11,15,16,17,18,19,25,35),'INTEG','FS') as type,
+	(SELECT IF(p.policytype IN (4,6,7,8,11,15,16,17,18,19,25,35),'INTEG','FS') FROM bppllist_policies p WHERE p.masterserver=c.masterserver AND p.name=c.policyname) AS type,
 	c.policyname,c.name,c.architecture,c.os,
-	COUNT(j.jobid) AS jobs,
-	SUM(if(j.status>1,1,0)) AS failures,
-	ROUND(SUM(j.kbytes)/1048576,1) AS gbytes
+	SUM(j.jobs) AS jobs,
+	ROUND(SUM(j.mb)/1000,1) AS gbytes,
+	ROUND(SUM(j.in_bsr*(100-j.bsr))/100,0) AS failures,
+	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr,
+	MAX(j.bw_day) as last_day
 	FROM bppllist_clients c
-		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=c.masterserver AND ptc.policy=c.policyname)
-		LEFT JOIN bppllist_policies p ON (p.masterserver=c.masterserver AND p.name=c.policyname AND p.obsoleted IS NULL)
-		LEFT JOIN bpdbjobs_report j ON (j.masterserver=c.masterserver AND j.policy=c.policyname AND j.client=c.name AND j.started BETWEEN f_from() AND f_to())
-	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+		LEFT JOIN nbu_policy_tower_customer ptc ON(ptc.masterserver=c.masterserver AND ptc.policy=c.policyname)
+		LEFT JOIN nbu_bw_jobs_detail j ON (j.masterserver=c.masterserver AND j.policy=c.policyname AND j.client=c.name)
+	WHERE c.obsoleted IS NULL 
+	AND IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
 	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
-	AND c.obsoleted IS NULL 
 	AND c.policyname NOT REGEXP 'dummy|template'
 	GROUP BY c.masterserver,c.policyname,c.name
 	ORDER BY c.masterserver,c.name,c.policyname 
 ;
 
-DROP VIEW IF EXISTS `nbu_clients_distinct`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_clients_distinct` AS 
-SELECT DISTINCT
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_clients_distinct` AS 
+SELECT 
 	c.masterserver,
-	ptc.tower,ptc.customer,
-	IF(p.policytype IN (4,6,7,8,11,15,16,17,18,19,25,35),'INTEG','FS') as type,
+	MAX(ptc.tower) AS tower,MAX(ptc.customer) AS customer,
+	(SELECT IF(p.policytype IN (4,6,7,8,11,15,16,17,18,19,25,35),'INTEG','FS') FROM bppllist_policies p WHERE p.masterserver=c.masterserver AND p.name=c.policyname) AS type,
 	c.name,c.architecture,c.os,
-	COUNT(j.jobid) AS jobs,
-	SUM(if(j.status>1,1,0)) AS failures,
-	ROUND(SUM(j.kbytes)/1048576,1) AS gbytes
+	SUM(j.jobs) AS jobs,
+	ROUND(SUM(j.mb)/1000,1) AS gbytes,
+	ROUND(SUM(j.in_bsr*(100-j.bsr))/100,0) AS failures,
+	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr,
+	MAX(j.bw_day) as last_day
 	FROM bppllist_clients c
-		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=c.masterserver AND ptc.policy=c.policyname)
-		LEFT JOIN bppllist_policies p ON (p.masterserver=c.masterserver AND p.name=c.policyname AND p.obsoleted IS NULL)
-		LEFT JOIN bpdbjobs_report j ON (j.masterserver=c.masterserver AND j.policy=c.policyname AND j.client=c.name AND j.started BETWEEN f_from() AND f_to())
-	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	LEFT JOIN nbu_policy_tower_customer ptc ON(ptc.masterserver=c.masterserver AND ptc.policy=c.policyname)
+		LEFT JOIN nbu_bw_jobs_detail j ON (j.masterserver=c.masterserver AND j.policy=c.policyname AND j.client=c.name)
+	WHERE c.obsoleted IS NULL 
+	AND IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
 	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
-	AND c.obsoleted IS NULL 
-	AND c.policyname NOT REGEXP 'dummy|template'
 	GROUP BY c.masterserver,c.name,type
-	ORDER BY c.masterserver,c.name,type 
+	ORDER BY j.customer,c.name,type 
 ;
 
-DROP VIEW IF EXISTS `nbu_flist`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_flist` AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_flist` AS 
 SELECT 
 	b.`masterserver`,
 	b.`tower`,b.`customer`,
@@ -958,12 +1349,43 @@ SELECT
 	LEFT JOIN `bpflist_backupid` f ON (f.`masterserver`=b.`masterserver` AND f.`backupid`=b.`backupid` AND (f.`file_number`=1 OR f.`timestamp`=0)) 
 ;
 
-DROP VIEW IF EXISTS `nbu_schedules`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_schedules` AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_policies` AS 
+SELECT 
+	ptc.tower,ptc.customer,p.masterserver,p.name,
+	IF(p.active=1,'NO','YES') AS active,
+	nbu_code('policytype',p.policytype) AS policytype,
+	(SELECT COUNT(c.name) FROM bppllist_clients c WHERE c.masterserver=p.masterserver AND c.policyname=p.name and c.obsoleted IS NULL) AS clients,
+	(SELECT COUNT(s.name) FROM bppllist_schedules s WHERE s.masterserver=p.masterserver AND s.policyname=p.name and s.obsoleted IS NULL) AS schedules,
+	IFNULL(j.bsrjobs,0) as bsrjobs,IFNULL(j.bsrgbytes,0) AS bsrgbytes,IFNULL(j.failures,0) AS failures,j.bsr,
+	IFNULL(j.jobs,0) as jobs,IFNULL(j.gbytes,0) AS gbytes,
+	p.include,
+	NULLIF(SUBSTRING_INDEX(p.`res`,',',1),'NULL') AS res,
+	p.maxjobsperclient,from_unixtime(p.classid) AS effectivedate,p.backupcopies AS classid,p.bmr,p.vm,p.pool
+	FROM bppllist_policies p
+	LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=p.masterserver AND ptc.policy=p.name)
+		LEFT JOIN (SELECT 
+			j.tower,j.customer,j.masterserver,j.policy,
+			SUM(j.in_bsr) AS bsrjobs,
+			ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr,
+			SUM(j.jobs) AS jobs,
+			ROUND(SUM(j.in_bsr*(100-j.bsr))/100,0) AS failures,
+			ROUND(SUM(j.mb_in_bsr)/1000,1) AS bsrgbytes,
+			ROUND(SUM(j.mb)/1000,1) AS gbytes
+			FROM nbu_bw_jobs_detail j
+			GROUP BY j.tower,j.customer,j.masterserver,j.policy
+			ORDER BY j.tower,j.customer,j.masterserver,j.policy
+		) j ON (p.masterserver=j.masterserver AND p.name=j.policy)
+	WHERE p.name IS NOT NULL AND p.obsoleted IS NULL
+	AND IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,'')) 
+;
+
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_schedules` AS 
 SELECT 
 	ptc.tower,ptc.customer,s.masterserver,s.policyname,s.name,
 	nbu_code('backuptype',s.backuptype) AS backuptype,
-	IFNULL(j.jobs,0) as jobs,IFNULL(j.failures,0) AS failures,IFNULL(j.gbytes,0) AS gbytes,
+	IFNULL(j.bsrjobs,0) as bsrjobs,IFNULL(j.bsrgbytes,0) AS bsrgbytes,IFNULL(j.failures,0) AS failures,j.bsr,
+	IFNULL(j.jobs,0) as jobs,IFNULL(j.gbytes,0) AS gbytes,
 	FLOOR(s.frequency/60/60/24) as freq_days,
 	(select rl.period from bpretlevel rl where rl.masterserver=s.masterserver and rl.level=s.retentionlevel) AS retentionlevel,
 	NULLIF(SUBSTRING_INDEX(s.`schedres`,',',1),'NULL') AS res,
@@ -976,51 +1398,25 @@ SELECT
 	from_unixtime(nullif(s.win_fri_start,0),'%H:%i') AS fri_start,FLOOR(nullif(s.win_sun_duration,0)/60/60) AS fri_hours,
 	from_unixtime(nullif(s.win_sat_start,0),'%H:%i') AS sat_start,FLOOR(nullif(s.win_sun_duration,0)/60/60) AS sat_hours
 	FROM bppllist_schedules s
-		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=s.masterserver AND ptc.policy=s.policyname)
-		LEFT JOIN (SELECT
+	LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=s.masterserver AND ptc.policy=s.policyname)
+		LEFT JOIN (SELECT 
 			j.tower,j.customer,j.masterserver,j.policy,j.schedule,
-			COUNT(j.jobid) AS jobs,
-			SUM(IF(j.status>1,1,0)) AS failures,
-			ROUND(SUM(j.kbytes)/1048576,1) AS gbytes
-			FROM nbu_filtered_jobs j
+			SUM(j.in_bsr) AS bsrjobs,
+			ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr,
+			SUM(j.jobs) AS jobs,
+			ROUND(SUM(j.in_bsr*(100-j.bsr))/100,0) AS failures,
+			ROUND(SUM(j.mb_in_bsr)/1000,1) AS bsrgbytes,
+			ROUND(SUM(j.mb)/1000,1) AS gbytes
+			FROM nbu_bw_jobs_detail j
 			GROUP BY j.tower,j.customer,j.masterserver,j.policy,j.schedule
 			ORDER BY j.tower,j.customer,j.masterserver,j.policy,j.schedule
 		) j ON (s.masterserver=j.masterserver AND s.policyname=j.policy AND s.name=j.schedule)
-	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
-		AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
-		AND s.name IS NOT NULL  AND s.obsoleted IS NULL
+	WHERE s.name IS NOT NULL  AND s.obsoleted IS NULL 
+	AND IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
+	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,'')) 
 ;
 
-DROP VIEW IF EXISTS `nbu_policies`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_policies` AS 
-SELECT 
-	ptc.tower,ptc.customer,p.masterserver,p.name,
-	IF(p.active=1,'NO','YES') AS active,
-	nbu_code('policytype',p.policytype) AS policytype,
-	(SELECT COUNT(c.name) FROM bppllist_clients c WHERE c.masterserver=p.masterserver AND c.policyname=p.name and c.obsoleted IS NULL) AS clients,
-	(SELECT COUNT(s.name) FROM bppllist_schedules s WHERE s.masterserver=p.masterserver AND s.policyname=p.name and s.obsoleted IS NULL) AS schedules,
-	IFNULL(j.jobs,0) as jobs,IFNULL(j.failures,0) AS failures,IFNULL(j.gbytes,0) AS gbytes,
-	p.include,
-	NULLIF(SUBSTRING_INDEX(p.`res`,',',1),'NULL') AS res,
-	p.maxjobsperclient,from_unixtime(p.classid) AS effectivedate,p.backupcopies AS classid,p.bmr,p.vm,p.pool
-	FROM bppllist_policies p
-		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=p.masterserver AND ptc.policy=p.name)
-		LEFT JOIN (SELECT
-			j.tower,j.customer,j.masterserver,j.policy,
-			COUNT(j.jobid) AS jobs,
-			SUM(IF(j.status>1,1,0)) AS failures,
-			ROUND(SUM(j.kbytes)/1048576,1) AS gbytes
-			FROM nbu_filtered_jobs j
-			GROUP BY j.tower,j.customer,j.masterserver,j.policy
-			ORDER BY j.tower,j.customer,j.masterserver,j.policy
-		) j ON (p.masterserver=j.masterserver AND p.name=j.policy)
-	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
-		AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
-		AND p.name IS NOT NULL AND p.obsoleted IS NULL
-;
-
-DROP VIEW IF EXISTS `nbu_images`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_images` AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_images` AS 
 SELECT 
 	i.masterserver,ptc.tower,ptc.customer,i.name AS client,
 	IF(i.policy_type IN (4,6,7,8,11,15,16,17,18,19,25,35),'INTEG','FS') as type,
@@ -1046,22 +1442,19 @@ SELECT
 	AND f.`fragment_number`>0
 ORDER BY i.backupid,f.copy_number;
 
-DROP VIEW IF EXISTS `nbu_plclients`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_plclients` AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_plclients` AS 
 SELECT masterserver,name,architecture,os,priority
 	FROM bpplclients
 	WHERE obsoleted IS NULL
 ;
 
-DROP VIEW IF EXISTS `nbu_summary`;
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_summary` AS
+CREATE OR REPLACE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_summary` AS
 SELECT 
 	masterserver,queued,waiting,active,successful,partial,failed,incomplete,suspended,total
 	FROM bpdbjobs_summary 
 ;
 
-DROP VIEW IF EXISTS `nbu_esl`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_esl` AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_esl` AS 
 SELECT p.masterserver,p.name AS policy,s.backuptype,
 	CONCAT(p.name,' (',s.name,')') AS name,
 	TRIM(',' FROM p.res) AS res,
@@ -1079,16 +1472,14 @@ SELECT p.masterserver,p.name AS policy,s.backuptype,
 	ORDER BY 1,2 
 ;
 
-DROP VIEW IF EXISTS `nbu_esl_client`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_esl_client` AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_esl_client` AS 
 SELECT e.masterserver,e.name,c.name as client 
 	FROM nbu_esl e
 		LEFT JOIN bppllist_clients c ON (c.masterserver=e.masterserver and c.policyname=e.policy AND c.obsoleted IS NULL)
 	ORDER BY 1,2,3 
 ;
 
-DROP VIEW IF EXISTS `nbu_overview_jobs`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_overview_jobs` AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_overview_jobs` AS 
 SELECT j.masterserver,
 	nbu_code('jobtype',j.jobtype) AS jobtype,
 	nbu_code('subtype',j.subtype) AS subtype,
@@ -1103,83 +1494,65 @@ SELECT j.masterserver,
 	ORDER BY masterserver,jobtype,subtype,state,operation 
 ;
 
-DROP VIEW IF EXISTS `nbu_overview_clients`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_overview_clients` AS 
-	SELECT 
-	j.tower,j.customer,j.masterserver,j.client as name,
-	COUNT(c.policyname) as policies,
-	GROUP_CONCAT(DISTINCT c.architecture) AS architecture,
-	GROUP_CONCAT(DISTINCT c.os) AS os,
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_overview_clients` AS 
+SELECT 
+	j.tower,j.customer,j.masterserver,j.name,
+	j.policies,j.architecture,j.os,
 	j.bsrjobs,j.bsr,j.jobs,j.failures,j.gbytes,
-	COUNT(DISTINCT i.backupid) AS images,
-	SUM(DISTINCT IF(i.media_type=0,i.id_path,NULL)) AS vmedia,
-	SUM(DISTINCT IF(i.media_type>0,i.id_path,NULL)) AS pmedia,
-	GROUP_CONCAT(DISTINCT IF(i.media_type>0,i.id_path,NULL) ORDER BY i.id_path) AS pmedia,
-	ROUND(SUM(IF(i.media_type>0,i.kilobytes,0))/1048576,1) AS gbretained
-	FROM
-	(SELECT
-		j.tower,j.customer,j.masterserver,j.client,
-		SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0,1,0)) AS bsrjobs,
-		ROUND(100*SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0 AND j.status IN (0,1),1,0))/SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0,1,0)),1) AS bsr,
-		COUNT(j.jobid) AS jobs,
-		SUM(IF(j.status>1,1,0)) AS failures,
-		ROUND(SUM(j.kbytes)/1048576,1) AS gbytes
-		FROM nbu_filtered_jobs j
-		GROUP BY j.tower,j.customer,j.masterserver,j.client
-		ORDER BY j.tower,j.customer,j.masterserver,j.client
+	i.images,i.vmedia,i.pmedia,i.labels,i.gbretained
+	FROM (SELECT 
+		d.tower,d.customer,d.masterserver,d.client as name,
+		COUNT(DISTINCT d.policy) AS policies,
+		c.architecture,
+		c.os,
+		SUM(d.in_bsr) AS bsrjobs,
+		ROUND(SUM(d.in_bsr*d.bsr)/SUM(d.in_bsr),1) AS bsr,
+		SUM(d.jobs) AS jobs,
+		ROUND(SUM(d.in_bsr*(100-d.bsr))/100,0) AS failures,
+		ROUND(SUM(d.mb)/1000,1) AS gbytes
+		FROM nbu_bw_jobs_detail d
+		LEFT JOIN bpplclients c ON (c.masterserver=d.masterserver AND c.name=d.client AND c.obsoleted IS NULL)
+		WHERE c.name IS NOT NULL
+		GROUP BY d.tower,d.customer,d.masterserver,d.client
 	) j
-	LEFT JOIN bppllist_clients c ON (c.masterserver=j.masterserver AND c.name=j.client AND c.obsoleted IS NULL)
-	LEFT JOIN nbu_images i ON (i.masterserver=j.masterserver AND i.client=j.client)
-	WHERE c.name IS NOT NULL
-	AND c.policyname NOT REGEXP 'dummy|template'
-	GROUP BY j.tower,j.customer,j.masterserver,j.client
-	ORDER BY j.tower,j.customer,j.masterserver,j.client 
+	LEFT JOIN (SELECT i.masterserver,i.name,COUNT(DISTINCT i.backupid) AS images,
+		COUNT(DISTINCT IF(f.media_type=0,f.id_path,NULL)) AS vmedia,
+		COUNT(DISTINCT IF(f.media_type>0,f.id_path,NULL)) AS pmedia,
+		GROUP_CONCAT(DISTINCT IF(f.media_type>0,f.id_path,NULL) ORDER BY f.id_path) AS labels,
+		ROUND(SUM(IF(f.media_type>0,f.kilobytes,0))/1048576,1) AS gbretained
+		FROM bpimmedia i
+		LEFT JOIN bpimmedia_frags f ON (f.masterserver=i.masterserver AND f.backupid=i.backupid) 
+		WHERE f.`fragment_number`>0
+		AND f.expiration>UNIX_TIMESTAMP(NOW())
+		GROUP BY i.masterserver,i.name
+	) i ON (i.masterserver=j.masterserver AND i.name=j.name)
+ORDER BY j.customer,j.tower,j.masterserver,j.tower,j.name 
 ;
-	
-DROP VIEW IF EXISTS `nbu_overview_customers`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_overview_customers` AS 
-	SELECT
+
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_overview_customers` AS 
+SELECT
 	j.customer,
-	(SELECT COUNT(DISTINCT c.name) FROM bppllist_clients c
-		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=c.masterserver AND ptc.policy=c.policyname)
-		WHERE ptc.customer=j.customer
-		AND IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
-		AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
-		AND c.obsoleted IS NULL 
-	) AS clients,
-	(SELECT COUNT(DISTINCT c.name) FROM bppllist_clients c
-		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=c.masterserver AND ptc.policy=c.policyname)
-		LEFT JOIN bppllist_policies p ON (p.masterserver=c.masterserver AND p.name=c.policyname AND p.policytype IN (4,6,7,8,11,15,16,17,18,19,25,35) AND p.obsoleted IS NULL)
-		WHERE ptc.customer=j.customer
-		AND IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
-		AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
-		AND p.name IS NOT NULL
-		AND c.obsoleted IS NULL 
-	) AS integ_clients,
-	(SELECT COUNT(DISTINCT p.name) FROM bppllist_policies p
-		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.masterserver=p.masterserver AND ptc.policy=p.name)
-		WHERE ptc.customer=j.customer
-		AND IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
-		AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
-		AND p.obsoleted IS NULL 
-	) AS policies,
-	SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0,1,0)) AS bsrjobs,
-	ROUND(100*SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0 AND j.status IN (0,1),1,0))/SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0,1,0)),1) AS bsr,
-	COUNT(j.jobid) AS jobs,
-	SUM(IF(j.status>1,1,0)) AS failures,
-	ROUND(SUM(j.kbytes)/1048576,1) AS gbytes,
+	COUNT(DISTINCT j.client) AS clients,
+	IFNULL(NULLIF(COUNT(DISTINCT IF(j.policytype NOT REGEXP 'WIN|UX|VM',j.client,NULL))-1,-1),0) AS integ_clients,
+	COUNT(DISTINCT j.policy) AS policies,
+	SUM(j.in_bsr) AS bsrjobs,
+	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr,
+	SUM(j.jobs) AS jobs,
+	ROUND(SUM(j.in_bsr*(100-j.bsr))/100,0) AS failures,
+	ROUND(SUM(j.mb)/1000,1) AS gbytes,
 	(SELECT ROUND(SUM(i.kilobytes/1048576),1) AS TB FROM nbu_images i
 		WHERE i.customer=j.customer
 		AND i.media_type>0
 		AND i.expiration>NOW()
 	) AS gbretained
-	FROM nbu_filtered_jobs j
+	FROM nbu_bw_jobs_detail j
+	WHERE j.client IS NOT NULL
+	AND j.policy IS NOT NULL
 	GROUP BY j.customer
 	ORDER BY j.customer 
 ;
 
-DROP VIEW IF EXISTS `nbu_consecutive_failures`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_consecutive_failures` AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_consecutive_failures` AS 
 SELECT masterserver,tower,customer,client,policy,
 	IF(ISNULL((SELECT c.name FROM bppllist_clients c WHERE c.masterserver=j1.masterserver AND c.name=j1.client AND c.policyname=j1.policy AND c.obsoleted IS NULL)),'N','Y') AS existing,
 	schedule,FROM_UNIXTIME(lastfailure) AS lastfailure,
@@ -1196,8 +1569,16 @@ SELECT masterserver,tower,customer,client,policy,
 	ORDER BY failures DESC,customer,client,policy,schedule 
 ;
 
-DROP VIEW IF EXISTS `nbu_vault_classes`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_vault_classes` AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_puredisks` AS 
+SELECT 
+	masterserver,diskpool,disk_media_id,total_capacity,free_space,
+	ROUND(100-100*free_space/total_capacity,2) as used 
+	FROM nbdevquery_listdv_puredisk
+	WHERE obsoleted IS NULL
+	ORDER BY used DESC
+;
+
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_vault_classes` AS 
 select vi.masterserver,vi.profile,vi.value as name 
 from vault_item_xml vi
 where vi.obsoleted is null
@@ -1205,8 +1586,7 @@ and vi.type='CLASS'
 order by vi.value
 ;
 
-DROP VIEW IF EXISTS `nbu_vault_clients`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_vault_clients` AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_vault_clients` AS 
 select vi.masterserver,vi.profile,vi.value as name 
 from vault_item_xml vi
 where vi.obsoleted is null
@@ -1214,8 +1594,7 @@ and vi.type='CLIENT'
 order by vi.value
 ;
 
-DROP VIEW IF EXISTS `nbu_vault_schedules`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_vault_schedules` AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_vault_schedules` AS 
 select vi.masterserver,vi.profile,vi.value as name 
 from vault_item_xml vi
 where vi.obsoleted is null
@@ -1223,8 +1602,7 @@ and vi.type='SCHEDULE'
 order by vi.value
 ;
 
-DROP VIEW IF EXISTS `nbu_vault_profiles`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_vault_profiles` AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_vault_profiles` AS 
 select p.masterserver,p.robot_name as robot,p.vault_name as vault,p.profile_name as name,p.startday,p.starthour,p.endday,p.endhour,p.ipf_enabled,p.clientfilter,
 if(p.clientfilter='INCLUDE',(select count(c.value) from vault_item_xml c where c.masterserver=p.masterserver and c.profile=p.profile_name and c.`type`='CLIENT'),NULL) as clients,
 p.backuptypefilter,p.mediaserverfilter,p.classfilter,
@@ -1244,8 +1622,7 @@ group by p.masterserver,p.profile_id
 order by p.profile_name 
 ;
 
-DROP VIEW IF EXISTS `nbu_vault_robots`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_vault_robots` AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_vault_robots` AS 
 select r.masterserver,r.robot_name as name,r.robotnumber,r.robottype,r.roboticcontrolhost,r.usevaultprefene,r.robot_ene as ejectnotificationemail,
 count(distinct r.vault_id) as vaults,from_unixtime(round(r.robot_lastmod/10000000,0)) as lastmod
 from vault_xml r
@@ -1254,8 +1631,7 @@ group by r.masterserver,r.robot_id
 order by r.robot_name 
 ;
 
-DROP VIEW IF EXISTS `nbu_vault_vaults`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_vault_vaults` AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_vault_vaults` AS 
 select v.masterserver,v.robot_name as robot,v.vault_name as name,v.customerid,v.offsitevolumegroup,v.robotvolumegroup,v.vaultcontainers,v.vaultseed,v.vendor,
 count(distinct v.profile_id) as profiles,from_unixtime(round(v.vault_lastmod/10000000,0)) as lastmod
 from vault_xml v
@@ -1264,8 +1640,7 @@ group by v.masterserver,v.vault_id
 order by v.vault_name 
 ;
 
-DROP VIEW IF EXISTS `nbu_audit`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_audit` AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_audit` AS 
 SELECT DISTINCT 
 	ptc.`tower`,ptc.`customer`,
 	c.`masterserver`,
@@ -1306,8 +1681,7 @@ SELECT DISTINCT
 	ORDER BY ptc.`tower`,ptc.`customer`,c.`name`,p.`name`,s1.`name`,s2.`slpname`,v.`profile_name` 
 ;
 
-DROP VIEW IF EXISTS `nbu_slps`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_slps` AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_slps` AS 
 SELECT 
 	s.`masterserver`,s.`slpname` AS `name`,s.`dataclassification`,s.`duplicationpriority`,s.`state`,s.`version`,
 	(SELECT COUNT(DISTINCT p.`name`) FROM bppllist_policies p WHERE p.`masterserver`=s.`masterserver` AND SUBSTRING_INDEX(p.`res`,',',1)=s.`slpname` and p.`obsoleted` IS NULL) AS policies,
@@ -1323,8 +1697,7 @@ SELECT
 	ORDER BY s.`masterserver`,s.`slpname`,s.`operationindex` 
 ;
 
-DROP VIEW IF EXISTS `nbu_sm9`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_sm9` AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_sm9` AS 
 SELECT 
 	FROM_UNIXTIME(j.ended) AS `date`,
 	'MAJOR' AS `severity`,
@@ -1348,8 +1721,7 @@ SELECT
 	ORDER BY j.masterserver,j.ended,j.jobid 
 ;
 
-DROP VIEW IF EXISTS `nbu_bsr_job_results`;
-CREATE ALGORITHM=TEMPTABLE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `nbu_bsr_job_results` AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bsr_job_results` AS 
 	SELECT
 	j.customer,j.client,j.policy,j.schedule,
 	COUNT(j.jobid) AS jobs,
@@ -2433,7 +2805,76 @@ INSERT INTO `nbu_codes` (`field`, `code`, `description`) VALUES
 	('usefor', 4, 'Import'),
 	('usefor', 5, 'Backup from snapshot');
 
-REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `description`, `created`, `updated`, `obsoleted`) VALUES
+INSERT INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `description`, `created`, `updated`, `obsoleted`) VALUES
+	('audit_complete', 1, 'DATA_CENTER', 'DATA_CENTER', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:08:54', NULL),
+	('audit_complete', 2, 'CUSTOMER_NAME', 'CUSTOMER_NAME', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:09:41', NULL),
+	('audit_complete', 3, 'DEVICE_ID', 'DEVICE_ID', 'STRING', NULL, NULL, '2018-01-18 13:15:25', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 4, 'HOST_NAME', 'HOST_NAME', 'STRING', NULL, NULL, '2018-01-18 13:15:59', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 5, 'RLIs', 'RLIs', 'NUMBER', NULL, NULL, '2018-01-18 13:15:59', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 6, 'BACKUP_RLI_ID', 'BACKUP_RLI_ID', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 7, 'BACKUP_RLI_MRT', 'BACKUP_RLI_MRT', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 8, 'SOURCE', 'SOURCE', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 9, 'STATUS', 'STATUS', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 10, 'COMMENT', 'COMMENT', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 11, 'LISTS', 'LISTS', 'NUMBER', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 12, 'OWNER', 'OWNER', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 13, 'HOST', 'HOST', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 14, 'LIST', 'LIST', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 15, 'CUSTOMER', 'CUSTOMER', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 16, 'RETENTION', 'RETENTION', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_complete', 17, 'PROTECTION', 'PROTECTION', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_missing', 1, 'DATA_CENTER', 'DATA_CENTER', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:08:54', NULL),
+	('audit_missing', 2, 'CUSTOMER_NAME', 'CUSTOMER_NAME', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:09:41', NULL),
+	('audit_missing', 3, 'DEVICE_ID', 'DEVICE_ID', 'STRING', NULL, NULL, '2018-01-18 13:15:25', '2018-01-18 13:18:26', NULL),
+	('audit_missing', 4, 'HOST_NAME', 'HOST_NAME', 'STRING', NULL, NULL, '2018-01-18 13:15:59', '2018-01-18 13:18:26', NULL),
+	('audit_missing', 5, 'RLIs', 'RLIs', 'NUMBER', NULL, NULL, '2018-01-18 13:15:59', '2018-01-18 13:18:26', NULL),
+	('audit_missing', 6, 'BACKUP_RLI_ID', 'BACKUP_RLI_ID', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:18:26', NULL),
+	('audit_missing', 7, 'BACKUP_RLI_MRT', 'BACKUP_RLI_MRT', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_missing', 8, 'SOURCE', 'SOURCE', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_missing', 9, 'STATUS', 'STATUS', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_missing', 10, 'COMMENT', 'COMMENT', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 1, 'DATA_CENTER', 'DATA_CENTER', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:08:54', NULL),
+	('audit_partial', 2, 'CUSTOMER_NAME', 'CUSTOMER_NAME', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:09:41', NULL),
+	('audit_partial', 3, 'DEVICE_ID', 'DEVICE_ID', 'STRING', NULL, NULL, '2018-01-18 13:15:25', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 4, 'HOST_NAME', 'HOST_NAME', 'STRING', NULL, NULL, '2018-01-18 13:15:59', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 5, 'RLIs', 'RLIs', 'NUMBER', NULL, NULL, '2018-01-18 13:15:59', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 6, 'BACKUP_RLI_ID', 'BACKUP_RLI_ID', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 7, 'BACKUP_RLI_MRT', 'BACKUP_RLI_MRT', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 8, 'SOURCE', 'SOURCE', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 9, 'STATUS', 'STATUS', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 10, 'COMMENT', 'COMMENT', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 11, 'LISTS', 'LISTS', 'NUMBER', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 12, 'OWNER', 'OWNER', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 13, 'HOST', 'HOST', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 14, 'LIST', 'LIST', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 15, 'CUSTOMER', 'CUSTOMER', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 16, 'RETENTION', 'RETENTION', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_partial', 17, 'PROTECTION', 'PROTECTION', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 1, 'DATA_CENTER', 'DATA_CENTER', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:08:54', NULL),
+	('audit_qrs', 2, 'CUSTOMER_NAME', 'CUSTOMER_NAME', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:09:41', NULL),
+	('audit_qrs', 3, 'RESERVATION_ID', 'RESERVATION_ID', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:09:41', NULL),
+	('audit_qrs', 4, 'RESERVATION_STATUS', 'RESERVATION_STATUS', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:09:41', NULL),
+	('audit_qrs', 5, 'BACKUP_RLI_ID', 'BACKUP_RLI_ID', 'STRING', NULL, NULL, '2018-01-18 13:04:47', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 6, 'BACKUP_RLI_STATUS', 'BACKUP_RLI_STATUS', 'STRING', NULL, NULL, '2018-01-18 13:13:32', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 7, 'BACKUP_RLI_STATE', 'BACKUP_RLI_STATE', 'STRING', NULL, NULL, '2018-01-18 13:13:49', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 8, 'BACKUP_RLI_MRT', 'BACKUP_RLI_MRT', 'STRING', NULL, NULL, '2018-01-18 13:14:10', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 9, 'SERVER_RLI_ID', 'SERVER_RLI_ID', 'STRING', NULL, NULL, '2018-01-18 13:14:28', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 10, 'SERVER_RLI_STATUS', 'SERVER_RLI_STATUS', 'STRING', NULL, NULL, '2018-01-18 13:14:49', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 11, 'SERVER_RLI_STATE', 'SERVER_RLI_STATE', 'STRING', NULL, NULL, '2018-01-18 13:15:01', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 12, 'SERVER_RLI_MRT', 'SERVER_RLI_MRT', 'STRING', NULL, NULL, '2018-01-18 13:15:13', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 13, 'DEVICE_ID', 'DEVICE_ID', 'STRING', NULL, NULL, '2018-01-18 13:15:25', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 14, 'DEVICE_PHYSICAL_NAME', 'DEVICE_PHYSICAL_NAME', 'STRING', NULL, NULL, '2018-01-18 13:15:38', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 15, 'HOST_NAME', 'HOST_NAME', 'STRING', NULL, NULL, '2018-01-18 13:15:59', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 16, 'DEVICE_STATUS', 'DEVICE_STATUS', 'STRING', NULL, NULL, '2018-01-18 13:16:18', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 17, 'DEVICE_STATE', 'DEVICE_STATE', 'STRING', NULL, NULL, '2018-01-18 13:16:28', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 18, 'SERVER_TYPE', 'SERVER_TYPE', 'STRING', NULL, NULL, '2018-01-18 13:16:42', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 19, 'OS', 'OS', 'STRING', NULL, NULL, '2018-01-18 13:16:51', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 20, 'OS_TYPE', 'OS_TYPE', 'STRING', NULL, NULL, '2018-01-18 13:16:58', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 21, 'OS_VERSION', 'OS_VERSION', 'STRING', NULL, NULL, '2018-01-18 13:17:09', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 22, 'DEVICE_MRT', 'DEVICE_MRT', 'STRING', NULL, NULL, '2018-01-18 13:17:19', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 23, 'VLAN_ID', 'VLAN_ID', 'STRING', NULL, NULL, '2018-01-18 13:17:28', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 24, 'VLAN_STATUS', 'VLAN_STATUS', 'STRING', NULL, NULL, '2018-01-18 13:17:36', '2018-01-18 13:18:26', NULL),
+	('audit_qrs', 25, 'VLAN_ASSIGNED_CUSTOMER', 'VLAN_ASSIGNED_CUSTOMER', 'STRING', NULL, NULL, '2018-01-18 13:17:51', '2018-01-18 13:18:26', NULL),
 	('nbu_audit', 1, 'tower', 'Tower', 'STRING', NULL, NULL, '2017-10-09 14:57:39', '2017-10-09 14:57:39', NULL),
 	('nbu_audit', 2, 'customer', 'Customer', 'STRING', NULL, NULL, '2017-10-09 14:56:21', '2017-10-09 14:57:31', NULL),
 	('nbu_audit', 3, 'masterserver', 'Master server', 'STRING', NULL, NULL, '2017-10-09 14:57:56', '2017-10-09 14:57:56', NULL),
@@ -2470,7 +2911,7 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_bsr_jobs', 3, 'childjobs', 'Childs', 'NUMBER', 'nbu_bsr_jobs', 'Show child jobs for %parentjob%', '2017-03-22 12:10:49', '2017-03-22 12:11:02', NULL),
 	('nbu_bsr_jobs', 4, 'parentjob', 'Parent job', 'NUMBER', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:12:59', NULL),
 	('nbu_bsr_jobs', 5, 'status', 'Status', 'STRING', 'nbu_codes', 'Show description for status \'%status%\'', '2017-03-22 12:10:49', '2017-05-12 13:17:47', NULL),
-	('nbu_bsr_jobs', 6, 'tower', 'Tower', 'STRING', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:53:01', '2017-05-11 14:53:01'),
+	('nbu_bsr_jobs', 6, 'tower', 'Tower', 'STRING', NULL, NULL, '2017-03-22 12:10:49', '2020-04-09 15:02:22', NULL),
 	('nbu_bsr_jobs', 7, 'customer', 'Customer', 'STRING', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:26:46', NULL),
 	('nbu_bsr_jobs', 8, 'policy', 'Policy name', 'STRING', 'nbu_policies', 'Show policy \'%policy%\'', '2017-03-22 12:10:49', '2017-05-11 14:21:12', NULL),
 	('nbu_bsr_jobs', 9, 'policytype', 'P.type', 'STRING', NULL, NULL, '2017-03-22 12:10:49', '2017-05-11 14:27:23', NULL),
@@ -2516,19 +2957,160 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_bsr_schedule', 4, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed jobs for %schedule% and %day%', '2017-03-22 15:15:36', '2017-03-23 14:55:43', NULL),
 	('nbu_bsr_type', 1, 'day', 'Backup day', 'DATE', NULL, NULL, '2017-03-22 15:15:41', '2018-08-13 10:54:32', NULL),
 	('nbu_bsr_type', 2, 'type', 'Type', 'STRING', NULL, NULL, '2017-03-22 15:15:41', '2017-03-22 15:19:21', NULL),
-	('nbu_bsr_type', 3, 'jobs', 'Jobs', 'NUMBER', 'nbu_bsr_jobs', 'Show jobs for %type% and %day%', '2017-03-22 15:15:41', '2017-03-22 15:19:38', NULL),
-	('nbu_bsr_type', 4, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed jobs for %type% and %day%', '2017-03-22 15:15:41', '2017-03-23 14:55:46', NULL),
+	('nbu_bsr_type', 3, 'jobs', 'Jobs', 'NUMBER', NULL, NULL, '2017-03-22 15:15:41', '2020-04-09 15:16:19', NULL),
+	('nbu_bsr_type', 4, 'bsr', 'BSR', 'FLOAT', NULL, NULL, '2017-03-22 15:15:41', '2020-04-09 15:16:20', NULL),
+	('nbu_bw_jobs', 1, 'bw_day', 'Backup day', 'DATE', NULL, NULL, '2020-04-08 17:45:39', '2020-04-09 13:11:22', NULL),
+	('nbu_bw_jobs', 2, 'towers', 'Towers', 'NUMBER', 'nbu_bw_jobs_towers', 'Show %bw_day% jobs per tower', '2020-04-08 17:47:23', '2020-04-09 13:45:12', NULL),
+	('nbu_bw_jobs', 3, 'customers', 'Customers', 'NUMBER', 'nbu_bw_jobs_customers', 'Show %bw_day% jobs per customer', '2020-04-08 17:47:36', '2020-04-09 13:45:25', NULL),
+	('nbu_bw_jobs', 4, 'masterservers', 'Master servers', 'NUMBER', 'nbu_bw_jobs_masterservers', 'Show %bw_day% jobs per Master server', '2020-04-08 17:47:51', '2020-04-09 13:46:14', NULL),
+	('nbu_bw_jobs', 5, 'policytypes', 'Policy types', 'NUMBER', 'nbu_bw_jobs_policytypes', 'Show %bw_day% jobs per policy type', '2020-04-08 17:48:31', '2020-04-09 13:45:41', NULL),
+	('nbu_bw_jobs', 6, 'policies', 'Policies', 'NUMBER', 'nbu_bw_jobs_policies', 'Show %bw_day% jobs per policy', '2020-04-08 17:49:18', '2020-04-09 13:45:47', NULL),
+	('nbu_bw_jobs', 7, 'scheduletypes', 'Schedule types', 'NUMBER', 'nbu_bw_jobs_scheduletypes', 'Show %bw_day% jobs per schedule type', '2020-04-08 17:49:35', '2020-04-09 13:45:55', NULL),
+	('nbu_bw_jobs', 8, 'schedules', 'Schedules', 'NUMBER', 'nbu_bw_jobs_schedules', 'Show %bw_day% jobs per schedule', '2020-04-08 17:49:49', '2020-04-09 13:46:02', NULL),
+	('nbu_bw_jobs', 9, 'clients', 'Clients', 'NUMBER', 'nbu_bw_jobs_clients', 'Show %bw_day% jobs per client', '2020-04-08 17:51:02', '2020-04-09 13:46:07', NULL),
+	('nbu_bw_jobs', 10, 'jobs', 'Jobs', 'NUMBER', 'nbu_jobs', 'Show all jobs', '2020-04-08 17:52:02', '2020-04-09 13:30:31', NULL),
+	('nbu_bw_jobs', 11, 'gb', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-08 17:52:40', '2020-04-09 13:33:50', NULL),
+	('nbu_bw_jobs', 12, 'in_bsr', 'Jobs in BSR', 'NUMBER', 'nbu_bsr_jobs', 'Show BSR jobs', '2020-04-08 17:52:59', '2020-04-09 13:27:40', NULL),
+	('nbu_bw_jobs', 13, 'gb_in_bsr', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-08 17:54:21', '2020-04-09 13:34:08', NULL),
+	('nbu_bw_jobs', 14, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed BSR jobs', '2020-04-08 17:54:57', '2020-04-09 13:27:32', NULL),
+	('nbu_bw_jobs_clients', 1, 'bw_day', 'Backup day', 'DATE', NULL, NULL, '2020-04-09 13:59:32', '2020-04-09 13:59:32', NULL),
+	('nbu_bw_jobs_clients', 2, 'towers', 'Towers', 'NUMBER', 'nbu_bw_jobs_towers', 'Show %bw_day% jobs per tower', '2020-04-09 13:59:32', '2020-04-09 13:59:32', NULL),
+	('nbu_bw_jobs_clients', 3, 'customers', 'Customers', 'NUMBER', 'nbu_bw_jobs_customers', 'Show %bw_day% jobs per customer', '2020-04-09 13:59:32', '2020-04-09 13:59:32', NULL),
+	('nbu_bw_jobs_clients', 4, 'masterservers', 'Master servers', 'NUMBER', 'nbu_bw_jobs_masterservers', 'Show %bw_day% jobs per Master server', '2020-04-09 13:59:32', '2020-04-09 13:59:32', NULL),
+	('nbu_bw_jobs_clients', 5, 'policytypes', 'Policy types', 'NUMBER', 'nbu_bw_jobs_policytypes', 'Show %bw_day% jobs per policy type', '2020-04-09 13:59:32', '2020-04-09 13:59:32', NULL),
+	('nbu_bw_jobs_clients', 6, 'policies', 'Policies', 'NUMBER', 'nbu_bw_jobs_policies', 'Show %bw_day% jobs per policy', '2020-04-09 13:59:32', '2020-04-09 13:59:32', NULL),
+	('nbu_bw_jobs_clients', 7, 'scheduletypes', 'Schedule types', 'NUMBER', 'nbu_bw_jobs_scheduletypes', 'Show %bw_day% jobs per schedule type', '2020-04-09 13:59:32', '2020-04-09 13:59:32', NULL),
+	('nbu_bw_jobs_clients', 8, 'schedules', 'Schedules', 'NUMBER', 'nbu_bw_jobs_schedules', 'Show %bw_day% jobs per schedule', '2020-04-09 13:59:32', '2020-04-09 13:59:32', NULL),
+	('nbu_bw_jobs_clients', 9, 'client', 'Client name', 'STRING', 'nbu_clients_distinct', 'Show client "%client%"', '2020-04-09 13:59:32', '2020-04-09 14:01:03', NULL),
+	('nbu_bw_jobs_clients', 10, 'jobs', 'Jobs', 'NUMBER', 'nbu_jobs', 'Show all jobs', '2020-04-09 13:59:32', '2020-04-09 13:59:32', NULL),
+	('nbu_bw_jobs_clients', 11, 'gb', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-09 13:59:32', '2020-04-09 13:59:32', NULL),
+	('nbu_bw_jobs_clients', 12, 'in_bsr', 'Jobs in BSR', 'NUMBER', 'nbu_bsr_jobs', 'Show BSR jobs', '2020-04-09 13:59:32', '2020-04-09 13:59:32', NULL),
+	('nbu_bw_jobs_clients', 13, 'gb_in_bsr', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-09 13:59:32', '2020-04-09 13:59:32', NULL),
+	('nbu_bw_jobs_clients', 14, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed BSR jobs', '2020-04-09 13:59:32', '2020-04-09 13:59:32', NULL),
+	('nbu_bw_jobs_customers', 1, 'bw_day', 'Backup day', 'DATE', NULL, NULL, '2020-04-09 13:58:46', '2020-04-09 13:58:46', NULL),
+	('nbu_bw_jobs_customers', 2, 'towers', 'Towers', 'NUMBER', 'nbu_bw_jobs_towers', 'Show %bw_day% jobs per tower', '2020-04-09 13:58:46', '2020-04-09 13:58:46', NULL),
+	('nbu_bw_jobs_customers', 3, 'customer', 'Customer', 'STRING', NULL, NULL, '2020-04-09 13:58:46', '2020-04-09 14:24:59', NULL),
+	('nbu_bw_jobs_customers', 4, 'masterservers', 'Master servers', 'NUMBER', 'nbu_bw_jobs_masterservers', 'Show %bw_day% jobs per Master server', '2020-04-09 13:58:46', '2020-04-09 13:58:46', NULL),
+	('nbu_bw_jobs_customers', 5, 'policytypes', 'Policy types', 'NUMBER', 'nbu_bw_jobs_policytypes', 'Show %bw_day% jobs per policy type', '2020-04-09 13:58:46', '2020-04-09 13:58:46', NULL),
+	('nbu_bw_jobs_customers', 6, 'policies', 'Policies', 'NUMBER', 'nbu_bw_jobs_policies', 'Show %bw_day% jobs per policy', '2020-04-09 13:58:46', '2020-04-09 13:58:46', NULL),
+	('nbu_bw_jobs_customers', 7, 'scheduletypes', 'Schedule types', 'NUMBER', 'nbu_bw_jobs_scheduletypes', 'Show %bw_day% jobs per schedule type', '2020-04-09 13:58:46', '2020-04-09 13:58:46', NULL),
+	('nbu_bw_jobs_customers', 8, 'schedules', 'Schedules', 'NUMBER', 'nbu_bw_jobs_schedules', 'Show %bw_day% jobs per schedule', '2020-04-09 13:58:46', '2020-04-09 13:58:46', NULL),
+	('nbu_bw_jobs_customers', 9, 'clients', 'Clients', 'NUMBER', 'nbu_bw_jobs_clients', 'Show %bw_day% jobs per client', '2020-04-09 13:58:46', '2020-04-09 13:58:46', NULL),
+	('nbu_bw_jobs_customers', 10, 'jobs', 'Jobs', 'NUMBER', 'nbu_jobs', 'Show all jobs', '2020-04-09 13:58:46', '2020-04-09 13:58:46', NULL),
+	('nbu_bw_jobs_customers', 11, 'gb', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-09 13:58:46', '2020-04-09 13:58:46', NULL),
+	('nbu_bw_jobs_customers', 12, 'in_bsr', 'Jobs in BSR', 'NUMBER', 'nbu_bsr_jobs', 'Show BSR jobs', '2020-04-09 13:58:46', '2020-04-09 13:58:46', NULL),
+	('nbu_bw_jobs_customers', 13, 'gb_in_bsr', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-09 13:58:46', '2020-04-09 13:58:46', NULL),
+	('nbu_bw_jobs_customers', 14, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed BSR jobs', '2020-04-09 13:58:46', '2020-04-09 13:58:46', NULL),
+	('nbu_bw_jobs_detail', 1, 'bw_day', 'Backup day', 'DATE', NULL, NULL, '2020-04-08 17:45:39', '2020-04-09 13:11:22', NULL),
+	('nbu_bw_jobs_detail', 2, 'tower', 'Tower', 'STRING', NULL, NULL, '2020-04-08 17:47:23', '2020-04-09 13:11:25', NULL),
+	('nbu_bw_jobs_detail', 3, 'customer', 'Customer', 'STRING', NULL, NULL, '2020-04-08 17:47:36', '2020-04-09 13:11:26', NULL),
+	('nbu_bw_jobs_detail', 4, 'masterserver', 'Master server', 'STRING', NULL, NULL, '2020-04-08 17:47:51', '2020-04-09 13:22:29', NULL),
+	('nbu_bw_jobs_detail', 5, 'policytype', 'Policy type', 'STRING', NULL, NULL, '2020-04-08 17:48:31', '2020-04-09 13:11:27', NULL),
+	('nbu_bw_jobs_detail', 6, 'policy', 'Policy name', 'STRING', 'nbu_policies', 'Show policy "%policy%"', '2020-04-08 17:49:18', '2020-04-09 13:11:28', NULL),
+	('nbu_bw_jobs_detail', 7, 'scheduletype', 'Schedule type', 'STRING', NULL, NULL, '2020-04-08 17:49:35', '2020-04-09 13:11:29', NULL),
+	('nbu_bw_jobs_detail', 8, 'schedule', 'Schedule name', 'STRING', 'nbu_schedules', 'Show schedule "%schedule%"', '2020-04-08 17:49:49', '2020-04-09 13:11:30', NULL),
+	('nbu_bw_jobs_detail', 9, 'client', 'Client name', 'STRING', 'nbu_clients_distinct', 'Show client "%client%"', '2020-04-08 17:51:02', '2020-04-09 13:11:31', NULL),
+	('nbu_bw_jobs_detail', 10, 'jobs', 'Jobs', 'NUMBER', 'nbu_jobs', 'Show all jobs', '2020-04-08 17:52:02', '2020-04-09 13:27:50', NULL),
+	('nbu_bw_jobs_detail', 11, 'gb', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-08 17:52:40', '2020-04-09 13:33:46', NULL),
+	('nbu_bw_jobs_detail', 12, 'in_bsr', 'Jobs in BSR', 'NUMBER', 'nbu_bsr_jobs', 'Show BSR jobs', '2020-04-08 17:52:59', '2020-04-09 13:31:07', NULL),
+	('nbu_bw_jobs_detail', 13, 'gb_in_bsr', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-08 17:54:21', '2020-04-09 13:34:05', NULL),
+	('nbu_bw_jobs_detail', 14, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed BSR jobs', '2020-04-08 17:54:57', '2020-04-09 13:31:35', NULL),
+	('nbu_bw_jobs_masterservers', 1, 'bw_day', 'Backup day', 'DATE', NULL, NULL, '2020-04-09 13:58:56', '2020-04-09 13:58:56', NULL),
+	('nbu_bw_jobs_masterservers', 2, 'towers', 'Towers', 'NUMBER', 'nbu_bw_jobs_towers', 'Show %bw_day% jobs per tower', '2020-04-09 13:58:56', '2020-04-09 13:58:56', NULL),
+	('nbu_bw_jobs_masterservers', 3, 'customers', 'Customers', 'NUMBER', 'nbu_bw_jobs_customers', 'Show %bw_day% jobs per customer', '2020-04-09 13:58:56', '2020-04-09 13:58:56', NULL),
+	('nbu_bw_jobs_masterservers', 4, 'masterserver', 'Master server', 'STRING', NULL, NULL, '2020-04-09 13:58:56', '2020-04-09 14:02:04', NULL),
+	('nbu_bw_jobs_masterservers', 5, 'policytypes', 'Policy types', 'NUMBER', 'nbu_bw_jobs_policytypes', 'Show %bw_day% jobs per policy type', '2020-04-09 13:58:56', '2020-04-09 13:58:56', NULL),
+	('nbu_bw_jobs_masterservers', 6, 'policies', 'Policies', 'NUMBER', 'nbu_bw_jobs_policies', 'Show %bw_day% jobs per policy', '2020-04-09 13:58:56', '2020-04-09 13:58:56', NULL),
+	('nbu_bw_jobs_masterservers', 7, 'scheduletypes', 'Schedule types', 'NUMBER', 'nbu_bw_jobs_scheduletypes', 'Show %bw_day% jobs per schedule type', '2020-04-09 13:58:56', '2020-04-09 13:58:56', NULL),
+	('nbu_bw_jobs_masterservers', 8, 'schedules', 'Schedules', 'NUMBER', 'nbu_bw_jobs_schedules', 'Show %bw_day% jobs per schedule', '2020-04-09 13:58:56', '2020-04-09 13:58:56', NULL),
+	('nbu_bw_jobs_masterservers', 9, 'clients', 'Clients', 'NUMBER', 'nbu_bw_jobs_clients', 'Show %bw_day% jobs per client', '2020-04-09 13:58:56', '2020-04-09 13:58:56', NULL),
+	('nbu_bw_jobs_masterservers', 10, 'jobs', 'Jobs', 'NUMBER', 'nbu_jobs', 'Show all jobs', '2020-04-09 13:58:56', '2020-04-09 13:58:56', NULL),
+	('nbu_bw_jobs_masterservers', 11, 'gb', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-09 13:58:56', '2020-04-09 13:58:56', NULL),
+	('nbu_bw_jobs_masterservers', 12, 'in_bsr', 'Jobs in BSR', 'NUMBER', 'nbu_bsr_jobs', 'Show BSR jobs', '2020-04-09 13:58:56', '2020-04-09 13:58:56', NULL),
+	('nbu_bw_jobs_masterservers', 13, 'gb_in_bsr', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-09 13:58:56', '2020-04-09 13:58:56', NULL),
+	('nbu_bw_jobs_masterservers', 14, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed BSR jobs', '2020-04-09 13:58:56', '2020-04-09 13:58:56', NULL),
+	('nbu_bw_jobs_policies', 1, 'bw_day', 'Backup day', 'DATE', NULL, NULL, '2020-04-09 13:59:11', '2020-04-09 13:59:11', NULL),
+	('nbu_bw_jobs_policies', 2, 'towers', 'Towers', 'NUMBER', 'nbu_bw_jobs_towers', 'Show %bw_day% jobs per tower', '2020-04-09 13:59:11', '2020-04-09 13:59:11', NULL),
+	('nbu_bw_jobs_policies', 3, 'customers', 'Customers', 'NUMBER', 'nbu_bw_jobs_customers', 'Show %bw_day% jobs per customer', '2020-04-09 13:59:11', '2020-04-09 13:59:11', NULL),
+	('nbu_bw_jobs_policies', 4, 'masterservers', 'Master servers', 'NUMBER', 'nbu_bw_jobs_masterservers', 'Show %bw_day% jobs per Master server', '2020-04-09 13:59:11', '2020-04-09 13:59:11', NULL),
+	('nbu_bw_jobs_policies', 5, 'policytypes', 'Policy types', 'NUMBER', 'nbu_bw_jobs_policytypes', 'Show %bw_day% jobs per policy type', '2020-04-09 13:59:11', '2020-04-09 13:59:11', NULL),
+	('nbu_bw_jobs_policies', 6, 'policy', 'Policy name', 'STRING', 'nbu_policies', 'Show policy "%policy%"', '2020-04-09 13:59:11', '2020-04-09 14:11:29', NULL),
+	('nbu_bw_jobs_policies', 7, 'scheduletypes', 'Schedule types', 'NUMBER', 'nbu_bw_jobs_scheduletypes', 'Show %bw_day% jobs per schedule type', '2020-04-09 13:59:11', '2020-04-09 13:59:11', NULL),
+	('nbu_bw_jobs_policies', 8, 'schedules', 'Schedules', 'NUMBER', 'nbu_bw_jobs_schedules', 'Show %bw_day% jobs per schedule', '2020-04-09 13:59:11', '2020-04-09 13:59:11', NULL),
+	('nbu_bw_jobs_policies', 9, 'clients', 'Clients', 'NUMBER', 'nbu_bw_jobs_clients', 'Show %bw_day% jobs per client', '2020-04-09 13:59:11', '2020-04-09 13:59:11', NULL),
+	('nbu_bw_jobs_policies', 10, 'jobs', 'Jobs', 'NUMBER', 'nbu_jobs', 'Show all jobs', '2020-04-09 13:59:11', '2020-04-09 13:59:11', NULL),
+	('nbu_bw_jobs_policies', 11, 'gb', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-09 13:59:11', '2020-04-09 13:59:11', NULL),
+	('nbu_bw_jobs_policies', 12, 'in_bsr', 'Jobs in BSR', 'NUMBER', 'nbu_bsr_jobs', 'Show BSR jobs', '2020-04-09 13:59:11', '2020-04-09 13:59:11', NULL),
+	('nbu_bw_jobs_policies', 13, 'gb_in_bsr', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-09 13:59:11', '2020-04-09 13:59:11', NULL),
+	('nbu_bw_jobs_policies', 14, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed BSR jobs', '2020-04-09 13:59:11', '2020-04-09 13:59:11', NULL),
+	('nbu_bw_jobs_policytypes', 1, 'bw_day', 'Backup day', 'DATE', NULL, NULL, '2020-04-09 13:59:05', '2020-04-09 13:59:05', NULL),
+	('nbu_bw_jobs_policytypes', 2, 'towers', 'Towers', 'NUMBER', 'nbu_bw_jobs_towers', 'Show %bw_day% jobs per tower', '2020-04-09 13:59:05', '2020-04-09 13:59:05', NULL),
+	('nbu_bw_jobs_policytypes', 3, 'customers', 'Customers', 'NUMBER', 'nbu_bw_jobs_customers', 'Show %bw_day% jobs per customer', '2020-04-09 13:59:05', '2020-04-09 13:59:05', NULL),
+	('nbu_bw_jobs_policytypes', 4, 'masterservers', 'Master servers', 'NUMBER', 'nbu_bw_jobs_masterservers', 'Show %bw_day% jobs per Master server', '2020-04-09 13:59:05', '2020-04-09 13:59:05', NULL),
+	('nbu_bw_jobs_policytypes', 5, 'policytype', 'Policy type', 'STRING', NULL, NULL, '2020-04-09 13:59:05', '2020-04-09 14:03:33', NULL),
+	('nbu_bw_jobs_policytypes', 6, 'policies', 'Policies', 'NUMBER', 'nbu_bw_jobs_policies', 'Show %bw_day% jobs per policy', '2020-04-09 13:59:05', '2020-04-09 13:59:05', NULL),
+	('nbu_bw_jobs_policytypes', 7, 'scheduletypes', 'Schedule types', 'NUMBER', 'nbu_bw_jobs_scheduletypes', 'Show %bw_day% jobs per schedule type', '2020-04-09 13:59:05', '2020-04-09 13:59:05', NULL),
+	('nbu_bw_jobs_policytypes', 8, 'schedules', 'Schedules', 'NUMBER', 'nbu_bw_jobs_schedules', 'Show %bw_day% jobs per schedule', '2020-04-09 13:59:05', '2020-04-09 13:59:05', NULL),
+	('nbu_bw_jobs_policytypes', 9, 'clients', 'Clients', 'NUMBER', 'nbu_bw_jobs_clients', 'Show %bw_day% jobs per client', '2020-04-09 13:59:05', '2020-04-09 13:59:05', NULL),
+	('nbu_bw_jobs_policytypes', 10, 'jobs', 'Jobs', 'NUMBER', 'nbu_jobs', 'Show all jobs', '2020-04-09 13:59:05', '2020-04-09 13:59:05', NULL),
+	('nbu_bw_jobs_policytypes', 11, 'gb', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-09 13:59:05', '2020-04-09 13:59:05', NULL),
+	('nbu_bw_jobs_policytypes', 12, 'in_bsr', 'Jobs in BSR', 'NUMBER', 'nbu_bsr_jobs', 'Show BSR jobs', '2020-04-09 13:59:05', '2020-04-09 13:59:05', NULL),
+	('nbu_bw_jobs_policytypes', 13, 'gb_in_bsr', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-09 13:59:05', '2020-04-09 13:59:05', NULL),
+	('nbu_bw_jobs_policytypes', 14, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed BSR jobs', '2020-04-09 13:59:05', '2020-04-09 13:59:05', NULL),
+	('nbu_bw_jobs_schedules', 1, 'bw_day', 'Backup day', 'DATE', NULL, NULL, '2020-04-09 13:59:26', '2020-04-09 13:59:26', NULL),
+	('nbu_bw_jobs_schedules', 2, 'towers', 'Towers', 'NUMBER', 'nbu_bw_jobs_towers', 'Show %bw_day% jobs per tower', '2020-04-09 13:59:26', '2020-04-09 13:59:26', NULL),
+	('nbu_bw_jobs_schedules', 3, 'customers', 'Customers', 'NUMBER', 'nbu_bw_jobs_customers', 'Show %bw_day% jobs per customer', '2020-04-09 13:59:26', '2020-04-09 13:59:26', NULL),
+	('nbu_bw_jobs_schedules', 4, 'masterservers', 'Master servers', 'NUMBER', 'nbu_bw_jobs_masterservers', 'Show %bw_day% jobs per Master server', '2020-04-09 13:59:26', '2020-04-09 13:59:26', NULL),
+	('nbu_bw_jobs_schedules', 5, 'policytypes', 'Policy types', 'NUMBER', 'nbu_bw_jobs_policytypes', 'Show %bw_day% jobs per policy type', '2020-04-09 13:59:26', '2020-04-09 13:59:26', NULL),
+	('nbu_bw_jobs_schedules', 6, 'policies', 'Policies', 'NUMBER', 'nbu_bw_jobs_policies', 'Show %bw_day% jobs per policy', '2020-04-09 13:59:26', '2020-04-09 13:59:26', NULL),
+	('nbu_bw_jobs_schedules', 7, 'scheduletypes', 'Schedule types', 'NUMBER', 'nbu_bw_jobs_scheduletypes', 'Show %bw_day% jobs per schedule type', '2020-04-09 13:59:26', '2020-04-09 13:59:26', NULL),
+	('nbu_bw_jobs_schedules', 8, 'schedule', 'Schedule name', 'STRING', 'nbu_schedules', 'Show schedule "%schedule%"', '2020-04-09 13:59:26', '2020-04-09 14:06:15', NULL),
+	('nbu_bw_jobs_schedules', 9, 'clients', 'Clients', 'NUMBER', 'nbu_bw_jobs_clients', 'Show %bw_day% jobs per client', '2020-04-09 13:59:26', '2020-04-09 13:59:26', NULL),
+	('nbu_bw_jobs_schedules', 10, 'jobs', 'Jobs', 'NUMBER', 'nbu_jobs', 'Show all jobs', '2020-04-09 13:59:26', '2020-04-09 13:59:26', NULL),
+	('nbu_bw_jobs_schedules', 11, 'gb', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-09 13:59:26', '2020-04-09 13:59:26', NULL),
+	('nbu_bw_jobs_schedules', 12, 'in_bsr', 'Jobs in BSR', 'NUMBER', 'nbu_bsr_jobs', 'Show BSR jobs', '2020-04-09 13:59:26', '2020-04-09 13:59:26', NULL),
+	('nbu_bw_jobs_schedules', 13, 'gb_in_bsr', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-09 13:59:26', '2020-04-09 13:59:26', NULL),
+	('nbu_bw_jobs_schedules', 14, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed BSR jobs', '2020-04-09 13:59:26', '2020-04-09 13:59:26', NULL),
+	('nbu_bw_jobs_scheduletypes', 1, 'bw_day', 'Backup day', 'DATE', NULL, NULL, '2020-04-09 13:59:21', '2020-04-09 13:59:21', NULL),
+	('nbu_bw_jobs_scheduletypes', 2, 'towers', 'Towers', 'NUMBER', 'nbu_bw_jobs_towers', 'Show %bw_day% jobs per tower', '2020-04-09 13:59:21', '2020-04-09 13:59:21', NULL),
+	('nbu_bw_jobs_scheduletypes', 3, 'customers', 'Customers', 'NUMBER', 'nbu_bw_jobs_customers', 'Show %bw_day% jobs per customer', '2020-04-09 13:59:21', '2020-04-09 13:59:21', NULL),
+	('nbu_bw_jobs_scheduletypes', 4, 'masterservers', 'Master servers', 'NUMBER', 'nbu_bw_jobs_masterservers', 'Show %bw_day% jobs per Master server', '2020-04-09 13:59:21', '2020-04-09 13:59:21', NULL),
+	('nbu_bw_jobs_scheduletypes', 5, 'policytypes', 'Policy types', 'NUMBER', 'nbu_bw_jobs_policytypes', 'Show %bw_day% jobs per policy type', '2020-04-09 13:59:21', '2020-04-09 13:59:21', NULL),
+	('nbu_bw_jobs_scheduletypes', 6, 'policies', 'Policies', 'NUMBER', 'nbu_bw_jobs_policies', 'Show %bw_day% jobs per policy', '2020-04-09 13:59:21', '2020-04-09 13:59:21', NULL),
+	('nbu_bw_jobs_scheduletypes', 7, 'scheduletype', 'Schedule type', 'STRING', NULL, NULL, '2020-04-09 13:59:21', '2020-04-09 14:06:27', NULL),
+	('nbu_bw_jobs_scheduletypes', 8, 'schedules', 'Schedules', 'NUMBER', 'nbu_bw_jobs_schedules', 'Show %bw_day% jobs per schedule', '2020-04-09 13:59:21', '2020-04-09 13:59:21', NULL),
+	('nbu_bw_jobs_scheduletypes', 9, 'clients', 'Clients', 'NUMBER', 'nbu_bw_jobs_clients', 'Show %bw_day% jobs per client', '2020-04-09 13:59:21', '2020-04-09 13:59:21', NULL),
+	('nbu_bw_jobs_scheduletypes', 10, 'jobs', 'Jobs', 'NUMBER', 'nbu_jobs', 'Show all jobs', '2020-04-09 13:59:21', '2020-04-09 13:59:21', NULL),
+	('nbu_bw_jobs_scheduletypes', 11, 'gb', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-09 13:59:21', '2020-04-09 13:59:21', NULL),
+	('nbu_bw_jobs_scheduletypes', 12, 'in_bsr', 'Jobs in BSR', 'NUMBER', 'nbu_bsr_jobs', 'Show BSR jobs', '2020-04-09 13:59:21', '2020-04-09 13:59:21', NULL),
+	('nbu_bw_jobs_scheduletypes', 13, 'gb_in_bsr', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-09 13:59:21', '2020-04-09 13:59:21', NULL),
+	('nbu_bw_jobs_scheduletypes', 14, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed BSR jobs', '2020-04-09 13:59:21', '2020-04-09 13:59:21', NULL),
+	('nbu_bw_jobs_towers', 1, 'bw_day', 'Backup day', 'DATE', NULL, NULL, '2020-04-09 13:58:37', '2020-04-09 13:58:37', NULL),
+	('nbu_bw_jobs_towers', 2, 'tower', 'Tower', 'STRING', NULL, NULL, '2020-04-09 13:58:37', '2020-04-09 14:06:46', NULL),
+	('nbu_bw_jobs_towers', 3, 'customers', 'Customers', 'NUMBER', 'nbu_bw_jobs_customers', 'Show %bw_day% jobs per customer', '2020-04-09 13:58:37', '2020-04-09 13:58:37', NULL),
+	('nbu_bw_jobs_towers', 4, 'masterservers', 'Master servers', 'NUMBER', 'nbu_bw_jobs_masterservers', 'Show %bw_day% jobs per Master server', '2020-04-09 13:58:37', '2020-04-09 13:58:37', NULL),
+	('nbu_bw_jobs_towers', 5, 'policytypes', 'Policy types', 'NUMBER', 'nbu_bw_jobs_policytypes', 'Show %bw_day% jobs per policy type', '2020-04-09 13:58:37', '2020-04-09 13:58:37', NULL),
+	('nbu_bw_jobs_towers', 6, 'policies', 'Policies', 'NUMBER', 'nbu_bw_jobs_policies', 'Show %bw_day% jobs per policy', '2020-04-09 13:58:37', '2020-04-09 13:58:37', NULL),
+	('nbu_bw_jobs_towers', 7, 'scheduletypes', 'Schedule types', 'NUMBER', 'nbu_bw_jobs_scheduletypes', 'Show %bw_day% jobs per schedule type', '2020-04-09 13:58:37', '2020-04-09 13:58:37', NULL),
+	('nbu_bw_jobs_towers', 8, 'schedules', 'Schedules', 'NUMBER', 'nbu_bw_jobs_schedules', 'Show %bw_day% jobs per schedule', '2020-04-09 13:58:37', '2020-04-09 13:58:37', NULL),
+	('nbu_bw_jobs_towers', 9, 'clients', 'Clients', 'NUMBER', 'nbu_bw_jobs_clients', 'Show %bw_day% jobs per client', '2020-04-09 13:58:37', '2020-04-09 13:58:37', NULL),
+	('nbu_bw_jobs_towers', 10, 'jobs', 'Jobs', 'NUMBER', 'nbu_jobs', 'Show all jobs', '2020-04-09 13:58:37', '2020-04-09 13:58:37', NULL),
+	('nbu_bw_jobs_towers', 11, 'gb', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-09 13:58:37', '2020-04-09 13:58:37', NULL),
+	('nbu_bw_jobs_towers', 12, 'in_bsr', 'Jobs in BSR', 'NUMBER', 'nbu_bsr_jobs', 'Show BSR jobs', '2020-04-09 13:58:37', '2020-04-09 13:58:37', NULL),
+	('nbu_bw_jobs_towers', 13, 'gb_in_bsr', 'Written (GB)', 'FLOAT', NULL, NULL, '2020-04-09 13:58:37', '2020-04-09 13:58:37', NULL),
+	('nbu_bw_jobs_towers', 14, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed BSR jobs', '2020-04-09 13:58:37', '2020-04-09 13:58:37', NULL),
 	('nbu_clients', 1, 'masterserver', 'Master server', 'STRING', NULL, NULL, '2017-02-13 10:20:30', '2017-02-13 10:40:30', NULL),
 	('nbu_clients', 2, 'tower', 'Tower', 'STRING', NULL, NULL, '2017-02-13 10:24:08', '2017-04-27 13:39:54', NULL),
 	('nbu_clients', 3, 'customer', 'Customer', 'STRING', NULL, NULL, '2017-02-13 10:24:08', '2017-04-27 13:39:54', NULL),
-	('nbu_clients', 4, 'policyname', 'Policy Name', 'STRING', 'nbu_policies', 'Show policy \'%policyname%\'', '2017-02-13 10:24:44', '2017-06-13 09:42:12', NULL),
-	('nbu_clients', 4, 'type', 'Type', 'STRING', NULL, NULL, '2017-02-13 10:24:44', '2017-12-15 10:17:00', NULL),
-	('nbu_clients', 5, 'name', 'Host name', 'STRING', NULL, NULL, '2017-02-13 10:25:07', '2017-06-13 09:42:14', NULL),
-	('nbu_clients', 6, 'architecture', 'Architecture', 'STRING', NULL, NULL, '2017-02-13 10:25:40', '2017-06-13 09:42:15', NULL),
-	('nbu_clients', 7, 'os', 'OS', 'STRING', NULL, NULL, '2017-02-13 10:25:49', '2017-06-13 09:42:18', NULL),
-	('nbu_clients', 8, 'jobs', 'Jobs', 'NUMBER', 'nbu_jobs', 'Show jobs for \'%policyname%\' and \'%name%\'', '2017-02-13 10:25:49', '2017-04-27 13:39:37', NULL),
-	('nbu_clients', 9, 'failures', 'Failures', 'NUMBER', 'nbu_jobs', 'Show failed jobs for \'%policyname%\' and \'%name%\'', '2017-02-13 10:25:49', '2017-04-27 13:39:35', NULL),
-	('nbu_clients', 10, 'gbytes', 'Written (GB)', 'FLOAT', NULL, NULL, '2017-02-13 10:25:49', '2017-06-13 14:39:08', NULL),
+	('nbu_clients', 4, 'policyname', 'Policy name', 'STRING', NULL, NULL, '2017-02-13 10:24:44', '2020-06-02 13:45:09', NULL),
+	('nbu_clients', 5, 'type', 'Type', 'STRING', NULL, NULL, '2017-02-13 10:24:44', '2017-12-15 10:17:00', NULL),
+	('nbu_clients', 6, 'name', 'Host name', 'STRING', NULL, NULL, '2017-02-13 10:25:07', '2017-06-13 09:42:14', NULL),
+	('nbu_clients', 7, 'architecture', 'Architecture', 'STRING', NULL, NULL, '2017-02-13 10:25:40', '2017-06-13 09:42:15', NULL),
+	('nbu_clients', 8, 'os', 'OS', 'STRING', NULL, NULL, '2017-02-13 10:25:49', '2017-06-13 09:42:18', NULL),
+	('nbu_clients', 9, 'jobs', 'Jobs', 'NUMBER', 'nbu_jobs', 'Show jobs for \'%policyname%\' and \'%name%\'', '2017-02-13 10:25:49', '2017-04-27 13:39:37', NULL),
+	('nbu_clients', 10, 'failures', 'Failures', 'NUMBER', 'nbu_jobs', 'Show failed jobs for \'%policyname%\' and \'%name%\'', '2017-02-13 10:25:49', '2017-04-27 13:39:35', NULL),
+	('nbu_clients', 11, 'gbytes', 'Written (GB)', 'FLOAT', NULL, NULL, '2017-02-13 10:25:49', '2017-06-13 14:39:08', NULL),
+	('nbu_clients', 12, 'last_day', 'Last day', 'DATE', NULL, NULL, '2017-02-13 10:25:49', '2017-06-13 14:39:08', NULL),
 	('nbu_clients_distinct', 1, 'masterserver', 'Master server', 'STRING', NULL, NULL, '2017-02-13 10:20:30', '2017-02-13 10:40:30', NULL),
 	('nbu_clients_distinct', 2, 'tower', 'Tower', 'STRING', NULL, NULL, '2017-02-13 10:24:08', '2017-04-27 13:39:54', NULL),
 	('nbu_clients_distinct', 3, 'customer', 'Customer', 'STRING', NULL, NULL, '2017-02-13 10:24:08', '2017-04-27 13:39:54', NULL),
@@ -2539,6 +3121,7 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_clients_distinct', 8, 'jobs', 'Jobs', 'NUMBER', 'nbu_jobs', 'Show jobs for \'%name%\'', '2017-02-13 10:25:49', '2017-12-15 10:13:16', NULL),
 	('nbu_clients_distinct', 9, 'failures', 'Failures', 'NUMBER', 'nbu_jobs', 'Show failed jobs for \'%name%\'', '2017-02-13 10:25:49', '2017-12-15 10:13:23', NULL),
 	('nbu_clients_distinct', 10, 'gbytes', 'Written (GB)', 'FLOAT', NULL, NULL, '2017-02-13 10:25:49', '2017-06-13 14:39:08', NULL),
+	('nbu_clients_distinct', 11, 'last_day', 'Last day', 'DATE', NULL, NULL, '2017-02-13 10:25:49', '2017-06-13 14:39:08', NULL),
 	('nbu_codes', 1, 'field', 'Field name', 'STRING', NULL, NULL, '2017-05-12 13:07:33', '2017-05-12 13:08:38', NULL),
 	('nbu_codes', 2, 'code', 'Code', 'NUMBER', NULL, NULL, '2017-05-12 13:07:33', '2017-05-12 13:17:18', NULL),
 	('nbu_codes', 3, 'description', 'Description', 'STRING', NULL, NULL, '2017-05-12 13:07:33', '2017-05-12 13:17:21', NULL),
@@ -2591,8 +3174,8 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_gbsr_schedule', 2, 'jobs', 'Jobs', 'NUMBER', 'nbu_bsr_jobs', 'Show jobs for %schedule%', '2017-03-22 15:15:36', '2017-03-22 15:19:06', NULL),
 	('nbu_gbsr_schedule', 3, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed jobs for %schedule%', '2017-03-22 15:15:36', '2018-01-04 10:53:45', NULL),
 	('nbu_gbsr_type', 1, 'type', 'Type', 'STRING', NULL, NULL, '2017-03-22 15:15:41', '2017-03-22 15:19:21', NULL),
-	('nbu_gbsr_type', 2, 'jobs', 'Jobs', 'NUMBER', 'nbu_bsr_jobs', 'Show jobs for %type%', '2017-03-22 15:15:41', '2017-03-22 15:19:38', NULL),
-	('nbu_gbsr_type', 3, 'bsr', 'BSR', 'FLOAT', 'nbu_bsr_jobs', 'Show failed jobs for %type%', '2017-03-22 15:15:41', '2017-03-23 14:55:46', NULL),
+	('nbu_gbsr_type', 2, 'jobs', 'Jobs', 'NUMBER', NULL, NULL, '2017-03-22 15:15:41', '2020-04-09 15:16:34', NULL),
+	('nbu_gbsr_type', 3, 'bsr', 'BSR', 'FLOAT', NULL, NULL, '2017-03-22 15:15:41', '2020-04-09 15:16:33', NULL),
 	('nbu_images', 1, 'masterserver', 'Master Server', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
 	('nbu_images', 2, 'tower', 'Tower', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
 	('nbu_images', 3, 'customer', 'Customer', 'STRING', NULL, NULL, '2017-02-13 10:32:41', '2017-02-13 10:40:47', NULL),
@@ -2625,7 +3208,7 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_jobs', 3, 'childjobs', 'Childs', 'NUMBER', 'nbu_jobs', 'Show child jobs for %parentjob%', '2017-02-13 10:34:19', '2017-03-20 15:47:05', NULL),
 	('nbu_jobs', 4, 'parentjob', 'Parent job', 'NUMBER', NULL, NULL, '2017-02-13 10:34:19', '2017-05-11 14:19:36', NULL),
 	('nbu_jobs', 5, 'status', 'Status', 'STRING', 'nbu_codes', 'Show description for status \'%status%\'', '2017-02-13 10:36:00', '2017-05-12 13:18:01', NULL),
-	('nbu_jobs', 6, 'tower', 'Tower', 'STRING', NULL, NULL, '2017-02-13 10:36:39', '2017-05-11 14:53:09', '2017-05-11 14:53:08'),
+	('nbu_jobs', 6, 'tower', 'Tower', 'STRING', NULL, NULL, '2017-02-13 10:36:39', '2020-04-09 15:02:31', NULL),
 	('nbu_jobs', 7, 'customer', 'Customer', 'STRING', NULL, NULL, '2017-02-13 10:36:39', '2017-05-11 14:27:45', NULL),
 	('nbu_jobs', 8, 'policy', 'Policy name', 'STRING', 'nbu_policies', 'Show policy \'%policy%\'', '2017-02-13 10:36:52', '2017-05-11 14:19:55', NULL),
 	('nbu_jobs', 9, 'policytype', 'P.type', 'STRING', NULL, NULL, '2017-02-13 10:37:11', '2017-05-11 14:27:39', NULL),
@@ -2638,6 +3221,7 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_jobs', 16, 'operation', 'Operation', 'STRING', NULL, NULL, '2017-02-13 10:35:41', '2017-05-11 14:20:30', NULL),
 	('nbu_jobs', 17, 'server', 'Server', 'STRING', NULL, NULL, '2017-02-13 10:38:29', '2017-04-27 13:41:21', NULL),
 	('nbu_jobs', 18, 'percent', '%', 'NUMBER', NULL, NULL, '2017-02-13 10:36:12', '2017-05-11 14:23:29', NULL),
+	('nbu_jobs', 19, 'bw_day', 'Backup day', 'DATE', NULL, NULL, '2017-02-13 10:38:41', '2017-05-11 14:23:39', NULL),
 	('nbu_jobs', 19, 'started', 'Started', 'DATE', NULL, NULL, '2017-02-13 10:38:41', '2017-05-11 14:23:39', NULL),
 	('nbu_jobs', 20, 'elapsed', 'Elapsed', 'STRING', NULL, NULL, '2017-02-13 10:39:05', '2017-10-18 11:13:36', NULL),
 	('nbu_jobs', 21, 'ended', 'Ended', 'DATE', NULL, NULL, '2017-02-13 10:39:14', '2017-05-11 14:23:42', NULL),
@@ -2653,21 +3237,23 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_jobs', 31, 'retentionperiod', 'RP', 'NUMBER', NULL, NULL, '2017-03-22 09:06:01', '2018-10-25 10:34:49', NULL),
 	('nbu_jobs', 32, 'restartable', 'Restart', 'NUMBER', NULL, NULL, '2017-03-22 09:06:21', '2018-10-25 10:34:51', NULL),
 	('nbu_jobs', 33, 'kbpersec', 'kB/s', 'NUMBER', NULL, NULL, '2017-03-22 09:06:38', '2018-10-25 10:34:53', NULL),
-	('nbu_overview_clients', 1, 'customer', 'Customer', 'STRING', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 10:55:58', NULL),
-	('nbu_overview_clients', 2, 'name', 'Host name', 'STRING', NULL, NULL, '2017-06-13 10:06:45', '2017-12-15 09:42:09', NULL),
-	('nbu_overview_clients', 3, 'architecture', 'Architecture', 'STRING', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 10:56:00', NULL),
-	('nbu_overview_clients', 4, 'os', 'OS', 'STRING', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 10:56:01', NULL),
-	('nbu_overview_clients', 5, 'policies', 'Policies', 'STRING', 'nbu_clients', 'Show policies for \'%name%\'', '2017-06-13 10:06:45', '2017-12-15 09:45:01', NULL),
-	('nbu_overview_clients', 6, 'bsrjobs', 'BSR Jobs', 'NUMBER', 'nbu_bsr_jobs', 'Show BSR jobs for \'%name%\'', '2017-06-13 10:06:45', '2017-06-13 11:17:35', NULL),
-	('nbu_overview_clients', 7, 'bsr', '%', 'FLOAT', 'nbu_bsr_jobs', 'Show BSR failed jobs for \'%name%\'', '2017-06-13 10:06:45', '2017-06-13 14:35:57', NULL),
-	('nbu_overview_clients', 8, 'jobs', 'All Jobs', 'NUMBER', 'nbu_jobs', 'Show jobs for \'%name%\'', '2017-06-13 10:06:45', '2017-06-13 14:35:00', NULL),
-	('nbu_overview_clients', 9, 'failures', 'Failed', 'NUMBER', 'nbu_jobs', 'Show failed jobs for \'%name%\'', '2017-06-13 10:06:45', '2017-06-13 14:35:10', NULL),
-	('nbu_overview_clients', 10, 'gbytes', 'Written (GB)', 'FLOAT', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
-	('nbu_overview_clients', 11, 'images', 'Images', 'NUMBER', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
-	('nbu_overview_clients', 12, 'vmedia', 'Virtual media', 'NUMBER', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
-	('nbu_overview_clients', 13, 'pmedia', 'Physical media', 'NUMBER', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
-	('nbu_overview_clients', 14, 'labels', 'Physical labels', 'STRING', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
-	('nbu_overview_clients', 15, 'gbretained', 'Retained (GB)', 'FLOAT', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
+	('nbu_overview_clients', 1, 'tower', 'Tower', 'STRING', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 10:55:58', NULL),
+	('nbu_overview_clients', 2, 'customer', 'Customer', 'STRING', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 10:55:58', NULL),
+	('nbu_overview_clients', 3, 'masterserver', 'Master Server', 'STRING', NULL, NULL, '2017-06-13 10:06:45', '2020-04-22 10:40:52', NULL),
+	('nbu_overview_clients', 4, 'name', 'Host name', 'STRING', NULL, NULL, '2017-06-13 10:06:45', '2017-12-15 09:42:09', NULL),
+	('nbu_overview_clients', 5, 'architecture', 'Architecture', 'STRING', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 10:56:00', NULL),
+	('nbu_overview_clients', 6, 'os', 'OS', 'STRING', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 10:56:01', NULL),
+	('nbu_overview_clients', 7, 'policies', 'Policies', 'STRING', 'nbu_clients', 'Show policies for \'%name%\'', '2017-06-13 10:06:45', '2017-12-15 09:45:01', NULL),
+	('nbu_overview_clients', 8, 'bsrjobs', 'BSR Jobs', 'NUMBER', 'nbu_bsr_jobs', 'Show BSR jobs for \'%name%\'', '2017-06-13 10:06:45', '2017-06-13 11:17:35', NULL),
+	('nbu_overview_clients', 9, 'bsr', '%', 'FLOAT', 'nbu_bsr_jobs', 'Show BSR failed jobs for \'%name%\'', '2017-06-13 10:06:45', '2017-06-13 14:35:57', NULL),
+	('nbu_overview_clients', 10, 'jobs', 'All Jobs', 'NUMBER', 'nbu_jobs', 'Show jobs for \'%name%\'', '2017-06-13 10:06:45', '2017-06-13 14:35:00', NULL),
+	('nbu_overview_clients', 11, 'failures', 'Failed', 'NUMBER', 'nbu_jobs', 'Show failed jobs for \'%name%\'', '2017-06-13 10:06:45', '2017-06-13 14:35:10', NULL),
+	('nbu_overview_clients', 12, 'gbytes', 'Written (GB)', 'FLOAT', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
+	('nbu_overview_clients', 13, 'images', 'Images', 'NUMBER', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
+	('nbu_overview_clients', 14, 'vmedia', 'Virtual media', 'NUMBER', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
+	('nbu_overview_clients', 15, 'pmedia', 'Physical media', 'NUMBER', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
+	('nbu_overview_clients', 16, 'labels', 'Physical labels', 'STRING', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
+	('nbu_overview_clients', 17, 'gbretained', 'Retained (GB)', 'FLOAT', NULL, NULL, '2017-06-13 10:06:45', '2017-06-13 14:38:26', NULL),
 	('nbu_overview_customers', 1, 'customer', 'Customer', 'STRING', NULL, NULL, '2017-06-13 10:49:42', '2017-06-13 10:56:09', NULL),
 	('nbu_overview_customers', 2, 'clients', 'Clients', 'NUMBER', 'nbu_clients_distinct', 'Show clients for \'%customer%\'', '2017-06-13 10:49:42', '2017-12-15 09:52:57', NULL),
 	('nbu_overview_customers', 3, 'integ_clients', 'Integ Clients', 'NUMBER', 'nbu_clients_distinct', 'Show Integ clients for \'%customer%\'', '2017-06-13 10:49:42', '2017-12-15 09:53:04', NULL),
@@ -2702,6 +3288,12 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_policies', 12, 'gbytes', 'Written (GB)', 'FLOAT', NULL, NULL, '2017-03-20 09:08:35', '2017-07-14 14:55:17', NULL),
 	('nbu_policies', 13, 'res', 'Residence', 'STRING', NULL, NULL, '2017-03-20 09:08:35', '2019-04-23 09:04:48', NULL),
 	('nbu_policies', 14, 'maxjobsperclient', 'J/C', 'NUMBER', NULL, NULL, '2017-03-20 09:09:18', '2019-04-23 09:02:54', NULL),
+	('nbu_puredisks', 1, 'masterserver', 'Master Server', 'STRING', NULL, NULL, '2020-03-05 08:32:39', '2020-03-05 08:32:39', NULL),
+	('nbu_puredisks', 2, 'diskpool', 'Disk Pool', 'STRING', NULL, NULL, '2020-03-05 08:33:15', '2020-03-05 08:33:45', NULL),
+	('nbu_puredisks', 3, 'disk_media_id', 'Media ID', 'STRING', NULL, NULL, '2020-03-05 08:33:37', '2020-03-05 08:33:37', NULL),
+	('nbu_puredisks', 4, 'total_capacity', 'Capacity', 'FLOAT', NULL, NULL, '2020-03-05 08:34:21', '2020-03-05 08:34:21', NULL),
+	('nbu_puredisks', 5, 'free_space', 'Free space', 'FLOAT', NULL, NULL, '2020-03-05 08:34:55', '2020-03-05 08:34:55', NULL),
+	('nbu_puredisks', 6, 'used', 'Used %', 'FLOAT', NULL, NULL, '2020-03-05 08:35:17', '2020-03-05 08:35:17', NULL),
 	('nbu_schedules', 1, 'masterserver', 'Master server', 'STRING', NULL, NULL, '2017-03-20 14:46:35', '2017-03-20 14:46:35', NULL),
 	('nbu_schedules', 2, 'tower', 'Tower', 'STRING', NULL, NULL, '2017-03-20 14:47:00', '2017-03-20 14:47:00', NULL),
 	('nbu_schedules', 3, 'customer', 'Customer', 'STRING', NULL, NULL, '2017-03-20 14:47:00', '2017-04-27 13:43:13', NULL),
@@ -2831,10 +3423,15 @@ REPLACE INTO `core_fields` (`source`, `ord`, `name`, `title`, `type`, `link`, `d
 	('nbu_vault_vaults', 10, 'profiles', 'Profiles', 'NUMBER', 'nbu_vault_profiles', 'Show profiles for \'%name%\'', '2017-07-24 15:48:02', '2017-07-24 16:00:39', NULL),
 	('nbu_vault_vaults', 11, 'lastmod', 'Last modified', 'DATE', NULL, NULL, '2017-07-24 15:48:15', '2017-07-24 15:58:03', NULL);
 
-REPLACE INTO `core_filters` (`report`, `ord`, `source`, `field`, `operator`, `value`, `created`, `updated`, `obsoleted`) VALUES
+INSERT INTO `core_filters` (`report`, `ord`, `source`, `field`, `operator`, `value`, `created`, `updated`, `obsoleted`) VALUES
 	('nbu_consecutive_failures', 1, 'nbu_consecutive_failures', 'failures', '>', '1', '2017-08-31 15:40:04', '2017-08-31 15:44:48', '2017-08-31 15:44:46');
 
-REPLACE INTO `core_formats` (`report`, `ord`, `source`, `field`, `operator`, `value`, `style`, `description`, `fields`, `created`, `updated`, `obsoleted`) VALUES
+INSERT INTO `core_formats` (`report`, `ord`, `source`, `field`, `operator`, `value`, `style`, `description`, `fields`, `created`, `updated`, `obsoleted`) VALUES
+	('audit_(partial|missing|complete)', 1, 'audit_(partial|missing|complete)', 'STATUS', '=', 'OK', 'background-color: palegreen; color: green;', 'OK', NULL, '2018-01-18 14:18:56', '2018-01-18 14:19:36', NULL),
+	('audit_(partial|missing|complete)', 2, 'audit_(partial|missing|complete)', 'STATUS', '=', 'EXCEPTION', 'background-color: greenyellow; color: green;', 'Exception', NULL, '2018-01-18 14:20:23', '2018-01-18 14:21:13', NULL),
+	('audit_(partial|missing|complete)', 3, 'audit_(partial|missing|complete)', 'STATUS', '=', 'WRONG', 'background-color: gold; color: brown;', 'Wrong protection', NULL, '2018-01-18 14:20:23', '2018-01-18 14:24:49', NULL),
+	('audit_(partial|missing|complete)', 4, 'audit_(partial|missing|complete)', 'STATUS', '=', 'MISSING', 'background-color: lightpink; color: red;', 'Missing', NULL, '2018-01-18 14:20:23', '2018-01-18 14:22:12', NULL),
+	('audit_qrs', 1, 'audit_qrs', 'DATA_CENTER', '!=', NULL, 'background-color: palegreen; color: green;', 'QRS', NULL, '2018-01-18 14:23:54', '2018-01-18 14:32:55', NULL),
 	('nbu_(audit|clients|policies|schedules)', 4, 'nbu_(audit|clients|policies|schedules)', 'customer', '=', NULL, 'background-color: lightpink; color: red;', 'No customer', NULL, '2017-03-16 12:44:24', '2017-10-09 15:05:29', NULL),
 	('nbu_(audit|clients|policies|schedules)', 5, 'nbu_(audit|clients|policies|schedules)', 'tower', '=', NULL, 'background-color: pink; color: red;', 'No tower', NULL, '2017-04-27 13:50:18', '2017-10-09 15:05:29', NULL),
 	('nbu_(bsr_)?jobs', 1, 'nbu_(bsr_)?jobs', 'status', '=', '0', 'background-color: lightgreen; color: green;', 'Success', NULL, '2017-03-22 12:18:38', '2017-04-12 09:15:10', NULL),
@@ -2848,13 +3445,14 @@ REPLACE INTO `core_formats` (`report`, `ord`, `source`, `field`, `operator`, `va
 	('nbu_(clients|policies|schedules)(_.+)?', 1, 'nbu_(clients|policies|schedules)', 'jobs', '=', '0', 'background-color: silver; color: black;', 'No jobs', NULL, '2017-03-15 14:24:58', '2017-12-15 10:03:29', NULL),
 	('nbu_(clients|policies|schedules)(_.+)?', 2, 'nbu_(clients|policies|schedules)', 'jobs', '>', '0', 'background-color: lightgreen; color: green;', 'Jobs', NULL, '2017-03-16 12:44:24', '2017-12-15 10:03:30', NULL),
 	('nbu_(clients|policies|schedules)(_.+)?', 3, 'nbu_(clients|policies|schedules)', 'failures', '>', '0', 'background-color: greenyellow; color: green;', 'Failures', NULL, '2017-03-16 12:44:24', '2017-12-15 10:03:31', NULL),
-	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 1, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 'bsr', '>=', '0', 'background-color: salmon; color: darkred;', 'Below 75%', NULL, '2017-03-22 12:30:00', '2019-04-05 11:14:35', NULL),
-	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 2, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 'bsr', '>=', '75', 'background-color: lightpink; color: red;', '75%', NULL, '2017-03-22 12:30:00', '2019-04-05 11:14:35', NULL),
-	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 3, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 'bsr', '>=', '90', 'background-color: gold; color: brown;', '90%', NULL, '2017-03-22 12:30:00', '2019-04-05 11:14:36', NULL),
-	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 4, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 'bsr', '>=', '95', 'background-color: greenyellow; color: green;', '95%', NULL, '2017-03-22 12:30:00', '2019-04-05 11:14:36', NULL),
-	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 5, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results)', 'bsr', '>=', '98', 'background-color: lightgreen; color: green;', '98%', NULL, '2017-03-22 12:30:00', '2019-04-05 11:14:37', NULL),
+	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results|bw_jobs)', 1, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results|bw_jobs)', 'bsr', '>=', '0', 'background-color: salmon; color: darkred;', 'Below 75%', NULL, '2017-03-22 12:30:00', '2020-04-08 18:11:10', NULL),
+	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results|bw_jobs)', 2, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results|bw_jobs)', 'bsr', '>=', '75', 'background-color: lightpink; color: red;', '75%', NULL, '2017-03-22 12:30:00', '2020-04-08 18:11:09', NULL),
+	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results|bw_jobs)', 3, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results|bw_jobs)', 'bsr', '>=', '90', 'background-color: gold; color: brown;', '90%', NULL, '2017-03-22 12:30:00', '2020-04-08 18:11:09', NULL),
+	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results|bw_jobs)', 4, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results|bw_jobs)', 'bsr', '>=', '95', 'background-color: greenyellow; color: green;', '95%', NULL, '2017-03-22 12:30:00', '2020-04-08 18:11:08', NULL),
+	('nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results|bw_jobs)', 5, 'nbu_(g?bsr($|_(c|p|s|t).+)|overview|bsr_job_results|bw_jobs)', 'bsr', '>=', '98', 'background-color: lightgreen; color: green;', '98%', NULL, '2017-03-22 12:30:00', '2020-04-08 18:11:08', NULL),
 	('nbu_audit', 1, 'nbu_audit', 'vault', '=', NULL, 'background-color: greenyellow; color: green;', 'Without vaulting', NULL, '2017-10-09 15:02:36', '2017-10-09 15:08:03', NULL),
 	('nbu_audit', 2, 'nbu_audit', 'vault', '!=', NULL, 'background-color: lightgreen; color: green;', 'With vaulting', NULL, '2017-10-09 15:03:30', '2017-10-09 15:08:07', NULL),
+	('nbu_bw_jobs', 0, 'nbu_bw_jobs', 'in_bsr', '=', '0', 'background-color: lightblue; color: blue;', 'No BSR jobs', NULL, '2017-03-22 12:18:38', '2017-06-02 10:07:48', NULL),
 	('nbu_codes', 1, 'nbu_codes', 'code', '=', '0', 'background-color: lightgreen; color: green;', 'Success', NULL, '2017-05-12 13:36:29', '2017-05-12 13:37:35', NULL),
 	('nbu_codes', 2, 'nbu_codes', 'code', '=', '1', 'background-color: greenyellow; color: green;', 'Partial', NULL, '2017-05-12 13:36:29', '2017-05-12 13:37:32', NULL),
 	('nbu_codes', 3, 'nbu_codes', 'code', '>', '1', 'background-color: lightpink; color: red;', 'Failed', NULL, '2017-05-12 13:36:29', '2017-05-12 13:38:06', NULL),
@@ -2870,6 +3468,9 @@ REPLACE INTO `core_formats` (`report`, `ord`, `source`, `field`, `operator`, `va
 	('nbu_flist', 3, 'nbu_flist', 'schedule_type', 'regexp', 'full', 'font-weight:bold;', 'Full backup objects', NULL, '2018-10-26 13:14:55', '2018-10-26 13:15:02', NULL),
 	('nbu_images', 1, 'nbu_images', 'id_path', 'regexp', '^@', 'background-color: honeydew; font-style: italic;', 'Virtual tape', NULL, '2018-10-26 13:14:55', '2018-10-26 13:15:02', NULL),
 	('nbu_images', 2, 'nbu_images', 'id_path', 'regexp', '^\\w', 'background-color: lightcyan; color: black;', 'Physical tape', NULL, '2018-10-26 13:14:55', '2018-10-26 13:15:02', NULL),
+	('nbu_puredisks', 1, 'nbu_puredisks', 'used', '>', '0', 'background-color: lightgreen; color: green;', 'Normal', NULL, '2020-03-05 08:37:24', '2020-03-05 08:39:18', NULL),
+	('nbu_puredisks', 2, 'nbu_puredisks', 'used', '>', '80', 'background-color: gold; color: brown;', 'High', NULL, '2020-03-05 08:37:24', '2020-03-05 08:40:46', NULL),
+	('nbu_puredisks', 3, 'nbu_puredisks', 'used', '>', '90', 'background-color: lightpink; color: red;', 'Critical', NULL, '2020-03-05 08:37:24', '2020-03-05 08:41:29', NULL),
 	('nbu_slps', 1, 'nbu_slps', 'usefor', '=', 'Snapshot', 'background-color: greenyellow; color: green;', 'Snapshot', NULL, '2019-04-17 15:02:15', '2019-04-17 15:02:35', NULL),
 	('nbu_slps', 2, 'nbu_slps', 'usefor', 'REGEXP', 'Backup', 'background-color: lightgreen; color: green;', 'Backup', NULL, '2019-04-17 15:00:28', '2019-04-17 15:03:37', NULL),
 	('nbu_slps', 3, 'nbu_slps', 'usefor', '=', 'Duplication', 'background-color: lightblue; color: blue;', 'Duplication', NULL, '2019-04-17 15:01:24', '2019-04-17 15:01:47', NULL),
@@ -2885,30 +3486,79 @@ REPLACE INTO `core_formats` (`report`, `ord`, `source`, `field`, `operator`, `va
 	('nbu_vault_vaults', 1, 'nbu_vault_vaults', 'profiles', '=', '0', 'background-color: lightpink; color: red;', 'Without profiles', NULL, '2017-07-26 09:45:48', '2017-07-26 09:53:30', NULL),
 	('nbu_vault_vaults', 2, 'nbu_vault_vaults', 'profiles', '>', '0', 'background-color: lightblue; color: blue;', 'With profiles', NULL, '2017-07-26 09:45:54', '2017-07-26 09:56:10', NULL);
 
-REPLACE INTO `core_links` (`source`, `field`, `ord`, `target`, `filter`, `operator`, `value`, `created`, `updated`, `obsoleted`) VALUES
+INSERT INTO `core_links` (`source`, `field`, `ord`, `target`, `filter`, `operator`, `value`, `created`, `updated`, `obsoleted`) VALUES
 	('nbu(_bsr)?_jobs', 'backupid', 1, 'nbu_flist', 'masterserver', '=', '%masterserver%', '2017-03-20 15:38:43', '2018-10-26 13:37:14', NULL),
 	('nbu(_bsr)?_jobs', 'backupid', 2, 'nbu_flist', 'backupid', '=', '%backupid%', '2017-03-20 15:38:43', '2018-10-26 13:35:48', NULL),
 	('nbu(_bsr)?_jobs', 'childjobs', 1, 'nbu_jobs', 'parentjob', '=', '%parentjob%', '2017-03-20 15:36:14', '2017-04-10 15:06:36', NULL),
-	('nbu(_bsr)?_jobs', 'policy', 1, 'nbu_policies', 'name', '=', '%policy%', '2017-03-20 15:37:51', '2017-04-10 15:06:37', NULL),
-	('nbu(_bsr)?_jobs', 'schedule', 1, 'nbu_schedules', 'policyname', '=', '%policy%', '2017-03-20 15:38:11', '2017-04-10 15:06:38', NULL),
-	('nbu(_bsr)?_jobs', 'schedule', 2, 'nbu_schedules', 'name', '=', '%schedule%', '2017-03-20 15:38:43', '2017-04-10 15:06:38', NULL),
+	('nbu(_bsr)?_jobs', 'policy', 1, 'nbu_policies', 'name', '=', '%policy%', '2017-03-20 15:37:51', '2020-04-09 13:16:17', NULL),
+	('nbu(_bsr)?_jobs', 'schedule', 1, 'nbu_schedules', 'policyname', '=', '%policy%', '2017-03-20 15:38:11', '2020-04-09 13:16:16', NULL),
+	('nbu(_bsr)?_jobs', 'schedule', 2, 'nbu_schedules', 'name', '=', '%schedule%', '2017-03-20 15:38:43', '2020-04-09 13:16:09', NULL),
 	('nbu(_bsr)?_jobs', 'status', 1, 'nbu_codes', 'field', '=', 'status', '2017-03-20 15:38:43', '2017-05-12 13:19:39', NULL),
 	('nbu(_bsr)?_jobs', 'status', 2, 'nbu_codes', 'code', '=', '%status%', '2017-03-20 15:38:43', '2017-05-12 13:19:38', NULL),
-	('nbu_bsr($|_(c|p|s|t).+)', 'bsr', 1, 'nbu_bsr_jobs', 'bw_day', '=', '%day%', '2017-03-22 12:23:55', '2018-08-13 10:47:14', NULL),
-	('nbu_bsr($|_(c|p|s|t).+)', 'jobs', 1, 'nbu_bsr_jobs', 'bw_day', '=', '%day%', '2017-03-22 12:23:55', '2018-08-13 10:47:15', NULL),
-	('nbu_clients', 'failures', 1, 'nbu_jobs', 'policy', '=', '%policyname%', '2017-03-20 14:01:30', '2017-03-20 14:50:21', NULL),
+	('nbu_bsr($|_(c|p|s).+)', 'bsr', 1, 'nbu_bsr_jobs', 'bw_day', '=', '%day%', '2017-03-22 12:23:55', '2020-04-08 17:41:38', NULL),
+	('nbu_bsr($|_(c|p|s).+)', 'jobs', 1, 'nbu_bsr_jobs', 'bw_day', '=', '%day%', '2017-03-22 12:23:55', '2020-04-08 17:41:43', NULL),
+	('nbu_bw_jobs', 'bsr', 1, 'nbu_bsr_jobs', 'bw_day', '=', '%bw_day%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs', 'bsr', 10, 'nbu_bsr_jobs', 'status', '>', '1', '2020-04-08 18:03:26', '2020-04-09 14:47:57', NULL),
+	('nbu_bw_jobs', 'clients', 1, 'nbu_bw_jobs_clients', 'bw_day', '=', '%bw_day%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs', 'customers', 1, 'nbu_bw_jobs_customers', 'bw_day', '=', '%bw_day%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs', 'in_bsr', 1, 'nbu_bsr_jobs', 'bw_day', '=', '%bw_day%', '2020-04-08 18:03:26', '2020-04-08 18:27:54', NULL),
+	('nbu_bw_jobs', 'jobs', 1, 'nbu_jobs', 'bw_day', '=', '%bw_day%', '2020-04-08 18:03:26', '2020-04-08 18:43:19', NULL),
+	('nbu_bw_jobs', 'masterservers', 1, 'nbu_bw_jobs_masterservers', 'bw_day', '=', '%bw_day%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs', 'policies', 1, 'nbu_bw_jobs_policies', 'bw_day', '=', '%bw_day%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs', 'policytypes', 1, 'nbu_bw_jobs_policytypes', 'bw_day', '=', '%bw_day%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs', 'schedules', 1, 'nbu_bw_jobs_schedules', 'bw_day', '=', '%bw_day%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs', 'scheduletypes', 1, 'nbu_bw_jobs_scheduletypes', 'bw_day', '=', '%bw_day%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs', 'towers', 1, 'nbu_bw_jobs_towers', 'bw_day', '=', '%bw_day%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs_(client|d)', 'bsr', 5, 'nbu_bsr_jobs', 'client', '=', '%client%', '2020-04-08 18:03:26', '2020-04-09 15:06:18', NULL),
+	('nbu_bw_jobs_(client|d)', 'client', 1, 'nbu_clients_distinct', 'name', '=', '%client%', '2017-06-13 11:03:39', '2020-04-09 15:06:16', NULL),
+	('nbu_bw_jobs_(client|d)', 'in_bsr', 5, 'nbu_bsr_jobs', 'client', '=', '%client%', '2020-04-08 18:03:26', '2020-04-09 15:06:19', NULL),
+	('nbu_bw_jobs_(client|d)', 'jobs', 5, 'nbu_jobs', 'client', '=', '%client%', '2020-04-08 18:03:26', '2020-04-09 15:06:21', NULL),
+	('nbu_bw_jobs_(m|d)', 'bsr', 2, 'nbu_bsr_jobs', 'masterserver', '=', '%masterserver%', '2020-04-08 18:03:26', '2020-04-09 13:13:20', NULL),
+	('nbu_bw_jobs_(m|d)', 'in_bsr', 2, 'nbu_bsr_jobs', 'masterserver', '=', '%masterserver%', '2020-04-08 18:03:26', '2020-04-09 13:14:38', NULL),
+	('nbu_bw_jobs_(m|d)', 'jobs', 2, 'nbu_jobs', 'masterserver', '=', '%masterserver%', '2020-04-08 18:03:26', '2020-04-09 13:15:28', NULL),
+	('nbu_bw_jobs_(policies|d)', 'bsr', 3, 'nbu_bsr_jobs', 'policy', '=', '%policy%', '2020-04-08 18:03:26', '2020-04-09 13:13:51', NULL),
+	('nbu_bw_jobs_(policies|d)', 'in_bsr', 3, 'nbu_bsr_jobs', 'policy', '=', '%policy%', '2020-04-08 18:03:26', '2020-04-09 13:14:48', NULL),
+	('nbu_bw_jobs_(policies|d)', 'jobs', 3, 'nbu_jobs', 'policy', '=', '%policy%', '2020-04-08 18:03:26', '2020-04-09 13:15:19', NULL),
+	('nbu_bw_jobs_(policies|d)', 'policy', 1, 'nbu_policies', 'name', '=', '%policy%', '2017-03-20 15:37:51', '2020-04-09 13:16:17', NULL),
+	('nbu_bw_jobs_(schedules|d)', 'bsr', 4, 'nbu_bsr_jobs', 'schedule', '=', '%schedule%', '2020-04-08 18:03:26', '2020-04-09 13:14:01', NULL),
+	('nbu_bw_jobs_(schedules|d)', 'in_bsr', 4, 'nbu_bsr_jobs', 'schedule', '=', '%schedule%', '2020-04-08 18:03:26', '2020-04-09 13:14:54', NULL),
+	('nbu_bw_jobs_(schedules|d)', 'jobs', 4, 'nbu_jobs', 'schedule', '=', '%schedule%', '2020-04-08 18:03:26', '2020-04-09 13:15:14', NULL),
+	('nbu_bw_jobs_(schedules|d)', 'schedule', 1, 'nbu_schedules', 'policyname', '=', '%policy%', '2017-03-20 15:38:11', '2020-04-09 13:16:16', NULL),
+	('nbu_bw_jobs_(schedules|d)', 'schedule', 2, 'nbu_schedules', 'name', '=', '%schedule%', '2017-03-20 15:38:43', '2020-04-09 13:16:09', NULL),
+	('nbu_bw_jobs_clients', 'bsr', 9, 'nbu_bsr_jobs', 'client', '=', '%client%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs_clients', 'in_bsr', 9, 'nbu_bsr_jobs', 'client', '=', '%client%', '2020-04-08 18:03:26', '2020-04-08 18:27:54', NULL),
+	('nbu_bw_jobs_clients', 'jobs', 9, 'nbu_jobs', 'client', '=', '%client%', '2020-04-08 18:03:26', '2020-04-09 14:52:41', NULL),
+	('nbu_bw_jobs_customers', 'bsr', 3, 'nbu_bsr_jobs', 'customer', '=', '%customer%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs_customers', 'in_bsr', 3, 'nbu_bsr_jobs', 'customer', '=', '%customer%', '2020-04-08 18:03:26', '2020-04-08 18:27:54', NULL),
+	('nbu_bw_jobs_customers', 'jobs', 3, 'nbu_jobs', 'customer', '=', '%customer%', '2020-04-08 18:03:26', '2020-04-09 14:52:41', NULL),
+	('nbu_bw_jobs_masterservers', 'bsr', 4, 'nbu_bsr_jobs', 'masterserver', '=', '%masterserver%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs_masterservers', 'in_bsr', 4, 'nbu_bsr_jobs', 'masterserver', '=', '%masterserver%', '2020-04-08 18:03:26', '2020-04-08 18:27:54', NULL),
+	('nbu_bw_jobs_masterservers', 'jobs', 4, 'nbu_jobs', 'masterserver', '=', '%masterserver%', '2020-04-08 18:03:26', '2020-04-09 14:52:41', NULL),
+	('nbu_bw_jobs_policies', 'bsr', 6, 'nbu_bsr_jobs', 'policy', '=', '%policy%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs_policies', 'in_bsr', 6, 'nbu_bsr_jobs', 'policy', '=', '%policy%', '2020-04-08 18:03:26', '2020-04-08 18:27:54', NULL),
+	('nbu_bw_jobs_policies', 'jobs', 6, 'nbu_jobs', 'policy', '=', '%policy%', '2020-04-08 18:03:26', '2020-04-09 14:52:41', NULL),
+	('nbu_bw_jobs_policytypes', 'bsr', 5, 'nbu_bsr_jobs', 'policytype', '=', '%policytype%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs_policytypes', 'in_bsr', 5, 'nbu_bsr_jobs', 'policytype', '=', '%policytype%', '2020-04-08 18:03:26', '2020-04-08 18:27:54', NULL),
+	('nbu_bw_jobs_policytypes', 'jobs', 5, 'nbu_jobs', 'policytype', '=', '%policytype%', '2020-04-08 18:03:26', '2020-04-09 14:52:41', NULL),
+	('nbu_bw_jobs_schedules', 'bsr', 8, 'nbu_bsr_jobs', 'schedule', '=', '%schedule%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs_schedules', 'in_bsr', 8, 'nbu_bsr_jobs', 'schedule', '=', '%schedule%', '2020-04-08 18:03:26', '2020-04-08 18:27:54', NULL),
+	('nbu_bw_jobs_schedules', 'jobs', 8, 'nbu_jobs', 'schedule', '=', '%schedule%', '2020-04-08 18:03:26', '2020-04-09 14:52:41', NULL),
+	('nbu_bw_jobs_scheduletypes', 'bsr', 7, 'nbu_bsr_jobs', 'scheduletype', '=', '%scheduletype%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs_scheduletypes', 'in_bsr', 7, 'nbu_bsr_jobs', 'scheduletype', '=', '%scheduletype%', '2020-04-08 18:03:26', '2020-04-08 18:27:54', NULL),
+	('nbu_bw_jobs_scheduletypes', 'jobs', 7, 'nbu_jobs', 'scheduletype', '=', '%scheduletype%', '2020-04-08 18:03:26', '2020-04-09 14:52:41', NULL),
+	('nbu_bw_jobs_towers', 'bsr', 2, 'nbu_bsr_jobs', 'tower', '=', '%tower%', '2020-04-08 18:03:26', '2020-04-08 18:27:44', NULL),
+	('nbu_bw_jobs_towers', 'in_bsr', 2, 'nbu_bsr_jobs', 'tower', '=', '%tower%', '2020-04-08 18:03:26', '2020-04-08 18:27:54', NULL),
+	('nbu_bw_jobs_towers', 'jobs', 2, 'nbu_jobs', 'tower', '=', '%tower%', '2020-04-08 18:03:26', '2020-04-09 14:52:41', NULL),
 	('nbu_clients', 'failures', 2, 'nbu_jobs', 'client', '=', '%name%', '2017-03-20 14:01:30', '2017-03-20 14:50:23', NULL),
 	('nbu_clients', 'failures', 3, 'nbu_jobs', 'status', '>', '1', '2017-03-20 14:01:30', '2017-03-20 14:50:24', NULL),
-	('nbu_clients', 'jobs', 1, 'nbu_jobs', 'policy', '=', '%policyname%', '2017-03-20 14:01:30', '2017-03-20 14:44:59', NULL),
 	('nbu_clients', 'jobs', 2, 'nbu_jobs', 'client', '=', '%name%', '2017-03-20 14:01:30', '2017-03-20 14:48:02', NULL),
-	('nbu_clients', 'policyname', 1, 'nbu_policies', 'name', '=', '%policyname%', '2017-03-20 10:33:51', '2017-03-20 14:40:40', NULL),
 	('nbu_clients_distinct', 'failures', 1, 'nbu_jobs', 'client', '=', '%name%', '2017-03-20 14:01:30', '2017-12-15 10:13:51', NULL),
 	('nbu_clients_distinct', 'failures', 2, 'nbu_jobs', 'status', '>', '1', '2017-03-20 14:01:30', '2017-12-15 10:13:53', NULL),
 	('nbu_clients_distinct', 'jobs', 1, 'nbu_jobs', 'client', '=', '%name%', '2017-03-20 14:01:30', '2017-12-15 10:13:49', NULL),
 	('nbu_consecutive_failures', 'failures', 1, 'nbu_jobs', 'client', '=', '%client%', '2017-08-31 15:48:03', '2017-08-31 15:48:03', NULL),
 	('nbu_consecutive_failures', 'failures', 2, 'nbu_jobs', 'policy', '=', '%policy%', '2017-08-31 15:48:22', '2017-08-31 15:48:22', NULL),
 	('nbu_consecutive_failures', 'failures', 3, 'nbu_jobs', 'schedule', '=', '%schedule%', '2017-08-31 15:48:45', '2017-08-31 15:48:45', NULL),
-	('nbu_g?bsr($|_(c|p|s|t).+)', 'bsr', 2, 'nbu_bsr_jobs', 'status', '>', '1', '2017-03-22 12:23:55', '2018-01-04 10:35:32', NULL),
+	('nbu_g?bsr($|_(c|p|s).+)', 'bsr', 2, 'nbu_bsr_jobs', 'status', '>', '1', '2017-03-22 12:23:55', '2020-04-08 17:41:32', NULL),
 	('nbu_g?bsr_client', 'bsr', 3, 'nbu_bsr_jobs', 'status', '>', '1', '2017-03-22 15:08:20', '2018-01-04 10:35:27', NULL),
 	('nbu_g?bsr_client', 'jobs', 2, 'nbu_bsr_jobs', 'client', '=', '%client%', '2017-03-22 15:08:20', '2018-01-04 10:35:35', NULL),
 	('nbu_g?bsr_customer', 'bsr', 2, 'nbu_bsr_jobs', 'customer', '=', '%customer%', '2017-03-22 15:15:20', '2018-01-04 10:35:40', NULL),
@@ -2917,8 +3567,6 @@ REPLACE INTO `core_links` (`source`, `field`, `ord`, `target`, `filter`, `operat
 	('nbu_g?bsr_policy', 'jobs', 2, 'nbu_bsr_jobs', 'policytype', '=', '%policy%', '2017-03-22 15:15:29', '2018-01-04 10:35:48', NULL),
 	('nbu_g?bsr_schedule', 'bsr', 2, 'nbu_bsr_jobs', 'scheduletype', '=', '%schedule%', '2017-03-22 15:15:36', '2018-01-04 10:35:53', NULL),
 	('nbu_g?bsr_schedule', 'jobs', 2, 'nbu_bsr_jobs', 'scheduletype', '=', '%schedule%', '2017-03-22 15:15:36', '2018-01-04 10:35:58', NULL),
-	('nbu_g?bsr_type', 'bsr', 2, 'nbu_bsr_jobs', 'jobtype', '=', '%type%', '2017-03-22 15:15:41', '2018-01-04 10:36:04', NULL),
-	('nbu_g?bsr_type', 'jobs', 2, 'nbu_bsr_jobs', 'jobtype', '=', '%type%', '2017-03-22 15:15:41', '2018-01-04 10:36:13', NULL),
 	('nbu_overview_clients', 'bsr', 1, 'nbu_bsr_jobs', 'client', '=', '%name%', '2017-03-20 14:01:30', '2017-06-13 10:18:26', NULL),
 	('nbu_overview_clients', 'bsr', 2, 'nbu_bsr_jobs', 'status', '>', '1', '2017-03-20 14:01:30', '2017-06-13 10:18:27', NULL),
 	('nbu_overview_clients', 'bsrjobs', 1, 'nbu_bsr_jobs', 'client', '=', '%name%', '2017-03-20 14:01:30', '2017-06-13 10:18:40', NULL),
@@ -2974,14 +3622,14 @@ REPLACE INTO `core_links` (`source`, `field`, `ord`, `target`, `filter`, `operat
 	('nbu_vault_robots', 'vaults', 1, 'nbu_vault_vaults', 'robot', '=', '%name%', '2017-07-24 15:52:08', '2017-07-24 15:55:27', NULL),
 	('nbu_vault_vaults', 'profiles', 1, 'nbu_vault_profiles', 'vault', '=', '%name%', '2017-07-24 16:01:34', '2017-07-24 16:01:34', NULL);
 
-REPLACE INTO `core_reports` (`ord`, `name`, `category`, `title`, `created`, `updated`, `obsoleted`) VALUES
+INSERT INTO `core_reports` (`ord`, `name`, `category`, `title`, `created`, `updated`, `obsoleted`) VALUES
 	(1, 'nbu_policies', 'NBU Reports', 'Policies', '2017-02-13 10:31:58', '2017-04-12 12:28:38', NULL),
 	(2, 'nbu_schedules', 'NBU Reports', 'Schedules', '2017-03-20 08:55:23', '2017-04-12 12:28:41', NULL),
 	(3, 'nbu_clients_distinct', 'NBU Reports', 'Clients', '2017-02-13 10:06:41', '2017-12-15 10:19:44', NULL),
 	(4, 'nbu_clients', 'NBU Reports', 'Clients & policies', '2017-02-13 10:06:41', '2017-12-15 10:19:50', NULL),
 	(4, 'nbu_slps', 'NBU Reports', 'Storage Lifecycle Policies', '2017-02-13 10:06:41', '2017-12-15 10:19:50', NULL),
 	(5, '---', 'NBU Reports', '', '2017-03-22 15:31:14', '2017-06-13 10:02:04', NULL),
-	(5, 'nbu_jobs', 'NBU Reports', 'Job list', '2017-03-20 08:55:38', '2017-12-15 10:19:56', NULL),
+	(5, 'nbu_bw_jobs', 'NBU Reports', 'Job list', '2017-03-20 08:55:38', '2020-04-08 17:42:35', NULL),
 	(6, 'nbu_consecutive_failures', 'NBU Reports', 'Consecutive failures', '2017-03-22 15:31:14', '2017-08-31 15:29:54', NULL),
 	(7, 'nbu_bsr_job_results', 'NBU Reports', 'Failing BSR Job Results', '2017-03-22 15:31:14', '2018-04-27 14:32:21', NULL),
 	(8, '---', 'NBU Reports', ' ', '2017-03-22 15:31:14', '2018-04-27 14:21:44', NULL),
@@ -3015,17 +3663,19 @@ REPLACE INTO `core_reports` (`ord`, `name`, `category`, `title`, `created`, `upd
 	(44, 'nbu_vault_clients', 'Vaults', 'Clients', '2017-07-25 09:34:05', '2018-01-04 10:21:24', NULL),
 	(45, 'nbu_vault_classes', 'Vaults', 'Classes', '2017-07-25 09:34:05', '2018-01-04 10:21:32', NULL),
 	(46, 'nbu_vault_schedules', 'Vaults', 'Schedules', '2017-07-25 09:34:45', '2018-01-04 10:21:35', NULL),
-	(50, 'nbu_audit', 'Audits', 'Configuration audit', '2017-10-09 14:55:29', '2018-01-04 10:21:10', NULL),
-	(90, '---', 'Audits', '', '2018-01-18 13:01:58', '2018-01-18 13:08:03', NULL),
-	(91, 'audit_qrs', 'Audits', 'QRS', '2018-01-18 13:01:58', '2018-01-18 13:08:03', NULL),
-	(92, 'audit_missing', 'Audits', 'Missing hosts', '2018-01-18 13:01:58', '2018-01-18 13:08:03', NULL),
-	(93, 'audit_partial', 'Audits', 'Partial hosts', '2018-01-18 13:01:58', '2018-01-18 13:08:03', NULL),
-	(94, 'audit_complete', 'Audits', 'Complete hosts', '2018-01-18 13:01:58', '2018-01-18 13:08:03', NULL);
+	(50, 'nbu_puredisks', 'Devices', 'Pure Disks', '2020-03-05 08:29:30', '2020-03-05 08:31:29', NULL),
+	(90, 'nbu_audit', 'Audits', 'Configuration audit', '2017-10-09 14:55:29', '2018-01-04 10:21:10', NULL),
+	(91, '---', 'Audits', '', '2018-01-18 13:01:58', '2018-01-18 13:08:03', NULL),
+	(92, 'audit_qrs', 'Audits', 'QRS', '2018-01-18 13:01:58', '2018-01-18 13:08:03', NULL),
+	(93, 'audit_missing', 'Audits', 'Missing hosts', '2018-01-18 13:01:58', '2018-01-18 13:08:03', NULL),
+	(94, 'audit_partial', 'Audits', 'Partial hosts', '2018-01-18 13:01:58', '2018-01-18 13:08:03', NULL),
+	(95, 'audit_complete', 'Audits', 'Complete hosts', '2018-01-18 13:01:58', '2018-01-18 13:08:03', NULL);
 
-REPLACE INTO `core_sorts` (`report`, `ord`, `source`, `field`, `sort`, `created`, `updated`, `obsoleted`) VALUES
-	('nbu_(bsr_)?jobs', 1, 'nbu_(bsr_)?jobs', 'jobid', 'DESC', '2017-08-28 15:15:57', '2017-08-28 15:20:31', NULL);
+INSERT INTO `core_sorts` (`report`, `ord`, `source`, `field`, `sort`, `created`, `updated`, `obsoleted`) VALUES
+	('nbu_(bsr_)?jobs', 1, 'nbu_(bsr_)?jobs', 'jobid', 'DESC', '2017-08-28 15:15:57', '2017-08-28 15:20:31', NULL),
+	('nbu_overview_clients', 1, 'nbu_overview_clients', 'customer', 'ASC', '2020-04-22 11:42:41', '2020-04-22 11:42:42', NULL);
 
-REPLACE INTO `core_sources` (`report`, `ord`, `name`, `title`, `description`, `fields`, `link`, `pivot`, `tower`, `customer`, `timeperiod`, `limit`, `created`, `updated`, `obsoleted`) VALUES
+INSERT INTO `core_sources` (`report`, `ord`, `name`, `title`, `description`, `fields`, `link`, `pivot`, `tower`, `customer`, `timeperiod`, `limit`, `created`, `updated`, `obsoleted`) VALUES
 	('audit_complete', 1, 'audit_complete', 'Complete hosts', 'QRS fully complete servers/RLIs', NULL, NULL, NULL, 0, 0, 0, 10, '2018-01-18 13:04:22', '2018-01-18 13:08:19', NULL),
 	('audit_missing', 1, 'audit_missing', 'Missing hosts', 'QRS completely missing servers/RLIs', NULL, NULL, NULL, 0, 0, 0, 10, '2018-01-18 13:04:22', '2018-01-18 13:08:19', NULL),
 	('audit_partial', 1, 'audit_partial', 'Partial hosts', 'QRS partially completed servers/RLIs', NULL, NULL, NULL, 0, 0, 0, 10, '2018-01-18 13:04:22', '2018-01-18 13:08:19', NULL),
@@ -3042,6 +3692,16 @@ REPLACE INTO `core_sources` (`report`, `ord`, `name`, `title`, `description`, `f
 	('nbu_bsr_policy', 1, 'nbu_bsr_policy', 'BSR per policy type', 'Daily BSR per policy type', NULL, NULL, 'day,policy', 1, 1, 1, 10, '2017-03-22 15:03:40', '2017-05-12 13:25:52', NULL),
 	('nbu_bsr_schedule', 1, 'nbu_bsr_schedule', 'BSR per schedule type', 'Daily BSR per schedule type', NULL, NULL, 'day,schedule', 1, 1, 1, 10, '2017-03-22 15:03:40', '2017-05-12 13:25:53', NULL),
 	('nbu_bsr_type', 1, 'nbu_bsr_type', 'BSR per job type', 'Daily BSR per job type', NULL, NULL, 'day,type', 1, 1, 1, 10, '2017-03-22 15:03:40', '2017-05-12 13:25:53', NULL),
+	('nbu_bw_jobs', 1, 'nbu_bw_jobs', 'Jobs per backup day', 'List of jobs by backup day', NULL, NULL, NULL, 1, 1, 1, 10, '2020-04-08 17:44:14', '2020-04-09 13:49:13', NULL),
+	('nbu_bw_jobs_clients', 1, 'nbu_bw_jobs_clients', 'Jobs per client', 'List of jobs by client', NULL, NULL, NULL, 1, 1, 1, 10, '2020-04-08 17:44:14', '2020-04-08 18:18:35', NULL),
+	('nbu_bw_jobs_customers', 1, 'nbu_bw_jobs_customers', 'Jobs per customer', 'List of jobs by customer', NULL, NULL, NULL, 1, 1, 1, 10, '2020-04-08 17:44:14', '2020-04-08 18:18:35', NULL),
+	('nbu_bw_jobs_detail', 1, 'nbu_bw_jobs_detail', 'Jobs (detailed)', 'Detailed list of jobs', NULL, NULL, NULL, 1, 1, 1, 10, '2020-04-08 17:44:14', '2020-04-08 18:18:35', NULL),
+	('nbu_bw_jobs_masterservers', 1, 'nbu_bw_jobs_masterservers', 'Jobs per Master server', 'List of jobs by Master server', NULL, NULL, NULL, 1, 1, 1, 10, '2020-04-08 17:44:14', '2020-04-08 18:18:35', NULL),
+	('nbu_bw_jobs_policies', 1, 'nbu_bw_jobs_policies', 'Jobs per policy', 'List of jobs by policy', NULL, NULL, NULL, 1, 1, 1, 10, '2020-04-08 17:44:14', '2020-04-08 18:18:35', NULL),
+	('nbu_bw_jobs_policytypes', 1, 'nbu_bw_jobs_policytypes', 'Jobs per policy type', 'List of jobs by policy type', NULL, NULL, NULL, 1, 1, 1, 10, '2020-04-08 17:44:14', '2020-04-08 18:18:35', NULL),
+	('nbu_bw_jobs_schedules', 1, 'nbu_bw_jobs_schedules', 'Jobs per schedule', 'List of jobs by schedule', NULL, NULL, NULL, 1, 1, 1, 10, '2020-04-08 17:44:14', '2020-04-08 18:18:35', NULL),
+	('nbu_bw_jobs_scheduletypes', 1, 'nbu_bw_jobs_scheduletypes', 'Jobs per schedule type', 'List of jobs by schedule type', NULL, NULL, NULL, 1, 1, 1, 10, '2020-04-08 17:44:14', '2020-04-08 18:18:35', NULL),
+	('nbu_bw_jobs_towers', 1, 'nbu_bw_jobs_towers', 'Jobs per tower', 'List of jobs by tower', NULL, NULL, NULL, 1, 1, 1, 10, '2020-04-08 17:44:14', '2020-04-08 18:18:35', NULL),
 	('nbu_clients', 1, 'nbu_clients', 'Clients with policies', 'List of clients with policies', NULL, NULL, NULL, 1, 1, 1, 10, '2017-02-13 10:09:51', '2017-12-15 10:19:21', NULL),
 	('nbu_clients_distinct', 1, 'nbu_clients_distinct', 'Clients', 'List of clients', NULL, NULL, NULL, 1, 1, 1, 10, '2017-02-13 10:09:51', '2017-12-15 10:19:16', NULL),
 	('nbu_codes', 1, 'nbu_codes', 'Codes', 'List of codes', NULL, NULL, NULL, 0, 0, 0, 25, '2017-05-12 13:07:10', '2017-06-13 11:26:10', NULL),
@@ -3067,7 +3727,8 @@ REPLACE INTO `core_sources` (`report`, `ord`, `name`, `title`, `description`, `f
 	('nbu_vault_profiles', 1, 'nbu_vault_profiles', 'Profiles', 'List of vault profiles', NULL, NULL, NULL, 0, 0, 0, 10, '2017-07-24 15:56:37', '2017-07-24 15:56:37', NULL),
 	('nbu_vault_robots', 1, 'nbu_vault_robots', 'Robots', 'List of robots', NULL, NULL, NULL, 0, 0, 0, 10, '2017-07-24 15:34:10', '2017-07-24 15:41:36', NULL),
 	('nbu_vault_schedules', 1, 'nbu_vault_schedules', 'Schedules', 'List of included schedules', NULL, NULL, NULL, 0, 0, 0, 10, '2017-07-24 15:45:21', '2017-07-25 09:36:45', NULL),
-	('nbu_vault_vaults', 1, 'nbu_vault_vaults', 'Vaults', 'List of vaults', NULL, NULL, NULL, 0, 0, 0, 10, '2017-07-24 15:45:21', '2017-07-24 15:45:21', NULL);
+	('nbu_vault_vaults', 1, 'nbu_vault_vaults', 'Vaults', 'List of vaults', NULL, NULL, NULL, 0, 0, 0, 10, '2017-07-24 15:45:21', '2017-07-24 15:45:21', NULL),
+	('nbu_puredisks', 1, 'nbu_puredisks', 'Pure Disks', 'List of devices (pure disks)', NULL, NULL, NULL, 0, 0, 0, 25, '2020-03-05 08:31:06', '2020-03-05 08:31:06', NULL);
 
 CREATE DATABASE IF NOT EXISTS mars_backup;
 CREATE TABLE IF NOT EXISTS mars_backup.bpdbjobs_report LIKE mars40.bpdbjobs_report;

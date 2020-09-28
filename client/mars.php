@@ -19,6 +19,7 @@ function help( ) {
 	display( "\tretlevels\treads retention levels" );
 	display( "\tslps\t\treads SLP`s" );
 	display( "\tvaults\t\treads vaults" );
+	display( "\tpuredisks\t\treads PureDisk devices" );
 	display( 'Data related actions:' );
 	display( "\tjobs [-d[ays]=DD]\treads jobs for last DD days" );
 	display( "\tallimages\treads all backup images" );
@@ -474,6 +475,7 @@ try {
 			$threads->execute( );
 			if ( due( 'VAULTS', 'NBUVAULT_TIME' ) ) try { handler( vault_xml( os( )->path( array ( $ini[ 'NBU_DATA_HOME' ], 'db', 'vault' ) ) )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
 			if ( due( 'RETLEVELS', 'NBURETLEVEL_TIME' ) ) try { handler( bpretlevel( )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
+			if ( due( 'PUREDISKS', 'NBUVAULT_TIME' ) ) try { handler( nbdevquery_listdv_puredisk( )->execute( ) ); } catch ( exception $e ) { exception_handler( $e ); }
 			if ( due( 'ESL', 'NBU2ESL_TIME' ) ) nbu2esl( );
 			if ( due( 'SM9', 'NBU2SM9_TIME' ) ) nbu2sm9( );
 		} catch ( exception $e ) { exception_handler( $e ); }

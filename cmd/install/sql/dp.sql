@@ -4,8 +4,7 @@
 
 USE `mars30`;
 
-DROP TABLE IF EXISTS config_cellservers;
-CREATE TABLE config_cellservers (
+CREATE OR REPLACE TABLE config_cellservers (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(64) NOT NULL DEFAULT 'Default Cell Server',
   host varchar(64) DEFAULT NULL,
@@ -36,8 +35,7 @@ CREATE TABLE config_cellservers (
 
 # INSERT INTO config_cellservers (id,name,valid_since,updated_on) VALUES (1,'Default Cell Server','2012-12-31 23:00:00','2012-12-31 23:00:00');
 
-DROP TABLE IF EXISTS config_customers;
-CREATE TABLE config_customers (
+CREATE OR REPLACE TABLE config_customers (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(32) NOT NULL DEFAULT 'Default Customer',
   specification varchar(32) NOT NULL DEFAULT '_default_',
@@ -63,8 +61,7 @@ CREATE TABLE config_customers (
 
 # INSERT INTO config_customers (id,name,specification,fqdn,valid_since,updated_on) VALUES (1,'Default Customer','_default_','.default.','2012-12-31 23:00:00','2012-12-31 23:00:00');
 
-DROP TABLE IF EXISTS config_mediaservers;
-CREATE TABLE config_mediaservers (
+CREATE OR REPLACE TABLE config_mediaservers (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(64) NOT NULL DEFAULT 'Default Media Server',
   cellserver varchar(64) NOT NULL DEFAULT 'Default Cell Server',
@@ -78,8 +75,7 @@ CREATE TABLE config_mediaservers (
 
 # INSERT INTO config_mediaservers (id,name,cellserver,valid_since,updated_on) VALUES (1,'Default Media Server','Default Cell Server','2012-12-31 23:00:00','2012-12-31 23:00:00');
 
-DROP TABLE IF EXISTS config_reports;
-CREATE TABLE config_reports (
+CREATE OR REPLACE TABLE config_reports (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   sort int(3) unsigned NOT NULL DEFAULT '0',
   name varchar(32) NOT NULL,
@@ -188,8 +184,7 @@ INSERT INTO `config_reports` (`id`, `sort`, `name`, `submenu`, `title`, `descrip
 	(102, 1002, 'q2', 'Auditing', 'QRS audit missing', 'QRS completely missing servers/RLI\'s', 'select * from audit.audit_missing', NULL, 0, 0, NULL, '#field(s)_affected		#condition		#CSS						#description\r\n#---------------------		#---------------------		#------------------------------------------------		#------------------------------------------\r\n*			STATUS == \'MISSING\'	color:red;background:lightpink;			Missing\r\n*			STATUS REGEXP \'WRONG\'	color:salmon;background:gold;			Wrong protection\r\n*			STATUS == \'EXCEPTION\'	color:green;background:greenyellow;			Exception\r\n*			STATUS REGEXP \'OK\'	color:green;background:palegreen;			All OK\r\n', 25),
 	(103, 1003, 'q3', 'Auditing', 'QRS audit complete', 'QRS fully completed servers/RLI\'s', 'select * from audit.audit_complete', NULL, 0, 0, NULL, '#field(s)_affected		#condition		#CSS						#description\r\n#---------------------		#---------------------		#------------------------------------------------		#------------------------------------------\r\n*			STATUS == \'MISSING\'	color:red;background:lightpink;			Missing\r\n*			STATUS REGEXP \'WRONG\'	color:salmon;background:gold;			Wrong protection\r\n*			STATUS == \'EXCEPTION\'	color:green;background:greenyellow;			Exception\r\n*			STATUS REGEXP \'OK\'	color:green;background:palegreen;			All OK\r\n', 25);
 
-DROP TABLE IF EXISTS config_retentions;
-CREATE TABLE config_retentions (
+CREATE OR REPLACE TABLE config_retentions (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(16) NOT NULL DEFAULT 'Default',
   customer varchar(32) DEFAULT NULL,
@@ -217,8 +212,7 @@ INSERT INTO config_retentions (id,name,customer,retention,restarthours,periodici
 	(6,'Special',NULL,14,72,7,1,'_special','2012-12-31 23:00:00','2012-12-31 23:00:00'),
 	(7,'Excluded',NULL,14,12,1,2,'(_arch|_trans|_tlog|hp_test)','2012-12-31 23:00:00','2012-12-31 23:00:00');
 
-DROP TABLE IF EXISTS config_scheduler;
-CREATE TABLE config_scheduler (
+CREATE OR REPLACE TABLE config_scheduler (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   date varchar(32) DEFAULT NULL,
   time varchar(32) NOT NULL DEFAULT 'NEVER',
@@ -237,8 +231,7 @@ CREATE TABLE config_scheduler (
   UNIQUE KEY name (name)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='List of scheduled tasks';
 
-DROP TABLE IF EXISTS config_scripts;
-CREATE TABLE config_scripts (
+CREATE OR REPLACE TABLE config_scripts (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(32) NOT NULL DEFAULT 'script',
   code longtext NOT NULL,
@@ -270,8 +263,7 @@ INSERT INTO config_scripts (id, name, code, valid_since, updated_on, valid_until
 	(22, 'reschedule/reschedule.ini', '[main]\r\n; PATH TO OMNI/SERVER FOLDER\r\nomni_server=/etc/opt/omni/server\r\n\r\n; PATH WHERE TO BACKUP SCHEDULES\r\nbackup          ="./backup"\r\n\r\n; PATTERN SPECIFIES WHICH SCHEDULES TO IGNORE(REGEXP)\r\nignore          ="(arch|log|trans)"\r\n\r\n; PATTERN SPECIFIES WHICH SCHEDULES TO EXCLUDE (REGEXP)\r\nexclude         ="Daily"\r\n\r\n; PATTERN SPECIFIES WHICH SCHEDULES TO RESCHEDULE (REGEXP)\r\nreschedule      ="(Weekly|Monthly|Yearly|Special)"\r\n\r\n; SUBSTRING SPECIFIES WHICH SCHEDULES TO EXCLUDE INSTEAD OF RESCHEDULED BACKUPS\r\ninstead         ="Daily"\r\n\r\n; TEST ONLY. NO WRITE OPERATION WILL BE PERFORMED, JUST LOGGING\r\n; test          =1|0\r\ntest            =0\r\n\r\n; CLEANUP OF SCHEDULES REMOVES ALL \'EXCLUDE\' AND \'ONLY\' ENTRIES\r\n; cleanup       =1|0\r\ncleanup         =0\r\n\r\n; MAINTENANCE DATE\r\n; mtw_day        =1-31\r\n; mtw_month      =Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec\r\n; mtw_year       =2013-9999\r\n\r\n; MAINTENANCE TIME PATTERN (REGEXP)\r\n; time_pattern   =0*x        single hour before 10AM (x=0-9)\r\n; time_pattern   =0*[a-b]    range of hours before 10AM (a,b=0-9,b>a)\r\n; time_pattern   =1x         single hour before 8PM (x=0-9)\r\n; time_pattern   =1[a-b]     range of hours before 8PM (a,b=0-9,b>a)\r\n; time_pattern   =2x         single hour 8PM and later (x=0-9)\r\n; time_pattern   =2[a-b]     range of hours 8PM and later (a,b=0-9,b>a)\r\n\r\n; NEW DATE FOR WEEKLY BACKUPS\r\n; new_day        =1-31\r\n; new_month      =Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec\r\n; new_year       =2013-9999\r\n\r\n;[EXAMPLE]\r\n;mtw_day                        ="18 May 2013"\r\n;time_pattern   ="0*[7-9]"\r\n;new_day                        ="17 May 2013"\r\n\r\n[Sat13_06-09]\r\nmtw_day                 ="13 Feb 2016"\r\ntime_pattern    ="0*[6-9]"\r\nnew_day                 ="15 Feb 2016"\r\n[Sat13_10-19]\r\nmtw_day                 ="13 Feb 2016"\r\ntime_pattern    ="1[0-9]"\r\nnew_day                 ="15 Feb 2016"\r\n[Sat13_20-23]\r\nmtw_day                 ="13 Feb 2016"\r\ntime_pattern    ="2[0-3]"\r\nnew_day                 ="15 Feb 2016"\r\n\r\n[Sun14_00-09]\r\nmtw_day                 ="14 Feb 2016"\r\ntime_pattern    ="0*[0-9]"\r\nnew_day                 ="16 Feb 2016"\r\n[Sun14_10-19]\r\nmtw_day                 ="14 Feb 2016"\r\ntime_pattern    ="1[0-9]"\r\nnew_day                 ="16 Feb 2016"\r\n', '2015-11-13 15:02:08', '2016-04-21 12:21:53', NULL);
 /**/
 
-DROP TABLE IF EXISTS config_settings;
-CREATE TABLE config_settings (
+CREATE OR REPLACE TABLE config_settings (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   cellserver varchar(32) DEFAULT NULL,
   name varchar(32) NOT NULL,
@@ -299,8 +291,7 @@ INSERT INTO config_settings (id,cellserver,name,value,description,valid_since,up
 	(12,NULL,'routine_periodicity','15','Periodicity of normal routine (minutes)','2012-12-31 23:00:00','2012-12-31 23:00:00'),
 	(13, NULL, 'bw_start', '18:00', 'Start of backup window', '2018-08-13 14:24:16', '2018-08-13 14:24:26');
 
-DROP TABLE IF EXISTS config_timeperiods;
-CREATE TABLE config_timeperiods (
+CREATE OR REPLACE TABLE config_timeperiods (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(32) NOT NULL DEFAULT 'Default',
   value varchar(8) NOT NULL DEFAULT 'D-7::D',
@@ -339,7 +330,7 @@ INSERT INTO config_timeperiods (id,name,value,ord,valid_since,updated_on) VALUES
 	(24,'This year','Y::Y+1',24,'2013-01-01 00:00:00','2013-01-01 00:00:00'),
 	(25,'Last year','Y-1::Y',25,'2013-01-01 00:00:00','2013-01-01 00:00:00');
 
-CREATE TABLE `config_timers` (
+CREATE OR REPLACE TABLE `config_timers` (
 	`name` VARCHAR(32) NOT NULL,
 	`start` TIMESTAMP NOT NULL,
 	`end` TIMESTAMP NOT NULL,
@@ -347,8 +338,7 @@ CREATE TABLE `config_timers` (
 	PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Start times and durations of events';
 
-DROP TABLE IF EXISTS dataprotector_clients;
-CREATE TABLE dataprotector_clients (
+CREATE OR REPLACE TABLE dataprotector_clients (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   cellserver varchar(64) NOT NULL,
   name varchar(64) NOT NULL,
@@ -364,8 +354,7 @@ CREATE TABLE dataprotector_clients (
   KEY customer (customer)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Clients list';
 
-DROP TABLE IF EXISTS dataprotector_copylists;
-CREATE TABLE dataprotector_copylists (
+CREATE OR REPLACE TABLE dataprotector_copylists (
 	id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 	cellserver VARCHAR(64) NOT NULL,
 	name VARCHAR(128) NOT NULL,
@@ -389,8 +378,7 @@ CREATE TABLE dataprotector_copylists (
 	INDEX updated_on (updated_on)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Copylists with schedules';
 
-DROP TABLE IF EXISTS dataprotector_devices;
-CREATE TABLE dataprotector_devices (
+CREATE OR REPLACE TABLE dataprotector_devices (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(64) NOT NULL,
   definition text NOT NULL,
@@ -412,8 +400,7 @@ CREATE TABLE dataprotector_devices (
   KEY updated_on (updated_on)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Device configuration "omnidownload -list_devices -detail"';
 
-DROP TABLE IF EXISTS dataprotector_libraries;
-CREATE TABLE dataprotector_libraries (
+CREATE OR REPLACE TABLE dataprotector_libraries (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(64) NOT NULL,
   definition text NOT NULL,
@@ -431,8 +418,7 @@ CREATE TABLE dataprotector_libraries (
   KEY updated_on (updated_on)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Library configuration "omnidownload -list_libraries -detail"';
 
-DROP TABLE IF EXISTS dataprotector_locked_objects;
-CREATE TABLE dataprotector_locked_objects (
+CREATE OR REPLACE TABLE dataprotector_locked_objects (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   type varchar(16) NOT NULL,
   name varchar(64) NOT NULL,
@@ -448,8 +434,7 @@ CREATE TABLE dataprotector_locked_objects (
   KEY updated_on (updated_on)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Locked objects "omnidbutil -show_locked_devs -all"';
 
-DROP TABLE IF EXISTS dataprotector_media;
-CREATE TABLE dataprotector_media (
+CREATE OR REPLACE TABLE dataprotector_media (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   pool varchar(64) NOT NULL,
   mediumid varchar(32) NOT NULL,
@@ -480,8 +465,7 @@ CREATE TABLE dataprotector_media (
   KEY updated_on (updated_on)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Media list';
 
-DROP TABLE IF EXISTS dataprotector_objects;
-CREATE TABLE dataprotector_objects (
+CREATE OR REPLACE TABLE dataprotector_objects (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   cellserver varchar(64) NOT NULL,
   client varchar(64) NOT NULL,
@@ -498,8 +482,7 @@ CREATE TABLE dataprotector_objects (
   UNIQUE KEY cellserver_client_type_name (cellserver,client,type,name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Objects list';
 
-DROP TABLE IF EXISTS dataprotector_omnistat;
-CREATE TABLE dataprotector_omnistat (
+CREATE OR REPLACE TABLE dataprotector_omnistat (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   cellserver varchar(64) NOT NULL,
   sessionid varchar(16) NOT NULL,
@@ -528,8 +511,7 @@ CREATE TABLE dataprotector_omnistat (
   KEY updated_on (updated_on)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Actual status "omnistat -det"';
 
-DROP TABLE IF EXISTS dataprotector_omnistat_devices;
-CREATE TABLE dataprotector_omnistat_devices (
+CREATE OR REPLACE TABLE dataprotector_omnistat_devices (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   cellserver varchar(64) NOT NULL,
   sessionid varchar(16) NOT NULL,
@@ -546,8 +528,7 @@ CREATE TABLE dataprotector_omnistat_devices (
   KEY updated_on (updated_on)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Actual status "omnistat -ses -det"';
 
-DROP TABLE IF EXISTS dataprotector_omnistat_objects;
-CREATE TABLE dataprotector_omnistat_objects (
+CREATE OR REPLACE TABLE dataprotector_omnistat_objects (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   cellserver varchar(64) NOT NULL,
   sessionid varchar(16) NOT NULL,
@@ -570,8 +551,7 @@ CREATE TABLE dataprotector_omnistat_objects (
   KEY updated_on (updated_on)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Actual status "omnistat -ses -det"';
 
-DROP TABLE IF EXISTS dataprotector_pools;
-CREATE TABLE dataprotector_pools (
+CREATE OR REPLACE TABLE dataprotector_pools (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(64) NOT NULL,
   description varchar(128) NOT NULL,
@@ -596,8 +576,7 @@ CREATE TABLE dataprotector_pools (
   KEY updated_on (updated_on)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Pool list';
 
-DROP TABLE IF EXISTS dataprotector_sessions;
-CREATE TABLE dataprotector_sessions (
+CREATE OR REPLACE TABLE dataprotector_sessions (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   cellserver varchar(64) NOT NULL,
   sessionid varchar(16) NOT NULL,
@@ -632,8 +611,7 @@ CREATE TABLE dataprotector_sessions (
   KEY cellserver_restartof (cellserver,restartof)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Sessions "omnirpt -report single_session"';
 
-DROP TABLE IF EXISTS dataprotector_session_devices;
-CREATE TABLE dataprotector_session_devices (
+CREATE OR REPLACE TABLE dataprotector_session_devices (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   cellserver varchar(64) NOT NULL,
   sessionid varchar(16) NOT NULL,
@@ -649,8 +627,7 @@ CREATE TABLE dataprotector_session_devices (
   UNIQUE KEY cellserver_sessionid_device (cellserver,sessionid,device)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Session devices "omnirpt -report session_devices"';
 
-DROP TABLE IF EXISTS dataprotector_session_media;
-CREATE TABLE dataprotector_session_media (
+CREATE OR REPLACE TABLE dataprotector_session_media (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   cellserver varchar(64) NOT NULL,
   sessionid varchar(16) NOT NULL,
@@ -667,8 +644,7 @@ CREATE TABLE dataprotector_session_media (
   UNIQUE KEY cellserver_sessionid_mediumid (cellserver,sessionid,mediumid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Session media "omnirpt -report session_media"';
 
-DROP TABLE IF EXISTS dataprotector_session_objects;
-CREATE TABLE dataprotector_session_objects (
+CREATE OR REPLACE TABLE dataprotector_session_objects (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   cellserver varchar(64) NOT NULL,
   sessionid varchar(16) NOT NULL,
@@ -695,8 +671,7 @@ CREATE TABLE dataprotector_session_objects (
   KEY client_type (client,type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Session objects "omnirpt -report session_objects"';
 
-DROP TABLE IF EXISTS dataprotector_specifications;
-CREATE TABLE dataprotector_specifications (
+CREATE OR REPLACE TABLE dataprotector_specifications (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   cellserver varchar(64) NOT NULL,
   name varchar(128) NOT NULL,
@@ -727,8 +702,7 @@ CREATE TABLE dataprotector_specifications (
   KEY updated_on (updated_on)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Datalists/Barlists with schedules';
 
-DROP TABLE IF EXISTS mars_log;
-CREATE TABLE mars_log (
+CREATE OR REPLACE TABLE mars_log (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   cellserver varchar(32) NOT NULL,
@@ -742,8 +716,7 @@ CREATE TABLE mars_log (
   KEY severity (severity)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Application log';
 
-DROP TABLE IF EXISTS mars_queue;
-CREATE TABLE mars_queue (
+CREATE OR REPLACE TABLE mars_queue (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   cellserver varchar(64) NOT NULL,
@@ -759,9 +732,7 @@ CREATE TABLE mars_queue (
 
 DELIMITER ;;
 
-DROP EVENT IF EXISTS event_routine;;
-
-CREATE DEFINER=root@'%' EVENT event_routine
+CREATE OR REPLACE DEFINER=CURRENT_USER EVENT event_routine
 	ON SCHEDULE
 		EVERY 5 MINUTE STARTS '2015-01-01'
 	ON COMPLETION PRESERVE
@@ -810,9 +781,7 @@ CREATE DEFINER=root@'%' EVENT event_routine
   CLOSE queue;
 END ;;
 
-DROP FUNCTION IF EXISTS function_customer;;
-
-CREATE DEFINER=root@'%' FUNCTION function_customer()
+CREATE OR REPLACE DEFINER=CURRENT_USER FUNCTION function_customer()
 	RETURNS varchar(32) CHARSET utf8
 	LANGUAGE SQL
 	DETERMINISTIC
@@ -823,9 +792,7 @@ BEGIN
 RETURN NULLIF(@customer,'');
 END ;;
 
-DROP FUNCTION IF EXISTS function_from;;
-
-CREATE DEFINER=root@'%' FUNCTION function_from()
+CREATE OR REPLACE DEFINER=CURRENT_USER FUNCTION function_from()
 	RETURNS timestamp
 	LANGUAGE SQL
 	DETERMINISTIC
@@ -836,9 +803,7 @@ BEGIN
 RETURN IFNULL(NULLIF(@datetime_from,''),DATE(SUBDATE(NOW(), interval 1 MONTH)));
 END ;;
 
-DROP FUNCTION IF EXISTS function_mountpoint;;
-
-CREATE DEFINER=root@'%' FUNCTION function_mountpoint(type VARCHAR(16), mountpoint VARCHAR(128), description VARCHAR(128))
+CREATE OR REPLACE DEFINER=CURRENT_USER FUNCTION function_mountpoint(type VARCHAR(16), mountpoint VARCHAR(128), description VARCHAR(128))
 	RETURNS varchar(128) CHARSET utf8
 	LANGUAGE SQL
 	DETERMINISTIC
@@ -919,9 +884,7 @@ END IF;
 RETURN IFNULL(TRIM(@result),mountpoint);
 END ;;
 
-DROP FUNCTION IF EXISTS function_restartof;;
-
-CREATE DEFINER=root@'%' FUNCTION function_restartof(_cellserver VARCHAR(32), _sessionid VARCHAR(16))
+CREATE OR REPLACE DEFINER=CURRENT_USER FUNCTION function_restartof(_cellserver VARCHAR(32), _sessionid VARCHAR(16))
 	RETURNS varchar(16) CHARSET utf8
 	LANGUAGE SQL
 	DETERMINISTIC
@@ -946,9 +909,7 @@ BEGIN
 END ;;
 
 
-DROP FUNCTION IF EXISTS function_to;;
-
-CREATE DEFINER=root@'%' FUNCTION function_to()
+CREATE OR REPLACE DEFINER=CURRENT_USER FUNCTION function_to()
 	RETURNS timestamp
 	LANGUAGE SQL
 	DETERMINISTIC
@@ -960,9 +921,7 @@ RETURN IFNULL(NULLIF(@datetime_to,''),DATE(ADDDATE(NOW(), interval 1 DAY))) - IN
 END ;;
 
 
-DROP FUNCTION IF EXISTS function_uptime;;
-
-CREATE DEFINER=root@'%' FUNCTION function_uptime()
+CREATE OR REPLACE DEFINER=CURRENT_USER FUNCTION function_uptime()
 	RETURNS varchar(32) CHARSET utf8
 	LANGUAGE SQL
 	DETERMINISTIC
@@ -977,8 +936,7 @@ MINUTE(@uptime), 'm') into @result from dual;
 return @result;
 END ;;
 
-DROP PROCEDURE IF EXISTS procedure_maintenance;;
-CREATE DEFINER=root@'%' PROCEDURE procedure_maintenance()
+CREATE OR REPLACE DEFINER=CURRENT_USER PROCEDURE procedure_maintenance()
 	LANGUAGE SQL NOT DETERMINISTIC CONTAINS SQL SQL SECURITY DEFINER
 	COMMENT 'Maintenance'
 BEGIN
@@ -1151,9 +1109,7 @@ BEGIN
   SELECT @result AS RESULT;
 END ;;
 
-DROP PROCEDURE IF EXISTS procedure_queue;;
-
-CREATE DEFINER=root@'%' PROCEDURE procedure_queue(IN cellserver VARCHAR(64), IN action VARCHAR(64), IN data VARCHAR(128))
+CREATE OR REPLACE DEFINER=CURRENT_USER PROCEDURE procedure_queue(IN cellserver VARCHAR(64), IN action VARCHAR(64), IN data VARCHAR(128))
 	LANGUAGE SQL
 	NOT DETERMINISTIC
 	CONTAINS SQL
@@ -1172,9 +1128,7 @@ ELSE
 END IF;
 END ;;
 
-DROP PROCEDURE IF EXISTS procedure_routine;;
-
-CREATE DEFINER=`root`@`%` PROCEDURE `procedure_routine`( IN `mode` VARCHAR(50))
+CREATE OR REPLACE DEFINER=CURRENT_USER PROCEDURE `procedure_routine`( IN `mode` VARCHAR(50))
 	LANGUAGE SQL
 	NOT DETERMINISTIC
 	CONTAINS SQL
@@ -1372,8 +1326,7 @@ END ;;
 
 DELIMITER ;
 
-DROP VIEW IF EXISTS _copylists;
-CREATE ALGORITHM = MERGE DEFINER=root@`%` SQL SECURITY DEFINER VIEW _copylists AS 
+CREATE OR REPLACE ALGORITHM = MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _copylists AS 
 SELECT c.cellserver AS cellserver,
 	c.name AS name,
 	c.customer AS customer,
@@ -1392,8 +1345,7 @@ SELECT c.cellserver AS cellserver,
 	ORDER BY c.nextexecution DESC 
 ;
 
-DROP VIEW IF EXISTS _locked_objects;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _locked_objects AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _locked_objects AS 
 	SELECT lo.host AS host,
 	lo.pid AS pid,
 	lo.type AS type,
@@ -1404,8 +1356,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _locked_object
 	ORDER BY lo.host,lo.pid,lo.type,lo.name 
 ;
 
-DROP VIEW IF EXISTS _media;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _media AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _media AS 
 	SELECT m.updated_by AS cellserver,
 	m.mediumid AS mediumid,
 	m.label AS label,
@@ -1430,8 +1381,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _media AS
 	ORDER BY m.updated_by,m.label 
 ;
 
-DROP VIEW IF EXISTS _pools;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _pools AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _pools AS 
 	SELECT p.updated_by AS cellserver,
 	max(c.name) AS customer,
 	p.name AS name,
@@ -1451,8 +1401,7 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _pools AS
 	ORDER BY p.updated_by,c.name,p.name 
 ;
 
-DROP VIEW IF EXISTS _queue;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _queue AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _queue AS 
 SELECT q.cellserver AS cellserver,
 	q.timestamp AS timestamp,
 	q.name AS name,
@@ -1464,8 +1413,7 @@ SELECT q.cellserver AS cellserver,
 	ORDER BY q.executed_on desc,q.timestamp 
 ;
 
-DROP VIEW IF EXISTS _specifications;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _specifications AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _specifications AS 
 	SELECT s.cellserver AS cellserver,
 	s.dpgroup AS dpgroup,
 	s.name AS name,
@@ -1492,16 +1440,14 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _specification
 	ORDER BY s.nextexecution DESC 
 ;
 
-DROP VIEW IF EXISTS _groups;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _groups AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _groups AS 
 SELECT cellserver,customer,dpgroup,count(name) as specifications 
 	FROM _specifications 
 	GROUP BY cellserver,customer,dpgroup
 	ORDER BY cellserver,customer,dpgroup
 ;
 
-DROP VIEW IF EXISTS _omnistat;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _omnistat AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _omnistat AS 
 	SELECT o.cellserver AS cellserver,
 	o.sessionid AS sessionid,
 	o.type AS type,
@@ -1528,8 +1474,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _omnistat AS
 	ORDER BY o.starttime DESC 
 ;
 
-DROP VIEW IF EXISTS _session_objects;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _session_objects AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _session_objects AS 
 	SELECT so.cellserver AS cellserver,
 	so.sessionid AS sessionid,
 	so.type AS type,
@@ -1551,8 +1496,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _session_objec
 	ORDER BY so.starttime DESC 
 ;
 
-DROP VIEW IF EXISTS _sessions;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _sessions AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _sessions AS 
 	SELECT s1.cellserver AS cellserver,
 	s1.sessionid AS sessionid,
 	IF((s1.scheduled = 1),'S',IF((s1.restartof = ''),'A','R')) AS sar,
@@ -1585,8 +1529,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _sessions AS
 	ORDER BY s1.starttime DESC 
 ;
 
-DROP VIEW IF EXISTS _sessions_all;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _sessions_all AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _sessions_all AS 
 	SELECT s1.cellserver AS cellserver,
 	s1.sessionid AS sessionid,
 	s1.sar AS sar,
@@ -1619,8 +1562,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _sessions_all 
 	AND ((function_customer() IS NULL) OR (s1.customer=function_customer()))) 
 ;
 
-DROP VIEW IF EXISTS _backup_retained_customer;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _backup_retained_customer AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _backup_retained_customer AS 
 	SELECT c.name AS customer,
 	s.description AS mtype,
 	COUNT(m.label) AS media,
@@ -1635,8 +1577,7 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _backup_re
 	ORDER BY c.name,s.description
 ;
 
-DROP VIEW IF EXISTS _backup_volume_cellserver;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _backup_volume_cellserver AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _backup_volume_cellserver AS 
 SELECT sa.cellserver AS cellserver,
 	COUNT(sa.sessionid) AS sessions,
 	ROUND((SUM(sa.gbwritten) / 1024),1) AS tbwritten 
@@ -1645,8 +1586,7 @@ SELECT sa.cellserver AS cellserver,
 	ORDER BY sa.cellserver 
 ;
 
-DROP VIEW IF EXISTS _backup_volume_customer;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _backup_volume_customer AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _backup_volume_customer AS 
 	SELECT sa.customer AS customer,
 	COUNT(sa.sessionid) AS sessions,
 	ROUND((SUM(sa.gbwritten) / 1024),1) AS tbwritten 
@@ -1656,8 +1596,7 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _backup_vo
 	ORDER BY sa.customer 
 ;
 
-DROP VIEW IF EXISTS _backup_volume_customer_host;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _backup_volume_customer_host AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _backup_volume_customer_host AS 
 	SELECT s.customer AS customer,
 	IF(LOCATE('-b.',s1.hostnames),LEFT(s1.hostnames,(LOCATE('-b.',s1.hostnames) - 1)),IF(LOCATE('.',s1.hostnames),LEFT(s1.hostnames,(LOCATE('.',s1.hostnames) - 1)),s1.hostnames)) AS host,
 	s.type AS type,
@@ -1670,8 +1609,7 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _backup_vo
 	ORDER BY 1,2,3 
 ;
 
-DROP VIEW IF EXISTS _clients;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _clients AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _clients AS 
 	SELECT c.cellserver AS cellserver,
 	c.customer AS customer,
 	c.name AS name,
@@ -1684,8 +1622,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _clients AS
 	ORDER BY c.name,c.type 
 ;
 
-DROP VIEW IF EXISTS _cellservers;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _cellservers AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _cellservers AS 
 	SELECT cs.name AS name,
 	cs.mmd_local AS mmd_local,
 	cs.timezone AS timezone,
@@ -1720,8 +1657,7 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _cellserve
 	ORDER BY cs.name
 ;
 
-DROP VIEW IF EXISTS _consecutive_failures;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _consecutive_failures AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _consecutive_failures AS 
 	SELECT spec.cellserver AS cellserver,
 	spec.customer AS customer,
 	spec.name AS specification,
@@ -1738,8 +1674,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _consecutive_f
 	ORDER BY spec.failure DESC 
 ;
 
-DROP VIEW IF EXISTS _customers;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _customers AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _customers AS 
 	SELECT c.name AS customer,
 	c.clients AS clients,
 	(SELECT CAST(COUNT(DISTINCT cl.name) AS unsigned) FROM _clients cl WHERE ((cl.customer = c.name) AND (cl.type <> 'BAR'))) AS fsclients,
@@ -1764,8 +1699,7 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _customers
 	ORDER BY c.name
 ;
 
-DROP VIEW IF EXISTS _devices;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _devices AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _devices AS 
 	SELECT d.updated_by AS cellserver,
 	d.library AS library,
 	d.lockname AS lockname,
@@ -1781,8 +1715,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _devices AS
 	ORDER BY d.updated_by,d.library,d.name 
 ;
 
-DROP VIEW IF EXISTS _device_utilization;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _device_utilization AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _device_utilization AS 
 	SELECT s2.starttime AS starttime,
 	s2.duration AS duration,
 	s2.endtime AS endtime,
@@ -1804,8 +1737,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _device_utiliz
 	ORDER BY s2.starttime,s2.device 
 ;
 
-DROP VIEW IF EXISTS _did_not_run;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _did_not_run AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _did_not_run AS 
 	SELECT s.cellserver AS cellserver,
 	s.customer AS customer,
 	s.name AS specification,
@@ -1823,8 +1755,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _did_not_run A
 	ORDER BY 9 DESC,s.cellserver,s.customer,s.name 
 ;
 
-DROP VIEW IF EXISTS _libraries;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _libraries AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _libraries AS 
 	SELECT l.updated_by AS cellserver,
 	l.name AS name,
 	(SELECT COUNT(0) FROM _devices d WHERE ((d.cellserver = l.updated_by) AND (d.library = l.name))) AS devices,
@@ -1837,8 +1768,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _libraries AS
 	ORDER BY l.updated_by,l.name 
 ;
 
-DROP VIEW IF EXISTS _log;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _log AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _log AS 
 	SELECT l.cellserver AS cellserver,
 	l.timestamp AS timestamp,
 	l.pid AS pid,
@@ -1849,8 +1779,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _log AS
 	ORDER BY l.timestamp DESC 
 ;
 
-DROP VIEW IF EXISTS _objects;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _objects AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _objects AS 
 	SELECT c.customer AS customer,
 	o.cellserver AS cellserver,
 	o.client AS client,
@@ -1867,8 +1796,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _objects AS
 	ORDER BY o.cellserver,o.client,o.type,o.name 
 ;
 
-DROP VIEW IF EXISTS _object_versions;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _object_versions AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _object_versions AS 
 	SELECT c.customer AS customer,
 	o.cellserver AS cellserver,
 	o.client AS client,
@@ -1887,8 +1815,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _object_versio
 	ORDER BY c.customer,o.client,o.type,o.mountpoint,o.starttime DESC 
 ;
 
-DROP VIEW IF EXISTS _offload_scratch_tapes;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _offload_scratch_tapes AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _offload_scratch_tapes AS 
 	SELECT m.pool AS pool,
 	SUBSTR(m.label,(LOCATE('[',m.label) + 1),2) AS prefix,
 	SUBSTR(m.label,(LOCATE('[',m.label) + 1),(LOCATE(']',m.label) - 2)) AS barcode,
@@ -1906,8 +1833,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _offload_scrat
 	ORDER BY m.pool,2,m.lastwrite 
 ;
 
-DROP VIEW IF EXISTS _offload_used_tapes;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _offload_used_tapes AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _offload_used_tapes AS 
 	SELECT l.name AS library,
 	IF((m.kbused = m.kbtotal),'yes','no') AS full,
 	m.pool AS pool,
@@ -1928,8 +1854,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _offload_used_
 	ORDER BY l.name,2 DESC,m.pool,m.label 
 ;
 
-DROP VIEW IF EXISTS _omnistat_devices;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _omnistat_devices AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _omnistat_devices AS 
 	SELECT od.cellserver AS cellserver,
 	od.sessionid AS sessionid,
 	od.name AS name,
@@ -1946,8 +1871,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _omnistat_devi
 	ORDER BY od.started DESC 
 ;
 
-DROP VIEW IF EXISTS _omnistat_objects;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _omnistat_objects AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _omnistat_objects AS 
 	SELECT oo.cellserver AS cellserver,
 	oo.sessionid AS sessionid,
 	oo.name AS name,
@@ -1966,8 +1890,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _omnistat_obje
 	ORDER BY oo.started DESC 
 ;
 
-DROP VIEW IF EXISTS _processes;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _processes AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _processes AS 
 SELECT pl.ID AS ID,
 	pl.USER AS USER,
 	pl.HOST AS HOST,
@@ -1981,8 +1904,7 @@ SELECT pl.ID AS ID,
 	OR (NOT((pl.INFO REGEXP 'process')))) 
 ;
 
-DROP VIEW IF EXISTS _scheduler;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _scheduler AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _scheduler AS 
 SELECT cs.*
 	FROM config_scheduler cs 
 	WHERE ISNULL(cs.valid_until) 
@@ -1990,8 +1912,7 @@ SELECT cs.*
 	ORDER BY cs.date,cs.time,cs.type,cs.name
 ;
 
-DROP VIEW IF EXISTS _sessions_aggregated;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _sessions_aggregated AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _sessions_aggregated AS 
 SELECT s1.cellserver AS cellserver,
 	s1.sessionid AS sessionid,
 	s1.status AS istatus,
@@ -2030,8 +1951,7 @@ SELECT s1.cellserver AS cellserver,
 	ORDER BY s1.starttime DESC 
 ;
 
-DROP VIEW IF EXISTS _sessions_review;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _sessions_review AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _sessions_review AS 
 	SELECT COALESCE(IF((_sessions_aggregated.cellserver REGEXP 'IDPCP01'),'EU','WW'),'TOTAL') AS support,
 	COALESCE(IF(((_sessions_aggregated.type = 'SAP') OR (_sessions_aggregated.specification REGEXP 'EAO_')),'EAO','GOC'),'TOTAL') AS tower,
 	COALESCE(_sessions_aggregated.cellserver,'TOTAL') AS cellserver,
@@ -2052,8 +1972,7 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _sessions_
 	GROUP BY 1,2,3 WITH ROLLUP
 ;
 
-DROP VIEW IF EXISTS _sessions_xmastree;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _sessions_xmastree AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _sessions_xmastree AS 
 	SELECT REPLACE(REPLACE(s.specification,'_Daily',''),'_Weekly','') AS specification,
 	DATE_FORMAT(s.starttime,'%m/%d') AS date,
 	CONCAT(IF((LEFT(s.retention,1) = 'D'),'D',IF((LEFT(s.retention,1) = 'W'),'W','')),IF((s.bsr = 100),'S',IF((s.bsr = 0),'F','P')),IF((s.restarts = 0),'','+')) AS flag 
@@ -2061,8 +1980,7 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _sessions_
 	ORDER BY 1,2 DESC 
 ;
 
-DROP VIEW IF EXISTS _session_counts;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _session_counts AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _session_counts AS 
 	SELECT CONCAT(CAST(s.starttime AS date),' ',hour(s.starttime),':',right(CONCAT('00',(truncate((minute(s.starttime) / 15),0) * 15)),2)) AS starttime,
 	s.cellserver AS cellserver,
 	s.retention AS retention,
@@ -2074,8 +1992,7 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _session_c
 	ORDER BY 1,2,3 
 ;
 
-DROP VIEW IF EXISTS _session_devices;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _session_devices AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _session_devices AS 
 	SELECT sd.cellserver AS cellserver,
 	sd.sessionid AS sessionid,
 	sd.device AS device,
@@ -2091,8 +2008,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _session_devic
 	ORDER BY sd.starttime DESC 
 ;
 
-DROP VIEW IF EXISTS _session_media;
-CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _session_media AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _session_media AS 
 	SELECT sm.cellserver AS cellserver,
 	sm.sessionid AS sessionid,
 	sm.mediumid AS mediumid,
@@ -2107,8 +2023,7 @@ CREATE ALGORITHM=MERGE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _session_media
 	ORDER BY sm.lastused DESC 
 ;
 
-DROP VIEW IF EXISTS _specification_copylist;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _specification_copylist AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _specification_copylist AS 
 SELECT s.cellserver,s.dpgroup,
 	s.name AS specification,s.customer,
 	s.retention,s.protection,
@@ -2121,8 +2036,7 @@ SELECT s.cellserver,s.dpgroup,
 	ORDER BY s.cellserver,s.name
 ;
 
-DROP VIEW IF EXISTS _specification_periodicity;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _specification_periodicity AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _specification_periodicity AS 
 	SELECT s.cellserver AS cellserver,
 	s.specification AS specification,
 	COUNT(s.sessionid) AS sessions 
@@ -2133,8 +2047,7 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _specifica
 	ORDER BY 3 DESC 
 ;
 
-DROP VIEW IF EXISTS _specification_status;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _specification_status AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _specification_status AS 
 	SELECT s.cellserver,s.name AS specification,s.customer,s.retention,s.type,
 	(SELECT count(sessionid) FROM _sessions_all s1 WHERE s1.cellserver=s.cellserver AND s1.specification=s.name) AS sessions,
 	(SELECT count(sessionid) FROM _sessions_all s1 WHERE s1.cellserver=s.cellserver AND s1.specification=s.name AND status='Completed') AS completed,
@@ -2147,8 +2060,7 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _specifica
 	ORDER BY s.cellserver,s.name 
 ;
 
-DROP VIEW IF EXISTS _specification_status_percent;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _specification_status_percent AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _specification_status_percent AS 
 	SELECT cellserver,specification,customer,retention,type,sessions,
 	ROUND(100*completed/sessions,1) AS completed,
 	ROUND(100*errors/sessions,1) AS errors,
@@ -2158,8 +2070,7 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _specifica
 	FROM _specification_status 
 ;
 
-DROP VIEW IF EXISTS _status;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _status AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _status AS 
 SELECT mars30.function_uptime() AS uptime,
 		((SELECT COUNT(0) FROM mars30._processes) - 1) AS processes,
 		(SELECT COUNT(0) FROM mars30.mars_queue) AS queue,
@@ -2175,8 +2086,7 @@ SELECT mars30.function_uptime() AS uptime,
 		WHERE e.EVENT_NAME='event_routine' 
 ;
 
-DROP VIEW IF EXISTS _status_cellservers;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _status_cellservers AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _status_cellservers AS 
 	SELECT (SELECT COUNT(0) FROM _cellservers) AS cellservers,
 	(SELECT COUNT(0) FROM _omnistat) AS sessions,
 	(SELECT CAST(SUM(_cellservers.sessions_24h) AS unsigned) FROM _cellservers) AS sessions_24h,
@@ -2187,8 +2097,7 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _status_ce
 	(SELECT ROUND(avg(_cellservers.bsr_1m),2) FROM _cellservers) AS bsr_1m 
 ;
 
-DROP VIEW IF EXISTS _status_customers;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _status_customers AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _status_customers AS 
 	SELECT (SELECT COUNT(0) FROM _customers) AS customers,
 	(SELECT CAST(SUM(IF((_clients.type IN ('FileSystem','WinFS')),1,0)) AS unsigned) FROM _clients) AS fs,
 	(SELECT CAST(SUM(_customers.fsobjects) AS unsigned) FROM _customers) AS fsobjects,
@@ -2198,8 +2107,7 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _status_cu
 	(SELECT SUM(_customers.tbwritten_1m) FROM _customers) AS tbwritten_1m,
 	(SELECT SUM(_customers.tbretained) FROM _customers) AS tbretained 
 ;
-DROP VIEW IF EXISTS _clients_missing_objects;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _clients_missing_objects AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _clients_missing_objects AS 
 	SELECT 
 	c.cellserver,c.customer,c.name AS client,c.type,c.specifications,c.mountpoints,
 	o.name AS mountpoint,
@@ -2213,8 +2121,7 @@ CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _clients_m
 	ORDER BY days DESC 
 ;
 
-DROP VIEW IF EXISTS _backup_volume_library;
-CREATE ALGORITHM=TEMPTABLE DEFINER=root@'%' SQL SECURITY DEFINER VIEW _backup_volume_library AS 
+CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW _backup_volume_library AS 
 SELECT sd.library AS library,
 	COUNT(DISTINCT sd.sessionid) AS sessions,
 	COUNT(DISTINCT sd.device) AS devices,

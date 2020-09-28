@@ -4,8 +4,7 @@
 
 USE `mars40`;
 
-DROP TABLE IF EXISTS `config_customers`;
-CREATE TABLE IF NOT EXISTS `config_customers` (
+CREATE OR REPLACE TABLE `config_customers` (
   `name` varchar(64) NOT NULL DEFAULT 'Default',
   `policyname` varchar(64) NOT NULL DEFAULT '^.+',
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -14,8 +13,7 @@ CREATE TABLE IF NOT EXISTS `config_customers` (
   PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of customers';
 
-DROP TABLE IF EXISTS `config_schedules`;
-CREATE TABLE IF NOT EXISTS `config_schedules` (
+CREATE OR REPLACE TABLE `config_schedules` (
   `date` varchar(32) DEFAULT NULL,
   `time` varchar(32) NOT NULL,
   `name` varchar(64) NOT NULL,
@@ -33,8 +31,7 @@ CREATE TABLE IF NOT EXISTS `config_schedules` (
   PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of scheduled reports';
 
-DROP TABLE IF EXISTS `config_settings`;
-CREATE TABLE `config_settings` (
+CREATE OR REPLACE TABLE `config_settings` (
 	`name` VARCHAR(32) NOT NULL DEFAULT 'region',
 	`value` VARCHAR(32) NOT NULL DEFAULT 'Default',
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -44,8 +41,7 @@ CREATE TABLE `config_settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Settings';
 GRANT SELECT, INSERT, UPDATE, DELETE ON mars40.config_settings TO 'operator'@'%';
 
-DROP TABLE IF EXISTS `config_timeperiods`;
-CREATE TABLE IF NOT EXISTS `config_timeperiods` (
+CREATE OR REPLACE TABLE `config_timeperiods` (
   `ord` int(10) unsigned NOT NULL DEFAULT '1',
   `name` varchar(32) NOT NULL DEFAULT 'Default',
   `value` varchar(8) NOT NULL DEFAULT 'D-7::D',
@@ -55,8 +51,7 @@ CREATE TABLE IF NOT EXISTS `config_timeperiods` (
   PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List o time periods';
 
-DROP TABLE IF EXISTS `config_towers`;
-CREATE TABLE IF NOT EXISTS `config_towers` (
+CREATE OR REPLACE TABLE `config_towers` (
   `name` varchar(32) NOT NULL DEFAULT 'Default',
   `policyname` varchar(32) NOT NULL DEFAULT '^.+',
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -65,8 +60,7 @@ CREATE TABLE IF NOT EXISTS `config_towers` (
   PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of towers';
 
-DROP TABLE IF EXISTS `config_reports`;
-CREATE TABLE IF NOT EXISTS `config_reports` (
+CREATE OR REPLACE TABLE `config_reports` (
   `name` varchar(64) NOT NULL,
   `title` varchar(64) NOT NULL,
   `sources` text NOT NULL,
@@ -79,8 +73,7 @@ CREATE TABLE IF NOT EXISTS `config_reports` (
   PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of user reports';
 
-DROP VIEW IF EXISTS `v_schedules`;
-CREATE ALGORITHM=MERGE DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `v_schedules` AS 
+CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `v_schedules` AS 
 SELECT cs.*
 	FROM config_schedules cs 
 	WHERE ISNULL(cs.obsoleted) 
