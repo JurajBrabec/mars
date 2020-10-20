@@ -29,13 +29,13 @@ define( 'SCHEDULER_PAGE', 'PAGE' );
 define( 'SCHEDULER_SOURCE', 'SOURCE' );
 define( 'SCHEDULER_CMD', 'CMD' );
 define( 'ERROR_UNHANDLED_TYPE', "Unhandled type '%s'." );
-define( 'UPGRADE_FILE', '..\\upgrade*.zip' );
+define( 'UPGRADE_FILE', '../upgrade*.zip' );
 define( 'UPGRADE_EXTRACT', 'Extracting file "%s".');
 define( 'UPGRADE_EXECUTE', 'Executing file "%s".' );
 define( 'UPGRADE_EXTRACT_ERROR', 'Error: Cannot extract file "%s".' );
 define( 'UPGRADE_EXECUTE_ERROR', 'Error: File "%s" does not exist.' );
-define( 'UPGRADE_CMD', '%s\\%s\\upgrade.cmd' );
-define( 'UPGRADE_EXTRACT_CLEANUP', 'rd /s /q "%s\\%s"' );
+define( 'UPGRADE_CMD', '%s/%s/upgrade.cmd' );
+define( 'UPGRADE_EXTRACT_CLEANUP', 'rd /s /q "%s/%s"' );
 define( 'EXEC', '%s 2>&1' );
 define( 'ERROR_EXEC', 'Cannot start command "%s".' );
 define( 'ERROR_EXEC_TIMEOUT', 'Timeout %s seconds in command "%s".' );
@@ -51,8 +51,8 @@ define( 'EXCEPTION_LINE' ,'Line' );
 define( 'EXCEPTION_TRACE' ,'Trace' );
 define( 'FOOTER', '%s %s Prepared in <b>%s</b> second(s) on <b>%s (%s)</b>.' );
 
-require_once 'inc\database.php';
-require_once 'inc\page.php';
+require_once 'inc/database.php';
+require_once 'inc/page.php';
 
 class application {
 	var $name;
@@ -82,11 +82,11 @@ class application {
 
 	function application( $params = array( ) ) {
 		$this->micro_time = microtime( true );
-		$this->config = array_change_key_case( parse_ini_file( sprintf( '%s\conf\%s', substr( __DIR__, 0, strpos( __DIR__, 'www' ) - 1 ), INI_FILE ) ), CASE_UPPER );
+		$this->config = array_change_key_case( parse_ini_file( sprintf( '%s/conf/%s', substr( __DIR__, 0, strpos( __DIR__, 'www' ) - 1 ), INI_FILE ) ), CASE_UPPER );
 #MARS30 config.ini adjustments
 		$this->config[ 'TIME_FORMAT' ] = 'Y-m-d H:i:s';
 		$this->config[ 'MYSQL_HOST' ] = 'localhost';
-		$this->config[ 'MYSQL_DB' ] = 'MARS30';
+		$this->config[ 'MYSQL_DB' ] = 'mars30';
 		$this->config[ 'QUOTE' ] = $this->config[ 'TEXT_QUALIFIER' ];
 		$this->config[ 'MAIL_FROM' ] = $this->config[ 'SMTP_FROM' ];
 #MARS30 config.ini adjustments
@@ -94,7 +94,7 @@ class application {
 		$this->start_time = date( $this->config[ 'TIME_FORMAT' ] );
 		if ( !empty( $this->config[ 'SMTP_SERVER' ] ) ) ini_set( 'SMTP', $this->config[ 'SMTP_SERVER' ] ); 
 		if ( !empty( $this->config[ 'SMTP_PORT' ] ) ) ini_set( 'smtp_port', $this->config[ 'SMTP_PORT' ] ); 
-		$build = file_get_contents( sprintf( '%s\%s', substr( __DIR__, 0, strpos( __DIR__, 'www' ) - 1 ), BUILD_FILE ) );
+		$build = file_get_contents( sprintf( '%s/%s', substr( __DIR__, 0, strpos( __DIR__, 'www' ) - 1 ), BUILD_FILE ) );
 		$this->name = sprintf( APPLICATION, trim( $build ) );
 		$this->database_connect( );
 		$this->region = $this->get_config( REGION, APPLICATION );

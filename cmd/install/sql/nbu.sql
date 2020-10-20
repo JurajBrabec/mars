@@ -606,6 +606,36 @@ SELECT description INTO @description FROM nbu_codes WHERE field=_field and code=
 RETURN IFNULL(@description,_code);
 END //
 
+CREATE OR REPLACE DEFINER=CURRENT_USER FUNCTION `nbu_inbsr`(
+	`_jobtype` INT,
+	`_state` INT,
+    `_childjobs` INT
+)
+RETURNS INT
+LANGUAGE SQL
+DETERMINISTIC
+NO SQL
+COMMENT 'NBU BSR detection function'
+BEGIN
+RETURN IF(IFNULL(_jobtype,0) IN (0,6,22,28) AND IFNULL(_state,0)=3 AND IFNULL(_childjobs,0)=0,1,0);
+END //
+
+CREATE OR REPLACE DEFINER=CURRENT_USER FUNCTION `nbu_bsr`(
+	`_jobtype` INT,
+	`_state` INT,
+    `_childjobs` INT,
+	`_policytype` INT,
+	`_status` INT
+)
+RETURNS INT
+LANGUAGE SQL
+DETERMINISTIC
+NO SQL
+COMMENT 'NBU BSR calculation function'
+BEGIN
+RETURN IF(nbu_inbsr(_jobtype,_state,_childjobs),IF((_status=0) OR (_policytype IN (0,13) AND _status=1),100,0),NULL);
+END //
+
 CREATE OR REPLACE DEFINER=CURRENT_USER PROCEDURE `nbu_collect_bw_jobs`(
 	IN `daysback` INT
 )
@@ -615,23 +645,24 @@ MODIFIES SQL DATA
 SQL SECURITY DEFINER
 COMMENT 'BW Jobs collection routine'
 BEGIN
-INSERT INTO mars_bw_jobs (masterserver,policy,schedule,CLIENT,bw_day,jobs,mb,in_bsr,mb_in_bsr,bsr) (
+INSERT INTO mars_bw_jobs (masterserver,policy,schedule,client,bw_day,jobs,mb,in_bsr,mb_in_bsr,bsr) (
 	SELECT 
 		j.masterserver,j.policy,j.schedule,j.client,j.bw_day,
 		COUNT(j.jobid) AS jobs,
 		ROUND(SUM(j.kbytes/1000),1) AS mb,
-		SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0,1,0)) as in_bsr,
-		ROUND(SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0,j.kbytes/1000,0)),1) as mb_in_bsr,
-		IF(SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0,1,0))=0,NULL,
-			ROUND(SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0 AND j.status IN (0,1),100,0))/SUM(IF(j.jobtype IN (0,6,22,28) AND j.state=3 AND IFNULL(j.childjobs,0)=0,1,0)),1)) AS bsr
+        SUM(nbu_inbsr(j.jobtype,j.state,j.childjobs)) AS in_bsr,
+		ROUND(SUM(IF(nbu_inbsr(j.jobtype,j.state,j.childjobs),j.kbytes/1000,0)),1) as mb_in_bsr,
+		IF(SUM(nbu_inbsr(j.jobtype,j.state,j.childjobs)),
+			ROUND(SUM(nbu_bsr(j.jobtype,j.state,j.childjobs,j.policytype,j.status))/SUM(nbu_inbsr(j.jobtype,j.state,j.childjobs)),1)
+            ,NULL) AS bsr
 		FROM (
 			SELECT 
-				j.masterserver,j.policy,j.schedule,j.client,j.jobid,j.jobtype,j.state,j.status,j.kbytes,
+				j.masterserver,j.policy,j.policytype,j.schedule,j.client,j.jobid,j.jobtype,j.state,j.status,j.kbytes,
 				DATE(FROM_UNIXTIME(j.started-TIME_TO_SEC(s.value))) AS bw_day,
 				IF(j.jobid=j.parentjob,(SELECT COUNT(r.jobid) FROM bpdbjobs_report r WHERE r.masterserver=j.masterserver AND r.parentjob=j.jobid)-1,NULL) AS childjobs
 				FROM bpdbjobs_report j
 					LEFT JOIN config_settings s ON (s.name='bw_start')
-				WHERE j.masterserver IS NOT NULL AND j.policy IS NOT NULL AND J.schedule IS NOT NULL AND J.client IS NOT NULL
+				WHERE j.masterserver IS NOT NULL AND j.policy IS NOT NULL AND j.schedule IS NOT NULL AND j.client IS NOT NULL
 				AND j.started>UNIX_TIMESTAMP(ADDTIME(DATE(NOW()-INTERVAL daysback DAY-INTERVAL TIME_TO_SEC(s.value) SECOND),TIME(s.value)))
 		) j
 		GROUP BY j.masterserver,j.policy,j.schedule,j.client,j.bw_day
@@ -1068,25 +1099,6 @@ FROM mars_bw_jobs j
 	ORDER BY j.bw_day DESC,j.client
 ;
 
-CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bw_jobs` AS 
-SELECT j.bw_day,
-ptc.tower,ptc.customer,ptc.masterserver,
-c1.description as policytype,ptc.policy,
-c2.description AS scheduletype,j.schedule,
-j.client,j.jobs,j.mb,j.in_bsr,j.mb_in_bsr,j.bsr
-FROM mars_bw_jobs j
-	LEFT JOIN nbu_policy_tower_customer ptc ON (j.masterserver=ptc.masterserver AND j.policy=ptc.policy)
-	LEFT JOIN bppllist_policies p ON (p.masterserver=ptc.masterserver AND p.name=ptc.policy)
-	LEFT JOIN bppllist_schedules s ON (s.masterserver=ptc.masterserver AND s.policyname=ptc.policy AND s.name=j.schedule)
-	LEFT JOIN nbu_codes c1 ON (c1.field='policytype' AND c1.code=p.policytype)
-	LEFT JOIN nbu_codes c2 ON (c2.field='scheduletype' AND c2.code=s.backuptype)
-	LEFT JOIN config_settings cs ON (cs.name='bw_start')
-	WHERE IFNULL(ptc.tower,'')=IFNULL(f_tower(),IFNULL(ptc.tower,''))
-	AND IFNULL (ptc.customer,'')=IFNULL(f_customer(),IFNULL(ptc.customer,''))
-	AND UNIX_TIMESTAMP(j.bw_day)+TIME_TO_SEC(cs.value) BETWEEN f_from() AND f_to()
-	ORDER BY j.bw_day DESC,ptc.tower,ptc.customer,ptc.masterserver,ptc.policy,j.schedule,j.client 
-;
-
 CREATE OR REPLACE ALGORITHM=MERGE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_filtered_jobs` AS 
 SELECT 
 	j.masterserver,j.jobid,j.parentjob,
@@ -1136,6 +1148,7 @@ SELECT
 	nbu_code('subtype',b.subtype) AS subtype,
 	nbu_code('state',b.state) AS state,
 	nbu_code('operation',b.operation) AS operation,
+    nbu_bsr(b.jobtype,b.state,b.childjobs,b.policytype,b.status) AS bsr,
 	b.status,b.percent,b.tower,b.customer,
 	b.policy,
 	nbu_code('policytype',b.policytype) AS policytype,
@@ -1149,9 +1162,7 @@ SELECT
 	b.retentionlevel,b.retentionperiod,b.restartable,b.kbpersec
 	FROM nbu_filtered_jobs b
 	LEFT JOIN config_settings s ON (s.name='bw_start')
-	WHERE b.jobtype IN (0,6,22,28)
-		AND b.state=3 
-		AND IFNULL(b.childjobs,0)=0 
+    WHERE nbu_inbsr(b.jobtype,b.state,b.childjobs)
 ;
 
 CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_bsr` AS 
@@ -1170,7 +1181,7 @@ SELECT
 	j.client,
 	SUM(j.in_bsr) AS jobs,
 	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
-	FROM nbu_bw_jobs j
+	FROM nbu_bw_jobs_clients j
 	GROUP BY j.bw_day,j.client
 	ORDER BY j.bw_day DESC,j.client
 ;
@@ -1181,7 +1192,7 @@ SELECT
 	j.customer,
 	SUM(j.in_bsr) AS jobs,
 	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
-	FROM nbu_bw_jobs j
+	FROM nbu_bw_jobs_customers j
 	GROUP BY j.bw_day,j.customer
 	ORDER BY j.bw_day DESC,j.customer
 ;
@@ -1192,7 +1203,7 @@ SELECT
 	j.policytype AS policy,
 	SUM(j.in_bsr) AS jobs,
 	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
-	FROM nbu_bw_jobs j
+	FROM nbu_bw_jobs_policytypes j
 	GROUP BY j.bw_day,j.policytype
 	ORDER BY j.bw_day DESC,j.policytype
 ;
@@ -1203,7 +1214,7 @@ SELECT
 	j.scheduletype AS schedule,
 	SUM(j.in_bsr) AS jobs,
 	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
-	FROM nbu_bw_jobs j
+	FROM nbu_bw_jobs_scheduletypes j
 	GROUP BY j.bw_day,j.scheduletype
 	ORDER BY j.bw_day DESC,j.scheduletype
 ;
@@ -1214,7 +1225,7 @@ SELECT
 	CONCAT(j.policytype,'/',j.scheduletype) AS type,
 	SUM(j.in_bsr) AS jobs,
 	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
-	FROM nbu_bw_jobs j
+	FROM nbu_bw_jobs_detail j
 	GROUP BY j.bw_day,j.policytype,j.scheduletype
 	ORDER BY j.bw_day DESC,j.policytype,j.scheduletype
 ;
@@ -1235,7 +1246,7 @@ SELECT
 	j.client,
 	SUM(j.in_bsr) AS jobs,
 	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
-	FROM nbu_bw_jobs j
+	FROM nbu_bw_jobs_clients j
 	GROUP BY j.client
 	ORDER BY j.client
 ;
@@ -1247,7 +1258,7 @@ SELECT
 	j.customer,
 	SUM(j.in_bsr) AS jobs,
 	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
-	FROM nbu_bw_jobs j
+	FROM nbu_bw_jobs_customers j
 	GROUP BY j.customer
 	ORDER BY j.customer
 ;
@@ -1259,7 +1270,7 @@ SELECT
 	j.policytype AS policy,
 	SUM(j.in_bsr) AS jobs,
 	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
-	FROM nbu_bw_jobs j
+	FROM nbu_bw_jobs_policytypes j
 	GROUP BY j.policytype
 	ORDER BY j.policytype
 ;
@@ -1271,7 +1282,7 @@ SELECT
 	j.scheduletype AS schedule,
 	SUM(j.in_bsr) AS jobs,
 	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
-	FROM nbu_bw_jobs j
+	FROM nbu_bw_jobs_scheduletypes j
 	GROUP BY j.scheduletype
 	ORDER BY j.scheduletype
 ;
@@ -1283,7 +1294,7 @@ SELECT
 	CONCAT(j.policytype,'/',j.scheduletype) AS type,
 	SUM(j.in_bsr) AS jobs,
 	ROUND(SUM(j.in_bsr*j.bsr)/SUM(j.in_bsr),1) AS bsr
-	FROM nbu_bw_jobs j
+	FROM nbu_bw_jobs_detail j
 	GROUP BY j.policytype,j.scheduletype
 	ORDER BY j.policytype,j.scheduletype
 ;
@@ -1340,7 +1351,7 @@ SELECT
 	b.`jobid`,b.`parentjob`,
 	b.`jobtype`,b.`subtype`,b.`state`,b.`status`,
 	b.`tries`,
-	IF(b.`status`=0 OR b.`status`=1,100,0) AS `BSR`,
+    b.`bsr`,
 	b.`bw_day`,b.`started`,b.`elapsed`,b.`ended`,
 	ROUND(b.`kbytes`/(1024*1024),1) AS `gbytes`,
 	FROM_UNIXTIME(f.`timestamp`) AS `timestamp`,
@@ -1486,8 +1497,8 @@ SELECT j.masterserver,
 	nbu_code('state',j.state) AS state,
 	nbu_code('operation',j.operation) AS operation,
 	COUNT(j.jobid) AS jobs,
-	SUM(IF(j.status>1,0,1)) AS success,SUM(IF(j.status>1,1,0)) AS fail,
-	ROUND(100*SUM(IF(j.status>1,0,1))/COUNT(j.jobid),1) AS bsr,
+	SUM(IF(j.status=0,1,0)) AS success,SUM(IF(j.status=0,0,1)) AS fail,
+	ROUND(100*SUM(IF(j.status=0,1,0))/COUNT(j.jobid),1) AS bsr,
 	ROUND(SUM(j.kbytes)/1048576,1) AS gbytes
 	FROM nbu_filtered_jobs j
 	GROUP BY j.masterserver,j.jobtype,j.subtype,j.state,j.operation
@@ -1554,13 +1565,18 @@ SELECT
 
 CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER VIEW `nbu_consecutive_failures` AS 
 SELECT masterserver,tower,customer,client,policy,
-	IF(ISNULL((SELECT c.name FROM bppllist_clients c WHERE c.masterserver=j1.masterserver AND c.name=j1.client AND c.policyname=j1.policy AND c.obsoleted IS NULL)),'N','Y') AS existing,
+	IF(ISNULL((SELECT c.name FROM bppllist_clients c 
+        WHERE c.masterserver=j1.masterserver AND c.name=j1.client AND c.policyname=j1.policy AND c.obsoleted IS NULL))
+        ,'N','Y') AS existing,
 	schedule,FROM_UNIXTIME(lastfailure) AS lastfailure,
-	(SELECT COUNT(*) FROM bpdbjobs_report j2 WHERE j2.masterserver=j1.masterserver AND j2.started BETWEEN f_from() AND f_to() AND j2.client=j1.client AND j2.status>1 AND j2.started>j1.lastsuccess AND j2.policy=j1.policy AND IFNULL(j2.schedule,'')=IFNULL(j1.schedule,'')) AS failures
+	(SELECT COUNT(*) FROM bpdbjobs_report j2 
+        WHERE j2.masterserver=j1.masterserver AND j2.started BETWEEN f_from() AND f_to() AND j2.client=j1.client 
+        AND j2.status>0 AND j2.started>j1.lastsuccess AND j2.policy=j1.policy AND IFNULL(j2.schedule,'')=IFNULL(j1.schedule,'')
+        ) AS failures
 	FROM 
 	(SELECT j.masterserver,j.tower,j.customer,j.client,j.policy,j.schedule,
-		MAX(IF(j.status<=1,j.started,0)) as lastsuccess,
-		MAX(IF(j.status>1,j.started,0)) as lastfailure
+		MAX(IF(j.status=0,j.started,0)) as lastsuccess,
+		MAX(IF(j.status>0,j.started,0)) as lastfailure
 		FROM nbu_filtered_jobs j
 		WHERE IFNULL(j.schedule,'') NOT REGEXP 'NONE|NULL'
 		GROUP BY j.masterserver,j.client,j.policy,j.schedule
@@ -1717,7 +1733,7 @@ SELECT
 	'' AS `corellationkey`
 	FROM bpdbjobs_report j
 	WHERE j.ended > UNIX_TIMESTAMP(NOW()- INTERVAL 1 HOUR)
-	AND ((j.status>1 AND j.tries>0) OR (j.status=196))
+	AND ((IFNULL(nbu_bsr(j.jobtype,j.state,NULL,j.policytype,j.status),IF(j.status=0,1,0))=0 AND j.tries>0) OR (j.status=196))
 	ORDER BY j.masterserver,j.ended,j.jobid 
 ;
 
@@ -1725,8 +1741,8 @@ CREATE OR REPLACE ALGORITHM=TEMPTABLE DEFINER=CURRENT_USER SQL SECURITY DEFINER 
 	SELECT
 	j.customer,j.client,j.policy,j.schedule,
 	COUNT(j.jobid) AS jobs,
-	ROUND(SUM(IF(j.status=0 OR j.status=1,100,IF(j.status>1,0,j.status)))/COUNT(j.jobid),1) AS bsr,
-	RIGHT(GROUP_CONCAT(IF(j.status>1,'F','S') ORDER BY j.jobid),5) AS results
+	ROUND(SUM(j.bsr)/COUNT(j.jobid),1) AS bsr,
+	RIGHT(GROUP_CONCAT(IF(j.bsr=100,'S','F') ORDER BY j.jobid),5) AS results
 	FROM nbu_bsr_jobs j
 	GROUP BY j.client,j.policy,j.schedule
 	HAVING bsr<100
@@ -1804,6 +1820,7 @@ INSERT INTO `nbu_codes` (`field`, `code`, `description`) VALUES
 	('operation', 29, 'Duplicate to RM'),
 	('operation', 30, 'Running'),
 	('policytype', 0, 'UX'),
+	('policytype', 1, 'Proxy'),
 	('policytype', 4, 'Oracle'),
 	('policytype', 6, 'Informix'),
 	('policytype', 7, 'Sybase'),
@@ -1816,13 +1833,18 @@ INSERT INTO `nbu_codes` (`field`, `code`, `description`) VALUES
 	('policytype', 18, 'DB2'),
 	('policytype', 19, 'NDMP'),
 	('policytype', 20, 'FlashBackup'),
+	('policytype', 21, 'SplitMirror'),
 	('policytype', 25, 'Lotus'),
 	('policytype', 29, 'FlashBackup-Windows'),
 	('policytype', 30, 'Vault'),
 	('policytype', 35, 'NBU-Catalog'),
+	('policytype', 36, 'Generic'),
+	('policytype', 38, 'PureDisk'),
 	('policytype', 39, 'EnterpriseVault'),
 	('policytype', 40, 'VMWare'),
 	('policytype', 41, 'Hyper-V'),
+	('policytype', 44, 'BigData'),
+	('policytype', 46, 'Deployment'),
 	('scheduletype', 0, 'Full'),
 	('scheduletype', 1, 'Incremental'),
 	('scheduletype', 2, 'User backup'),

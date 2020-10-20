@@ -300,7 +300,7 @@ class page {
 					$ext = pathinfo( $file, PATHINFO_EXTENSION );
 					if ( $ext != 'zip' ) 
 						throw new exception( sprintf( 'File "%s" is not a valid MARS upgrade package.', $file ) ); 
-					if ( !move_uploaded_file( $_FILES[  FILE ][ 'tmp_name' ], sprintf( '..\\..\\%s', $file ) ) ) 
+					if ( !move_uploaded_file( $_FILES[  FILE ][ 'tmp_name' ], sprintf( '../../%s', $file ) ) ) 
 						throw new exception( sprintf( 'Error uploading package "%s".', $file ) );
 					$this->message = sprintf( 'Package "%s" has been uploaded.', $file );
 					return;

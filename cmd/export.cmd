@@ -56,7 +56,7 @@ if "%db%" equ "MARS40" set tables=config_customers config_reports config_schedul
 config_settings config_timeperiods config_towers ^
 bpdbjobs_report bpdbjobs_summary bpflist_backupid bpimmedia bpimmedia_frags ^
 bpplclients bppllist_clients bppllist_policies bppllist_schedules bpretlevel ^
-nbu_policy_tower_customer nbstl vault_item_xml vault_xml
+mars_bw_jobs nbdevquery_listdv_puredisk nbu_policy_tower_customer nbstl vault_item_xml vault_xml
 if "%db%" equ "MARS41" set tables=config_customers config_owners config_settings config_timeperiods config_towers ^
 dp_clients dp_copylists dp_devices dp_libraries dp_media dp_objects dp_pools ^
 dp_sessions dp_session_devices dp_session_media dp_session_objects dp_specifications ^

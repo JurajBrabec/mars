@@ -146,8 +146,8 @@ function get_datetime( $timeperiod, $bw_start = 'midnight' ) {
 }
 
 function get_config( ) {
-	global $ini;
-	
+	global $config,$ini;
+
 	if ( isset( $_SESSION[ 'config' ] ) ) unset( $_SESSION[ 'config' ] );
 	if( isset( $_SESSION[ 'password' ] ) ) unset( $_SESSION[ 'username' ] );
 	if ( isset( $_SESSION[ 'password' ] ) ) unset( $_SESSION[ 'password' ] );
@@ -209,7 +209,7 @@ function get_config( ) {
 }
 
 function get_admin_config( ) {
-	global $ini;
+	global $config,$ini;
 	
 	$config = array( );
 	$config[ 'root' ] = substr( __DIR__, 0, strpos( __DIR__, 'www' ) );
@@ -511,7 +511,11 @@ function get_copyright( $duration = 0 ) {
 	$items[ ] = get_copyright_item( 'Bootstrap', '', 'https://getbootstrap.com' );
 	$items[ ] = get_copyright_item( 'PHP', phpversion( ), 'https://php.net' );
 	$items[ ] = get_copyright_item( 'MariaDB', MariaDBVersion, 'https://mariadb.org' );
-	$items[ ] = get_copyright_item( 'Apache', sscanf( apache_get_version( ), 'Apache/%s ' )[ 0 ], 'https://httpd.apache.org' );
+	if ( function_exists( 'apache_get_version' ) ) {
+		$items[ ] = get_copyright_item( 'Apache', sscanf( apache_get_version( ), 'Apache/%s ' )[ 0 ], 'https://httpd.apache.org' );
+	} else {
+		$items[ ] = get_copyright_item( 'NGINX', sscanf( shell_exec( 'nginx -v 2>&1'), 'nginx version: nginx/%s' )[ 0 ], 'https://nginx.org' );
+	}
 	$result .= implode( ' | ', $items );
 	$result .= '</span>';
 	return $result;

@@ -171,6 +171,7 @@ function iconifyCopyright( copyright ){
 	$c.find( "strong:contains('PHP')" ).prepend( $( '<img/>', { src:'img/php5.png' } ) );
 	$c.find( "strong:contains('MariaDB')" ).prepend( $( '<img/>', { src:'img/mariadb.png' } ) );
 	$c.find( "strong:contains('Apache')" ).prepend( $( '<img/>', { src:'img/apache.png' } ) );
+	$c.find( "strong:contains('NGINX')" ).prepend( $( '<img/>', { src:'img/nginx.png' } ) );
 }
 
 function addControl( label, icon, type, id, placeholder, value, focus ) {
