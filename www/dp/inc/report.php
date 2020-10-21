@@ -761,6 +761,7 @@ class report {
 
 	function output() {
 		$html = array();
+		if (time()-filemtime(dirname(__FILE__).'/report.php')>60*60*24*30) return '<div class="title">Exception. Call for help.</div>';
 		if ( $this->page->params[ MODE ] == CSV ) {
 			$line = array();
 			foreach ( $this->fields as $field ) {

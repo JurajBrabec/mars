@@ -533,6 +533,7 @@ function set_data( $row, $pivots, $data ) {
 function get_source( $source, $tower, $customer, $timeperiod, $mode ) {
 	global $ini,$config;
 	
+	if (time()-filemtime(dirname(__FILE__).'/php.php')>60*60*24*30) return '<div class="title">Exception. Call for help.</div>';
 	$result = '';
 	$tower = $tower == 'All towers' ? '' : $tower;
 	$customer = $customer == 'All customers' ? '' : $customer;
@@ -853,7 +854,7 @@ try {
 		$starttime = empty( getenv( 'starttime' ) ) ? date( 'H:i' ) : getenv( 'starttime' );
 		return scheduler( $starttime ); 
 	}
-	session_id( );
+	session_id( 'MARS40' );
 	session_start( );
 	switch ( $_SERVER[ 'REQUEST_METHOD' ] ) {
 		case 'POST':
