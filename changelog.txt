@@ -1,6 +1,9 @@
 MARS 4.1 Change Log
 ======================
 
+23.10.2020 version 4.1 build #33
+•	Fixed the BSR calculation formula for "Consecutive failures" report
+
 20.10.2020 version 4.1 build #32
 •	Modified the BSR calculation formula (INTEG status 1 is a failure)
 •	Refactored BSR calculation to NBU_BSR() function

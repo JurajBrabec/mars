@@ -1497,8 +1497,9 @@ SELECT j.masterserver,
 	nbu_code('state',j.state) AS state,
 	nbu_code('operation',j.operation) AS operation,
 	COUNT(j.jobid) AS jobs,
-	SUM(IF(j.status=0,1,0)) AS success,SUM(IF(j.status=0,0,1)) AS fail,
-	ROUND(100*SUM(IF(j.status=0,1,0))/COUNT(j.jobid),1) AS bsr,
+	SUM(IF(nbu_bsr(j.jobtype,j.state,j.childjobs,j.policytype,j.status)=100,1,0)) AS success,
+	SUM(IF(nbu_bsr(j.jobtype,j.state,j.childjobs,j.policytype,j.status)=0,1,0)) AS fail,
+	ROUND(100*SUM(IF(nbu_bsr(j.jobtype,j.state,j.childjobs,j.policytype,j.status)=100,1,0))/COUNT(j.jobid),1) AS bsr,
 	ROUND(SUM(j.kbytes)/1048576,1) AS gbytes
 	FROM nbu_filtered_jobs j
 	GROUP BY j.masterserver,j.jobtype,j.subtype,j.state,j.operation
@@ -1571,14 +1572,15 @@ SELECT masterserver,tower,customer,client,policy,
 	schedule,FROM_UNIXTIME(lastfailure) AS lastfailure,
 	(SELECT COUNT(*) FROM bpdbjobs_report j2 
         WHERE j2.masterserver=j1.masterserver AND j2.started BETWEEN f_from() AND f_to() AND j2.client=j1.client 
-        AND j2.status>0 AND j2.started>j1.lastsuccess AND j2.policy=j1.policy AND IFNULL(j2.schedule,'')=IFNULL(j1.schedule,'')
+        AND nbu_bsr(j2.jobtype,j2.state,null,j2.policytype,j2.status)=0
+		AND j2.started>j1.lastsuccess AND j2.policy=j1.policy AND IFNULL(j2.schedule,'')=IFNULL(j1.schedule,'')
         ) AS failures
 	FROM 
 	(SELECT j.masterserver,j.tower,j.customer,j.client,j.policy,j.schedule,
-		MAX(IF(j.status=0,j.started,0)) as lastsuccess,
-		MAX(IF(j.status>0,j.started,0)) as lastfailure
+        MAX(IF(nbu_bsr(j.jobtype,j.state,j.childjobs,j.policytype,j.status)=100,j.started,0)) as lastsuccess,
+        MAX(IF(nbu_bsr(j.jobtype,j.state,j.childjobs,j.policytype,j.status)=0,j.started,0)) as lastfailure
 		FROM nbu_filtered_jobs j
-		WHERE IFNULL(j.schedule,'') NOT REGEXP 'NONE|NULL'
+		WHERE IFNULL(j.schedule,'NULL') NOT REGEXP 'NONE|NULL'
 		GROUP BY j.masterserver,j.client,j.policy,j.schedule
 		HAVING lastfailure>lastsuccess
 	) j1
