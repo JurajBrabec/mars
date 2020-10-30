@@ -282,6 +282,8 @@ function error_handler( $errno, $errstr, $errfile, $errline, array $errcontext )
 
 date_default_timezone_set( @date_default_timezone_get( ) );
 set_error_handler( 'error_handler' );
+set_time_limit(0);
+ignore_user_abort(1);
 try {
 	$params =  $_REQUEST;
 	PHP_SAPI === 'cli' && parse_str( implode( '&', array_slice( $argv, 1 ) ), $params );

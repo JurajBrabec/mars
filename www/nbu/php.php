@@ -584,6 +584,8 @@ function get_source( $source, $tower, $customer, $timeperiod, $mode ) {
 				$rows = json_decode( file_get_contents( $filename ), true );
 			} else {
 				if ( $db = mysqli_connect( $ini[ 'DB_HOST' ], $ini[ 'DB_USER' ], $ini[ 'DB_PWD' ], $ini[ 'DB_NAME' ] ) ) {
+					set_time_limit(0);
+					ignore_user_abort(1);
 					$sql = sprintf( "set @tower='%s',@customer='%s',@datetime_from='%s',@datetime_to='%s';", 
 						$tower, $customer, $from == '' ? '' : date( 'Y-m-d H:i:s', $from ), $to == '' ? '' : date( 'Y-m-d H:i:s', $to ) );
 					mysqli_query( $db, $sql );
