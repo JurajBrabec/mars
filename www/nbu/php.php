@@ -34,19 +34,26 @@ function update( ) {
 			echo sprintf( 'Extracting update package "%s.zip" to "%s".', $name, $path ) . PHP_EOL;
 			$zip->extractTo( $path );
 			$zip->close( );
-			if( file_exists( sprintf( '%s/%s/.cmd', $path, $name ) ) ) {
-				echo sprintf( 'Executing "%s/.cmd" file.', $name );
-				$result = exec( sprintf( '%s/%s/.cmd WEBINTERFACE 2>&1', $path, $name ), $output, $errorlevel );
+			if ( PHP_OS === 'WINNT' )  {
+				$script = sprintf( '%s/.cmd', $name );
+				$removefolder = sprintf( 'rd /s /q "%s/%s"', $path, $name );
+			} else {
+				$script = sprintf( '%s/.sh', $name );
+				$removefolder = sprintf( 'rm -rf "%s/%s"', $path, $name );
+			}
+			if( file_exists( sprintf( '%s/%s', $path, $script ) ) ) {
+				echo sprintf( 'Executing "%s" script.', $script );
+				$result = exec( sprintf( '%s/%s WEBINTERFACE 2>&1', $path, $script ), $output, $errorlevel );
 				echo sprintf( ' E:%s', $errorlevel ) . PHP_EOL;
 				echo '<-OUTPUT->: ' . PHP_EOL;
 				echo implode( PHP_EOL, $output );
 				echo PHP_EOL;
 				echo '<-END->' . PHP_EOL;
 			} else {
-				echo sprintf( 'Error: No "%s/.cmd' . '" file found.', $name ) . PHP_EOL;
+				echo sprintf( 'Error: No "%s' . '" script found.', $script ) . PHP_EOL;
 			}
 			echo sprintf( 'Removing update folder "%s".', $name ) . PHP_EOL;
-			exec( sprintf( 'rd /s /q "%s/%s"', $path, $name ) );
+			exec( $removefolder );
 			echo sprintf( 'Installation of package "%s" was successful.', $name ) . PHP_EOL;
 		} else {
 			echo sprintf( 'Error: Unable to open package "%s.zip".', $name ) . PHP_EOL;
@@ -155,7 +162,7 @@ function get_config( ) {
 		$config = $_SESSION[ 'config' ];
 	} else {
 		$config = array( );
-		$config[ 'root' ] = substr( __DIR__, 0, strpos( __DIR__, 'www' ) );
+		$config[ 'root' ] = realpath( sprintf( '%s/../..', __DIR__ ) );
 		if ( $db = mysqli_connect( $ini[ 'DB_HOST' ], $ini[ 'DB_USER' ], $ini[ 'DB_PWD' ], $ini[ 'DB_NAME' ] ) ) {
 			define( 'MariaDBVersion', implode( sscanf( mysqli_get_server_info( $db ), '5.5.5-%d.%d.%d-MariaDB' ), '.' ) );
 			$sql = 'select * from config_towers where obsoleted is null order by name;';
@@ -212,7 +219,7 @@ function get_admin_config( ) {
 	global $config,$ini;
 	
 	$config = array( );
-	$config[ 'root' ] = substr( __DIR__, 0, strpos( __DIR__, 'www' ) );
+	$config[ 'root' ] = realpath( sprintf( '%s/../..', __DIR__ ) );
 	$config[ 'username' ] = empty( $_SESSION[ 'username' ] ) ? '' : $_SESSION[ 'username' ];
 	$config[ 'password' ] = empty( $_SESSION[ 'password' ] ) ? '' : $_SESSION[ 'password' ];
 	if ( $db = mysqli_connect( $ini[ 'DB_HOST' ], $ini[ 'DB_USER' ], $ini[ 'DB_PWD' ], $ini[ 'DB_NAME' ] ) ) {
@@ -533,7 +540,7 @@ function set_data( $row, $pivots, $data ) {
 function get_source( $source, $tower, $customer, $timeperiod, $mode ) {
 	global $ini,$config;
 	
-	if (time()-filemtime(dirname(__FILE__).'/php.php')>60*60*24*30) return '<div class="title">Exception. Call for help.</div>';
+	if (time()-filemtime(__FILE__)>60*60*24*30) return '<div class="title">Exception. Call for help.</div>';
 	$result = '';
 	$tower = $tower == 'All towers' ? '' : $tower;
 	$customer = $customer == 'All customers' ? '' : $customer;
@@ -848,7 +855,7 @@ set_error_handler( 'error_handler' );
 try {
 	$params =  $_REQUEST;
 	PHP_SAPI === 'cli' && parse_str( implode( '&', array_slice( $argv, 1 ) ), $params );
-	$ini_file = sprintf( '%s/conf/config.ini', substr( __DIR__, 0, strpos( __DIR__, 'www' ) ) );
+	$ini_file = sprintf( '%s/conf/config.ini', realpath( sprintf( '%s/../..', __DIR__ ) ) );
 	$ini = array_change_key_case( parse_ini_file( $ini_file ), CASE_UPPER );
 	date_default_timezone_set( $ini[ 'TIME_ZONE' ] );
 	if ( PHP_SAPI === 'cli' ) {
@@ -856,7 +863,7 @@ try {
 		$starttime = empty( getenv( 'starttime' ) ) ? date( 'H:i' ) : getenv( 'starttime' );
 		return scheduler( $starttime ); 
 	}
-	session_id( 'MARS40' );
+	session_id( );
 	session_start( );
 	switch ( $_SERVER[ 'REQUEST_METHOD' ] ) {
 		case 'POST':

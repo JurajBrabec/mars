@@ -1,6 +1,9 @@
 MARS 4.1 Change Log
 ======================
 
+16.11.2020 version 4.1 build #35
+•	PHP fixes
+
 30.10.2020 version 4.1 build #34
 •	Extended PHP/SQL timeout for long reports
 
