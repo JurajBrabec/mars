@@ -1,6 +1,7 @@
 <?php
 
 define( 'StartTime', microtime( true ) );
+define ( 'ROOT', realpath( sprintf( '%s/../..', __DIR__ ) ) );
 
 function fetch_rows( $db, $sql ) {
 	$rows = array( );
@@ -24,7 +25,7 @@ function buffer_fetch_rows( $filename, $db, $sql ) {
 }
 
 function update( ) {
-	$files = sprintf( '%s/upload/{,.}*.zip', dirname( __FILE__ ) );
+	$files = sprintf( '%s/upload/{,.}*.zip', __DIR__ );
 	foreach( glob( $files, GLOB_BRACE ) as $file ) {
 		$path = pathinfo( realpath( $file ), PATHINFO_DIRNAME );
 		$name = pathinfo( realpath( $file ), PATHINFO_FILENAME );
@@ -162,7 +163,7 @@ function get_config( ) {
 		$config = $_SESSION[ 'config' ];
 	} else {
 		$config = array( );
-		$config[ 'root' ] = realpath( sprintf( '%s/../..', __DIR__ ) );
+		$config[ 'root' ] = ROOT;
 		if ( $db = mysqli_connect( $ini[ 'DB_HOST' ], $ini[ 'DB_USER' ], $ini[ 'DB_PWD' ], $ini[ 'DB_NAME' ] ) ) {
 			define( 'MariaDBVersion', implode( sscanf( mysqli_get_server_info( $db ), '5.5.5-%d.%d.%d-MariaDB' ), '.' ) );
 			$sql = 'select * from config_towers where obsoleted is null order by name;';
@@ -209,7 +210,7 @@ function get_config( ) {
 		}
 	}
 	$config[ 'ini' ] = $ini;
-	$config[ 'build' ] = trim( file_get_contents( sprintf( '%s/build', $config[ 'root' ] ) ) );
+	$config[ 'build' ] = trim( file_get_contents( sprintf( '%s/build', ROOT ) ) );
 	$config[ 'copyright' ] = get_copyright( );
 	$_SESSION[ 'config' ] = $config;
 	return $_SESSION[ 'config' ];
@@ -219,7 +220,7 @@ function get_admin_config( ) {
 	global $config,$ini;
 	
 	$config = array( );
-	$config[ 'root' ] = realpath( sprintf( '%s/../..', __DIR__ ) );
+	$config[ 'root' ] = ROOT;
 	$config[ 'username' ] = empty( $_SESSION[ 'username' ] ) ? '' : $_SESSION[ 'username' ];
 	$config[ 'password' ] = empty( $_SESSION[ 'password' ] ) ? '' : $_SESSION[ 'password' ];
 	if ( $db = mysqli_connect( $ini[ 'DB_HOST' ], $ini[ 'DB_USER' ], $ini[ 'DB_PWD' ], $ini[ 'DB_NAME' ] ) ) {
@@ -540,7 +541,7 @@ function set_data( $row, $pivots, $data ) {
 function get_source( $source, $tower, $customer, $timeperiod, $mode ) {
 	global $ini,$config;
 	
-	if (time()-filemtime(__FILE__)>60*60*24*30) return '<div class="title">Exception. Call for help.</div>';
+	if (time()-filemtime( sprintf( '%s/build', ROOT ) )>60*60*24*30) return '<div class="title">Exception. Call for help.</div>';
 	$result = '';
 	$tower = $tower == 'All towers' ? '' : $tower;
 	$customer = $customer == 'All customers' ? '' : $customer;
@@ -759,9 +760,9 @@ function send_report( $name, $title, $sources, $tower, $customer, $timeperiod, $
 function phpMailer( $name, $title, $to, $cc, $text, $mode ) {
 	global $config;
 	
-	require_once dirname( __FILE__ ) . '/inc/PHPMailer.php';
-	require_once dirname( __FILE__ ) . '/inc/SMTP.php';
-	require_once dirname( __FILE__ ) . '/inc/Exception.php';
+	require_once sprintf( '%s/inc/PHPMailer.php', __DIR__ );
+	require_once sprintf( '%s/inc/SMTP.php', __DIR__ );
+	require_once sprintf( '%s/inc/Exception.php', __DIR__ );
 	
 	$delims = array( ';', ' ', '|' );
 	$name = preg_replace( "([^\w\s\d\-_~,;\[\]\(\).])", '', $name );
@@ -855,7 +856,7 @@ set_error_handler( 'error_handler' );
 try {
 	$params =  $_REQUEST;
 	PHP_SAPI === 'cli' && parse_str( implode( '&', array_slice( $argv, 1 ) ), $params );
-	$ini_file = sprintf( '%s/conf/config.ini', realpath( sprintf( '%s/../..', __DIR__ ) ) );
+	$ini_file = sprintf( '%s/conf/config.ini', ROOT );
 	$ini = array_change_key_case( parse_ini_file( $ini_file ), CASE_UPPER );
 	date_default_timezone_set( $ini[ 'TIME_ZONE' ] );
 	if ( PHP_SAPI === 'cli' ) {
@@ -870,7 +871,7 @@ try {
 			$post = count( $_POST ) == 0 ? json_decode( file_get_contents( 'php://input' ), true ) : $_POST;
 			if ( isset( $post[ 'action' ] ) ) {
 				if ( $post[ 'action' ] == 'help' ) {
-					$xml = simplexml_load_file( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'help-texts.xml' );
+					$xml = simplexml_load_file( sprintf( '%s/inc/help-texts.xml', __DIR__ ) );
 					$item = $post[ 'id' ];
 					$result = $xml->$item ? $xml->$item : 'Error retrieving help text for #' . $item;
 					echo str_replace( array( '[', ']' ), array( '<', '>' ), $result );
@@ -884,7 +885,7 @@ try {
 					$ext = pathinfo( $file, PATHINFO_EXTENSION );
 					if ( $ext != 'zip' ) 
 						die( sprintf( 'Error: File "%s" is not a valid package.', $file ) ); 
-					if ( !move_uploaded_file( $_FILES[  'file' ][ 'tmp_name' ], dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'upload' . DIRECTORY_SEPARATOR . $file ) ) 
+					if ( !move_uploaded_file( $_FILES[  'file' ][ 'tmp_name' ], sprintf( '%s/upload/%s' , __DIR__ , $file ) ) ) 
 						die( sprintf( 'Error moving package "%s".', $file ) );
 					update( );
 					echo sprintf( 'Upload of package "%s" was successful.', $file );

@@ -50,6 +50,7 @@ define( 'EXCEPTION_FILE' ,'File' );
 define( 'EXCEPTION_LINE' ,'Line' );
 define( 'EXCEPTION_TRACE' ,'Trace' );
 define( 'FOOTER', '%s %s Prepared in <b>%s</b> second(s) on <b>%s (%s)</b>.' );
+define ( 'ROOT', realpath( sprintf( '%s/../..', __DIR__ ) ) );
 
 require_once 'inc/database.php';
 require_once 'inc/page.php';
@@ -82,7 +83,7 @@ class application {
 
 	function application( $params = array( ) ) {
 		$this->micro_time = microtime( true );
-		$this->config = array_change_key_case( parse_ini_file( sprintf( '%s/conf/%s', realpath( sprintf( '%s/../..', __DIR__ ) ), INI_FILE ) ), CASE_UPPER );
+		$this->config = array_change_key_case( parse_ini_file( sprintf( '%s/conf/%s', ROOT, INI_FILE ) ), CASE_UPPER );
 #MARS30 config.ini adjustments
 		$this->config[ 'TIME_FORMAT' ] = 'Y-m-d H:i:s';
 		$this->config[ 'MYSQL_HOST' ] = 'localhost';
@@ -94,7 +95,7 @@ class application {
 		$this->start_time = date( $this->config[ 'TIME_FORMAT' ] );
 		if ( !empty( $this->config[ 'SMTP_SERVER' ] ) ) ini_set( 'SMTP', $this->config[ 'SMTP_SERVER' ] ); 
 		if ( !empty( $this->config[ 'SMTP_PORT' ] ) ) ini_set( 'smtp_port', $this->config[ 'SMTP_PORT' ] ); 
-		$build = file_get_contents( sprintf( '%s/%s', realpath( sprintf( '%s/../..', __DIR__ ) ), BUILD_FILE ) );
+		$build = file_get_contents( sprintf( '%s/%s', ROOT, BUILD_FILE ) );
 		$this->name = sprintf( APPLICATION, trim( $build ) );
 		$this->database_connect( );
 		$this->region = $this->get_config( REGION, APPLICATION );
