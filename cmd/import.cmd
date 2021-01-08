@@ -19,10 +19,6 @@ if /i "%1" equ "mars40" (
 	call :database-import MARS40 %2
 	goto :end
 )
-if /i "%1" equ "mars41" (
-	call :database-import MARS41 %2
-	goto :end
-)
 if /i "%1" equ "mars_backup" (
 	call :database-import MARS_BACKUP %2
 	goto :end

@@ -19,10 +19,6 @@ if /i "%1" equ "mars40" (
 	call :database-export MARS40 %2
 	goto :end
 )
-if /i "%1" equ "mars41" (
-	call :database-export MARS41 %2
-	goto :end
-)
 if /i "%1" equ "mars_backup" (
 	call :database-export MARS_BACKUP %2
 	goto :end
@@ -56,14 +52,7 @@ if "%db%" equ "MARS40" set tables=config_customers config_reports config_schedul
 config_settings config_timeperiods config_towers ^
 bpdbjobs_report bpdbjobs_summary bpflist_backupid bpimmedia bpimmedia_frags ^
 bpplclients bppllist_clients bppllist_policies bppllist_schedules bpretlevel ^
-mars_bw_jobs nbdevquery_listdv_puredisk nbu_policy_tower_customer nbstl vault_item_xml vault_xml
-if "%db%" equ "MARS41" set tables=config_customers config_owners config_settings config_timeperiods config_towers ^
-dp_clients dp_copylists dp_devices dp_libraries dp_media dp_objects dp_pools ^
-dp_sessions dp_session_devices dp_session_media dp_session_objects dp_specifications ^
-mars_backups mars_devices mars_hosts mars_ids mars_links mars_lists ^
-mars_log mars_media mars_objects mars_status mars_strings ^
-nbu_clients nbu_files nbu_images nbu_image_frags nbu_jobs ^
-nbu_policies nbu_retlevels nbu_schedules nbu_strings nbu_slps nbu_vaults
+mars_bw_jobs nbdevquery_listdv_puredisk nbu_history nbu_policy_tower_customer nbstl vault_item_xml vault_xml
 if "%db%" equ "MARS_BACKUP" set tables=
 :export-execute
 echo.>"%root%\tmp\.export"

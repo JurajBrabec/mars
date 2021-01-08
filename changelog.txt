@@ -1,6 +1,15 @@
 MARS 4.1 Change Log
 ======================
 
+8.1.2021 version 4.1 build #37
+•	BPDBJOBS.stream extended to SMALLINT
+•	BPIMMEDIA_FRAGS.fragment_number extended to SMALLINT
+•	VAULT_XML.duppriority extended to SMALLINT
+•	Added NBU_HISTORY
+
+16.12.2020 version 4.1 build #36
+•	PHP fixes
+
 16.11.2020 version 4.1 build #35
 •	PHP fixes
 

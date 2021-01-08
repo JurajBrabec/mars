@@ -50,7 +50,7 @@ CREATE OR REPLACE TABLE `bpdbjobs_report` (
 	`srcserver` VARCHAR(64) NULL DEFAULT NULL,
 	`srcmedia` VARCHAR(32) NULL DEFAULT NULL,
 	`dstmedia` VARCHAR(32) NULL DEFAULT NULL,
-	`stream` TINYINT(4) NULL DEFAULT NULL,
+	`stream` SMALLINT(5) NULL DEFAULT NULL,
 	`suspendable` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`resumable` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`restartable` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
@@ -112,7 +112,7 @@ CREATE OR REPLACE TABLE `bpflist_backupid` (
 	`timestamp` INT(10) UNSIGNED NOT NULL,
 	`schedule_type` TINYINT(3) UNSIGNED NOT NULL,
 	`client` VARCHAR(64) NOT NULL,
-	`policy_name` VARCHAR(64) NOT NULL,
+	`policy_name` VARCHAR(96) NOT NULL,
 	`backupid` VARCHAR(64) NOT NULL,
 	`peer_name` VARCHAR(8) NULL,
 	`lines` TINYINT(3) UNSIGNED NOT NULL,
@@ -150,7 +150,7 @@ CREATE OR REPLACE TABLE `bpimmedia` (
 	`name` VARCHAR(64) NOT NULL,
 	`version` TINYINT(3) UNSIGNED NOT NULL,
 	`backupid` VARCHAR(64) NOT NULL,
-	`policy_name` VARCHAR(64) NULL DEFAULT NULL,
+	`policy_name` VARCHAR(96) NULL DEFAULT NULL,
 	`policy_type` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
 	`sched_label` VARCHAR(64) NULL DEFAULT NULL,
 	`sched_type` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
@@ -173,7 +173,7 @@ CREATE OR REPLACE TABLE `bpimmedia_frags` (
 	`masterserver` VARCHAR(64) NOT NULL,
 	`backupid` VARCHAR(64) NOT NULL,
 	`copy_number` TINYINT(3) UNSIGNED NOT NULL,
-	`fragment_number` TINYINT(4) NOT NULL,
+	`fragment_number` SMALLINT(5) NOT NULL,
 	`kilobytes` INT(10) UNSIGNED NOT NULL,
 	`remainder` INT(10) UNSIGNED NULL DEFAULT NULL,
 	`media_type` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
@@ -387,7 +387,7 @@ ENGINE=InnoDB
 
 CREATE OR REPLACE TABLE `mars_bw_jobs` (
 	`masterserver` VARCHAR(64) NOT NULL COLLATE 'utf8_general_ci',
-	`policy` VARCHAR(64) NOT NULL COLLATE 'utf8_general_ci',
+	`policy` VARCHAR(96) NOT NULL COLLATE 'utf8_general_ci',
 	`schedule` VARCHAR(64) NOT NULL COLLATE 'utf8_general_ci',
 	`client` VARCHAR(64) NOT NULL COLLATE 'utf8_general_ci',
 	`bw_day` DATE NOT NULL,
@@ -450,9 +450,23 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
 
+CREATE OR REPLACE TABLE `nbu_history` (
+	`time` VARCHAR(10) NOT NULL,
+	`masterserver` VARCHAR(64) NOT NULL,
+	`started_jobs` INT(11) UNSIGNED NULL DEFAULT NULL,
+	`ended_jobs` INT(11) UNSIGNED NULL DEFAULT NULL,
+	`state` TINYINT(3) UNSIGNED NOT NULL,
+	`status` SMALLINT(5) NOT NULL,
+	`updated` DATETIME NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+	PRIMARY KEY (`time`, `masterserver`, `state`, `status`) USING BTREE
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+;
+
 CREATE OR REPLACE TABLE `nbu_policy_tower_customer` (
 	`masterserver` VARCHAR(64) NOT NULL,
-	`policy` VARCHAR(64) NOT NULL,
+	`policy` VARCHAR(96) NOT NULL,
 	`tower` VARCHAR(32) NULL DEFAULT NULL,
 	`customer` VARCHAR(64) NULL DEFAULT NULL,
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -546,7 +560,7 @@ CREATE OR REPLACE TABLE `vault_xml` (
 	`basicdiskfilter` SET('INCLUDE','INCLUDE_ALL') NULL DEFAULT NULL,
 	`diskgroupfilter` SET('INCLUDE','INCLUDE_ALL') NULL DEFAULT NULL,
 	`duplication_skip` ENUM('YES','NO') NOT NULL DEFAULT 'YES',
-	`duppriority` TINYINT(4) NULL DEFAULT NULL,
+	`duppriority` MEDIUMINT(8) NULL DEFAULT NULL,
 	`multiplex` ENUM('YES','NO') NULL DEFAULT NULL,
 	`sharedrobots` ENUM('YES','NO') NULL DEFAULT NULL,
 	`sortorder` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
@@ -645,28 +659,57 @@ MODIFIES SQL DATA
 SQL SECURITY DEFINER
 COMMENT 'BW Jobs collection routine'
 BEGIN
-INSERT INTO mars_bw_jobs (masterserver,policy,schedule,client,bw_day,jobs,mb,in_bsr,mb_in_bsr,bsr) (
-	SELECT 
-		j.masterserver,j.policy,j.schedule,j.client,j.bw_day,
-		COUNT(j.jobid) AS jobs,
-		ROUND(SUM(j.kbytes/1000),1) AS mb,
-        SUM(nbu_inbsr(j.jobtype,j.state,j.childjobs)) AS in_bsr,
-		ROUND(SUM(IF(nbu_inbsr(j.jobtype,j.state,j.childjobs),j.kbytes/1000,0)),1) as mb_in_bsr,
-		IF(SUM(nbu_inbsr(j.jobtype,j.state,j.childjobs)),
-			ROUND(SUM(nbu_bsr(j.jobtype,j.state,j.childjobs,j.policytype,j.status))/SUM(nbu_inbsr(j.jobtype,j.state,j.childjobs)),1)
-            ,NULL) AS bsr
-		FROM (
-			SELECT 
-				j.masterserver,j.policy,j.policytype,j.schedule,j.client,j.jobid,j.jobtype,j.state,j.status,j.kbytes,
-				DATE(FROM_UNIXTIME(j.started-TIME_TO_SEC(s.value))) AS bw_day,
-				IF(j.jobid=j.parentjob,(SELECT COUNT(r.jobid) FROM bpdbjobs_report r WHERE r.masterserver=j.masterserver AND r.parentjob=j.jobid)-1,NULL) AS childjobs
-				FROM bpdbjobs_report j
-					LEFT JOIN config_settings s ON (s.name='bw_start')
-				WHERE j.masterserver IS NOT NULL AND j.policy IS NOT NULL AND j.schedule IS NOT NULL AND j.client IS NOT NULL
-				AND j.started>UNIX_TIMESTAMP(ADDTIME(DATE(NOW()-INTERVAL daysback DAY-INTERVAL TIME_TO_SEC(s.value) SECOND),TIME(s.value)))
-		) j
-		GROUP BY j.masterserver,j.policy,j.schedule,j.client,j.bw_day
-) ON DUPLICATE KEY UPDATE jobs=VALUES(jobs), mb=values(mb), in_bsr=VALUES(in_bsr), mb_in_bsr=VALUES(mb_in_bsr), bsr=VALUES(bsr),obsoleted=NULL;
+	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+	INSERT INTO mars_bw_jobs (masterserver,policy,schedule,client,bw_day,jobs,mb,in_bsr,mb_in_bsr,bsr) (
+		SELECT 
+			j.masterserver,j.policy,j.schedule,j.client,j.bw_day,
+			COUNT(j.jobid) AS jobs,
+			ROUND(SUM(j.kbytes/1000),1) AS mb,
+			SUM(nbu_inbsr(j.jobtype,j.state,j.childjobs)) AS in_bsr,
+			ROUND(SUM(IF(nbu_inbsr(j.jobtype,j.state,j.childjobs),j.kbytes/1000,0)),1) as mb_in_bsr,
+			IF(SUM(nbu_inbsr(j.jobtype,j.state,j.childjobs)),
+				ROUND(SUM(nbu_bsr(j.jobtype,j.state,j.childjobs,j.policytype,j.status))/SUM(nbu_inbsr(j.jobtype,j.state,j.childjobs)),1)
+				,NULL) AS bsr
+			FROM (
+				SELECT 
+					j.masterserver,j.policy,j.policytype,j.schedule,j.client,j.jobid,j.jobtype,j.state,j.status,j.kbytes,
+					DATE(FROM_UNIXTIME(j.started-TIME_TO_SEC(s.value))) AS bw_day,
+					IF(j.jobid=j.parentjob,(SELECT COUNT(r.jobid) FROM bpdbjobs_report r WHERE r.masterserver=j.masterserver AND r.parentjob=j.jobid)-1,NULL) AS childjobs
+					FROM bpdbjobs_report j
+						LEFT JOIN config_settings s ON (s.name='bw_start')
+					WHERE j.masterserver IS NOT NULL AND j.policy IS NOT NULL AND j.schedule IS NOT NULL AND j.client IS NOT NULL
+					AND j.started>UNIX_TIMESTAMP(ADDTIME(DATE(NOW()-INTERVAL daysback DAY-INTERVAL TIME_TO_SEC(s.value) SECOND),TIME(s.value)))
+			) j
+			GROUP BY j.masterserver,j.policy,j.schedule,j.client,j.bw_day
+	) ON DUPLICATE KEY UPDATE jobs=VALUES(jobs), mb=values(mb), in_bsr=VALUES(in_bsr), mb_in_bsr=VALUES(mb_in_bsr), bsr=VALUES(bsr),obsoleted=NULL;
+	COMMIT;
+END //
+
+CREATE OR REPLACE DEFINER=CURRENT_USER PROCEDURE `nbu_collect_history`()
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'History collection routine'
+BEGIN
+	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+	SELECT UNIX_TIMESTAMP(IFNULL(MAX(updated),NOW()-INTERVAL 5 MINUTE)) INTO @timestamp FROM nbu_history;
+	INSERT INTO nbu_history (
+		SELECT DATE_FORMAT(NOW(),'%H:%i') AS `time`,`masterserver`,COUNT(`jobid`) AS `started_jobs`,NULL AS `ended_jobs`,`state`,IFNULL(`status`,-1) AS `status`, NOW() AS `updated`
+		FROM bpdbjobs_report
+		WHERE `started`>@timestamp
+		GROUP BY `masterserver`,`state`,`status`
+		ORDER BY `masterserver`,`state`,`status`)
+	ON DUPLICATE KEY UPDATE `started_jobs`=VALUES(`started_jobs`);
+	INSERT INTO nbu_history (
+		SELECT DATE_FORMAT(NOW(),'%H:%i') AS `time`,`masterserver`,NULL AS `started_jobs`,COUNT(`jobid`) AS `ended_jobs`,`state`,`status`,NOW() AS `updated`
+		FROM bpdbjobs_report
+		WHERE `ended`>@timestamp
+		GROUP BY `masterserver`,`state`,`status`
+		ORDER BY `masterserver`,`state`,`status`)
+	ON DUPLICATE KEY UPDATE `ended_jobs`=VALUES(`ended_jobs`);
+	DELETE FROM nbu_history WHERE `updated`<=NOW()-INTERVAL 24 HOUR;
+	COMMIT;
 END //
 
 CREATE OR REPLACE DEFINER=CURRENT_USER PROCEDURE `nbu_routine`()
@@ -680,6 +723,7 @@ BEGIN
 	END;
 	SET @start=NOW();
 	ALTER EVENT nbu_event DISABLE;
+	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 	INSERT INTO nbu_policy_tower_customer (masterserver,policy,tower,customer)
 		SELECT p.masterserver,p.name,t.name,c.name FROM bppllist_policies p
 			LEFT JOIN config_towers t ON (p.name REGEXP t.policyname AND t.obsoleted IS NULL)
@@ -691,6 +735,7 @@ BEGIN
 			LEFT JOIN config_customers c ON (j.policy REGEXP c.policyname AND c.obsoleted IS NULL)
 		ON DUPLICATE KEY UPDATE tower=VALUES(tower),customer=VALUES(customer),updated=NOW(),obsoleted=NULL;
 	UPDATE nbu_policy_tower_customer SET obsoleted=NOW() WHERE updated<NOW()-INTERVAL 1 DAY;
+	COMMIT;
 	SET @daysback=1;
 	IF UNIX_TIMESTAMP(NOW())%(60*15) BETWEEN 540 AND 660 THEN 
 		SET @daysback=2;
@@ -706,6 +751,7 @@ BEGIN
 		SET @daysback=100;
 	END IF;
 	CALL nbu_collect_bw_jobs(@daysback);
+	CALL nbu_collect_history();
 	ALTER EVENT nbu_event ENABLE;
 	REPLACE INTO config_settings (name,value) VALUES ('routine',TIMESTAMPDIFF(SECOND,@start,NOW()));
 END //
@@ -773,6 +819,10 @@ BEGIN
 	CREATE TABLE temp_table LIKE nbstl;
 	INSERT INTO temp_table SELECT * FROM nbstl WHERE obsoleted IS NULL ORDER BY masterserver,slpname;
 	RENAME TABLE nbstl TO drop_table,temp_table TO nbstl;
+	DROP TABLE drop_table;
+	CREATE TABLE temp_table LIKE nbu_history;
+	INSERT INTO temp_table SELECT * FROM nbu_history WHERE obsoleted IS NULL ORDER BY time,masterserver;
+	RENAME TABLE nbu_history TO drop_table,temp_table TO nbu_history;
 	DROP TABLE drop_table;
 	CREATE TABLE temp_table LIKE nbu_policy_tower_customer;
 	INSERT INTO temp_table SELECT * FROM nbu_policy_tower_customer WHERE obsoleted IS NULL ORDER BY masterserver,policy;

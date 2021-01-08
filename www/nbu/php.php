@@ -258,6 +258,17 @@ function get_admin_config( ) {
 	return $config;
 }
 
+function get_history( ) {
+	global $ini;
+
+	$history = array( );
+	if ( $db = mysqli_connect( $ini[ 'DB_HOST' ], $ini[ 'DB_USER' ], $ini[ 'DB_PWD' ], $ini[ 'DB_NAME' ] ) ) {
+		$sql = 'select * from nbu_history order by time,masterserver,state,status;';
+		$history = fetch_rows( $db, $sql );
+	}
+	return $history;
+}
+
 function matches( $row, $format ) {
 	$result = false;
 	$value = is_array( $row ) ? isset( $row[ $format[ 'field' ] ] ) ? $row[ $format[ 'field' ] ] : '' : $row;
@@ -937,6 +948,9 @@ try {
 			if ( isset( $_GET[ 'action' ] ) ) {
 				if ( $_GET[ 'action' ] == 'get-config' ) {
 					echo json_encode( get_config( ) );
+				}
+				if ( $_GET[ 'action' ] == 'get-history' ) {
+					echo json_encode( get_history( ) );
 				}
 				if ( $_GET[ 'action' ] == 'get-session' ) {
 					isset( $_SESSION[ 'sources' ] ) || $_SESSION[ 'sources' ] = array( );
