@@ -1627,12 +1627,12 @@ class vault_xml extends text {
 								foreach ( $this->items( $ipf, 'CLIENT_FILTER', 1 ) as $clientfilter )
 									foreach ( $this->items( $clientfilter, 'CLIENT' ) as $client )
 										foreach ( $this->items( $ipf, 'BACKUP_TYPE_FILTER', 1 ) as $btf );
-										foreach ( $this->items( $ipf, 'MEDIA_SERVER_FILTER', 1 ) as $mediaserverfilter );
-										foreach ( $this->items( $ipf, 'CLASS_FILTER', 1 ) as $classfilter )
-											foreach ( $this->items( $classfilter, 'CLASS' ) as $class )
-												foreach ( $this->items( $ipf, 'SCHEDULE_FILTER', 1 ) as $schedulefilter )
-													foreach ( $this->items( $schedulefilter, 'SCHEDULE' ) as $schedule )
-														foreach ( $this->items( $ipf, 'RETENTION_LEVEL_FILTER', 1 ) as $retentionlevelfilter );
+								foreach ( $this->items( $ipf, 'MEDIA_SERVER_FILTER', 1 ) as $mediaserverfilter );
+								foreach ( $this->items( $ipf, 'CLASS_FILTER', 1 ) as $classfilter )
+									foreach ( $this->items( $classfilter, 'CLASS' ) as $class )
+										foreach ( $this->items( $ipf, 'SCHEDULE_FILTER', 1 ) as $schedulefilter )
+											foreach ( $this->items( $schedulefilter, 'SCHEDULE' ) as $schedule )
+												foreach ( $this->items( $ipf, 'RETENTION_LEVEL_FILTER', 1 ) as $retentionlevelfilter );
 							}
 							foreach( $this->items( $selection, 'IMAGE_LOCATION_FILTERS', 1 ) as $ilf ) {
 								foreach ( $this->items( $ilf, 'SOURCE_VOL_GROUP_FILTER', 1 ) as $sourcevolgroupfilter );
@@ -1687,12 +1687,8 @@ class vault_xml extends text {
 	
 	public function SQL( $table = NULL, $rows = NULL ) {
 		$masterserver = nbu( )->masterserver( );
-		$vault_sql = 'replace into vault_xml (`masterserver`,`robot_id`,`robot_lastmod`,`robot_name`,`robotnumber`,`robottype`,`roboticcontrolhost`,`usevaultprefene`,`robot_ene`,
-	`customerid`,`vault_id`,`vault_lastmod`,`vault_name`,`offsitevolumegroup`,`robotvolumegroup`,`vaultcontainers`,`vaultseed`,`vendor`,`profile_id`,`profile_lastmod`,`profile_name`,`endday`,`endhour`,`startday`,`starthour`,
-	`ipf_enabled`,`clientfilter`,`backuptypefilter`,`mediaserverfilter`,`classfilter`,`schedulefilter`,`retentionlevelfilter`,`ilf_enabled`,`sourcevolgroupfilter`,`volumepoolfilter`,`basicdiskfilter`,`diskgroupfilter`,
-	`duplication_skip`,`duppriority`,`multiplex`,`sharedrobots`,`sortorder`,`altreadhost`,`backupserver`,`readdrives`,`writedrives`,`fail`,`primary`,`retention`,`sharegroup`,`stgunit`,`volpool`,`catalogbackup_skip`,
-	`eject_skip`,`ejectmode`,`eject_ene`,`suspend`,`suspendmode`,`userbtorvaultprefene`,`imfile`,`mode`,`useglobalrptsdist`,`updated`,`obsoleted`) values ';
-		$vault_item_sql = 'replace into vault_item_xml (`masterserver`,`profile`,`type`,`value`,`updated`,`obsoleted`) values ';
+		$vault_sql = '';
+		$vault_item_sql = '';
 		foreach( $this->items( $this->rows( ), 'VAULT_MGR', 1 ) as $vault_mgr )
 			foreach( $this->items( $vault_mgr, 'ROBOT', 0 ) as $robot )
 				foreach( $this->items( $robot, 'VAULT', 0 ) as $vault ) try {
@@ -1701,15 +1697,15 @@ class vault_xml extends text {
 							foreach( $this->items( $selection, 'IMAGE_PROPERTIES_FILTERS', 1 ) as $ipf ) {
 								foreach ( $this->items( $ipf, 'CLIENT_FILTER', 1 ) as $clientfilter )
 									foreach ( $this->items( $clientfilter, 'CLIENT' ) as $client )
-										$vault_item_sql .= sprintf( '("%s","%s","%s","%s","%s",null)', $masterserver, $profile[ 'Name' ], 'CLIENT', $client[ 0 ], $this->updated( ) ) . ',' . PHP_EOL;
+										$vault_item_sql .= sprintf( '("%s","%s","%s","%s","%s",null)', $masterserver, $profile[ 'Name' ], 'CLIENT', explode( '%20', $client[ 0 ] )[ 0 ], $this->updated( ) ) . ',' . PHP_EOL;
 								foreach ( $this->items( $ipf, 'BACKUP_TYPE_FILTER', 1 ) as $btf );
 								foreach ( $this->items( $ipf, 'MEDIA_SERVER_FILTER', 1 ) as $mediaserverfilter );
 								foreach ( $this->items( $ipf, 'CLASS_FILTER', 1 ) as $classfilter )
 									foreach ( $this->items( $classfilter, 'CLASS' ) as $class )
-										$vault_item_sql .= sprintf( '("%s","%s","%s","%s","%s",null)', $masterserver, $profile[ 'Name' ], 'CLASS', $class[ 0 ], $this->updated( ) ) . ',' . PHP_EOL;
+										$vault_item_sql .= sprintf( '("%s","%s","%s","%s","%s",null)', $masterserver, $profile[ 'Name' ], 'CLASS', explode( '%20', $class[ 0 ] )[ 0 ], $this->updated( ) ) . ',' . PHP_EOL;
 								foreach ( $this->items( $ipf, 'SCHEDULE_FILTER', 1 ) as $schedulefilter )
 									foreach ( $this->items( $schedulefilter, 'SCHEDULE' ) as $schedule )
-										$vault_item_sql .= sprintf( '("%s","%s","%s","%s","%s",null)', $masterserver, $profile[ 'Name' ], 'SCHEDULE', $schedule[ 0 ], $this->updated( ) ) . ',' . PHP_EOL;
+										$vault_item_sql .= sprintf( '("%s","%s","%s","%s","%s",null)', $masterserver, $profile[ 'Name' ], 'SCHEDULE', explode( '%20', $schedule[ 0 ] )[ 0 ], $this->updated( ) ) . ',' . PHP_EOL;
 									foreach ( $this->items( $ipf, 'RETENTION_LEVEL_FILTER', 1 ) as $retentionlevelfilter );
 							}
 							foreach( $this->items( $selection, 'IMAGE_LOCATION_FILTERS', 1 ) as $ilf ) {
@@ -1808,12 +1804,23 @@ class vault_xml extends text {
 			} catch ( exception $e ) {
 				display( $e->getmessage( ) );
 			}
-			$vault_sql = substr_replace( $vault_sql, ';', strrpos( $vault_sql, ',' ), 1 );
-			$vault_sql_cleanup = sprintf( "update vault_xml set obsoleted=updated where masterserver='%s' and obsoleted is null and updated<'%s';", $masterserver, $this->updated( ) );
-			$vault_item_sql = substr_replace( $vault_item_sql, ';', strrpos( $vault_item_sql, ',' ), 1 );
-			$vault_item_sql_cleanup = sprintf( "update vault_item_xml set obsoleted=updated where masterserver='%s' and obsoleted is null and updated<'%s';", $masterserver, $this->updated( ) );
-
-			return array( $vault_sql, $vault_sql_cleanup, $vault_item_sql, $vault_item_sql_cleanup );
+		$sqls = array( );
+		if ( !empty( $vault_sql ) ) {
+			$sqls[ ] = 'replace into vault_xml (`masterserver`,`robot_id`,`robot_lastmod`,`robot_name`,`robotnumber`,`robottype`,`roboticcontrolhost`,`usevaultprefene`,
+			`robot_ene`,`customerid`,`vault_id`,`vault_lastmod`,`vault_name`,`offsitevolumegroup`,`robotvolumegroup`,`vaultcontainers`,`vaultseed`,`vendor`,`profile_id`,
+			`profile_lastmod`,`profile_name`,`endday`,`endhour`,`startday`,`starthour`,`ipf_enabled`,`clientfilter`,`backuptypefilter`,`mediaserverfilter`,`classfilter`,
+			`schedulefilter`,`retentionlevelfilter`,`ilf_enabled`,`sourcevolgroupfilter`,`volumepoolfilter`,`basicdiskfilter`,`diskgroupfilter`,`duplication_skip`,
+			`duppriority`,`multiplex`,`sharedrobots`,`sortorder`,`altreadhost`,`backupserver`,`readdrives`,`writedrives`,`fail`,`primary`,`retention`,`sharegroup`,
+			`stgunit`,`volpool`,`catalogbackup_skip`,`eject_skip`,`ejectmode`,`eject_ene`,`suspend`,`suspendmode`,`userbtorvaultprefene`,`imfile`,`mode`,`useglobalrptsdist`,
+			`updated`,`obsoleted`) values ' . substr_replace( $vault_sql, ';', strrpos( $vault_sql, ',' ), 1 );
+			$sqls[ ] = sprintf( "update vault_xml set obsoleted=updated where masterserver='%s' and obsoleted is null and updated<'%s';", $masterserver, $this->updated( ) );
+		}
+		if ( !empty( $vault_item_sql ) ) {
+			$sqls[ ] = 'replace into vault_item_xml (`masterserver`,`profile`,`type`,`value`,`updated`,`obsoleted`) values '
+				. substr_replace( $vault_item_sql, ';', strrpos( $vault_item_sql, ',' ), 1 );
+			$sqls[ ] = sprintf( "update vault_item_xml set obsoleted=updated where masterserver='%s' and obsoleted is null and updated<'%s';", $masterserver, $this->updated( ) );
+		}
+		return $sqls;
 	}
 }
 
