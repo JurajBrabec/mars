@@ -821,7 +821,7 @@ BEGIN
 	RENAME TABLE nbstl TO drop_table,temp_table TO nbstl;
 	DROP TABLE drop_table;
 	CREATE TABLE temp_table LIKE nbu_history;
-	INSERT INTO temp_table SELECT * FROM nbu_history WHERE obsoleted IS NULL ORDER BY time,masterserver;
+	INSERT INTO temp_table SELECT * FROM nbu_history ORDER BY time,masterserver;
 	RENAME TABLE nbu_history TO drop_table,temp_table TO nbu_history;
 	DROP TABLE drop_table;
 	CREATE TABLE temp_table LIKE nbu_policy_tower_customer;
@@ -1727,9 +1727,11 @@ SELECT DISTINCT
 	s3.`slpname` AS `slp_name`,s3.`storageunit` AS `slp_stu`,
 	(SELECT rl.`period` FROM bpretlevel rl 
 		WHERE rl.`masterserver`=s3.`masterserver` AND rl.`level`=s3.`retentionlevel`) AS `slp_ret`,
-	v.`profile_name` AS `vault`,v.`stgunit` AS `vault_stu`,
-	(SELECT rl.`period` FROM bpretlevel rl 
-		WHERE rl.`masterserver`=v.`masterserver` AND rl.`level`=v.`retention`) AS `vault_ret`
+#	v.`profile_name` AS `vault`,v.`stgunit` AS `vault_stu`,(SELECT rl.`period` FROM bpretlevel rl WHERE rl.`masterserver`=v.`masterserver` AND rl.`level`=v.`retention`) AS `vault_ret`
+	IF(IFNULL(v.`schedulefilter`,'')<>'INCLUDE' OR vs.`value` IS NOT NULL,v.`profile_name`,NULL) AS `vault`,
+	IF(IFNULL(v.`schedulefilter`,'')<>'INCLUDE' OR vs.`value` IS NOT NULL,v.`stgunit`,NULL) AS `vault_stu`,
+	IF(IFNULL(v.`schedulefilter`,'')<>'INCLUDE' OR vs.`value` IS NOT NULL,(SELECT rl.`period` FROM bpretlevel rl 
+		WHERE rl.`masterserver`=v.`masterserver` AND rl.`level`=v.`retention`),NULL) AS `vault_ret`
 	FROM bppllist_clients c
 		LEFT JOIN bppllist_policies p ON (c.`masterserver`=p.`masterserver` AND c.`policyname`=p.`name` AND p.`obsoleted` IS NULL)
 		LEFT JOIN bppllist_schedules s1 ON (s1.`masterserver`=p.`masterserver` AND s1.`policyname`=p.`name` AND s1.`obsoleted` IS NULL)
@@ -1742,7 +1744,7 @@ SELECT DISTINCT
 		LEFT JOIN vault_item_xml vs ON ( vs.`masterserver`=c.`masterserver` AND vs.`type`='SCHEDULE' AND vs.`profile`=v.`profile_name` AND vs.`value`=s1.`name` AND vs.`obsoleted` IS NULL)
 		LEFT JOIN nbu_policy_tower_customer ptc ON (ptc.`masterserver`=c.`masterserver` AND ptc.`policy`=c.`policyname`)
 	WHERE c.`obsoleted` IS NULL
-	AND (IFNULL(v.`schedulefilter`,'')<>'INCLUDE' OR vs.`value` IS NOT NULL)
+#	AND (IFNULL(v.`schedulefilter`,'')<>'INCLUDE' OR vs.`value` IS NOT NULL)
 	AND p.`active`=0
 	AND IFNULL(ptc.`tower`,'')=IFNULL(f_tower(),IFNULL(ptc.`tower`,''))
 	AND IFNULL (ptc.`customer`,'')=IFNULL(f_customer(),IFNULL(ptc.`customer`,''))
