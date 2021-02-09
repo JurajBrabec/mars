@@ -25,6 +25,51 @@ function buffer_fetch_rows( $filename, $db, $sql ) {
 }
 
 function update( ) {
+        $files = sprintf( '%s/upload/{,.}*.zip', __DIR__ );
+        foreach( glob( $files, GLOB_BRACE ) as $file ) {
+                $path = pathinfo( realpath( $file ), PATHINFO_DIRNAME );
+                $name = pathinfo( realpath( $file ), PATHINFO_FILENAME );
+                $location = sprintf( '%s/%s', $path, $name );
+                echo sprintf( 'Found update package "%s.zip".', $name ) . PHP_EOL;
+                $zip = new ZipArchive;
+                if ( $zip->open( $file ) === TRUE ) {
+                        echo sprintf( 'Extracting update package "%s.zip" to "%s".', $name, $path ) . PHP_EOL;
+                        $zip->extractTo( $path );
+                        $zip->close( );
+                        if ( PHP_OS_FAMILY === 'Windows' )  {
+                                $script = '.cmd';
+                                $removefolder = sprintf( 'rd /s /q "%s"', $location );
+                                $exec = sprintf( '"%s/%s" WEBINTERFACE 2>&1', $location, $script );
+                        } else {
+                                $script = '.update';
+                                $removefolder = sprintf( 'rm -rf "%s"', $location );
+                                $exec = sprintf( 'sudo -E %s/bin/mars.sh -u %s/%s 2>&1', ROOT, $location, $script );
+                        }
+                        clearstatcache();
+                        if( file_exists( sprintf( '%s/%s', $location, $script ) ) ) {
+                                echo sprintf( 'Executing "%s" script.', $script );
+                                $result = exec( $exec, $output, $errorlevel );
+                                echo sprintf( ' E:%s', $errorlevel ) . PHP_EOL;
+                                echo '<-OUTPUT->: ' . PHP_EOL;
+                                echo implode( PHP_EOL, $output );
+                                echo PHP_EOL;
+                                echo '<-END->' . PHP_EOL;
+                        } else {
+                                echo sprintf( 'Error: No "%s' . '" script found.', $script ) . PHP_EOL;
+                        }
+                        echo sprintf( 'Removing update folder "%s".', $name ) . PHP_EOL;
+                        exec( $removefolder );
+                        echo sprintf( 'Installation of package "%s" was successful.', $name ) . PHP_EOL;
+                } else {
+                        echo sprintf( 'Error: Unable to open package "%s.zip".', $name ) . PHP_EOL;
+                }
+                echo sprintf( 'Removing update package "%s.zip".', $name ) . PHP_EOL;
+                unlink( $file );
+        }
+        return true;
+}
+
+function updateOld( ) {
 	$files = sprintf( '%s/upload/{,.}*.zip', __DIR__ );
 	foreach( glob( $files, GLOB_BRACE ) as $file ) {
 		$path = pathinfo( realpath( $file ), PATHINFO_DIRNAME );
