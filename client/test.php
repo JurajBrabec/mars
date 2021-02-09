@@ -51,15 +51,14 @@ function daystest() {
 	die();
 }
 
-function xml( ) {
+function xml( $xmlfile ) {
+    
+    function parse_item( $item, $prefix = '' ) {
     $skip_items = array( 
         'MAP','RETENTION_MAP','RETMAP_ITEM',
         'REPORT','REPORTS_SETTINGS','REPORTS',
         'VAULT_PREFERENCES','ALIASES'
     );
-    
-    function parse_item( $item, $prefix = '' ) {
-        global $skip_items;
         $result = array();
         if ( !in_array( $item->getName(), $skip_items ) ) {
             $string = trim( $item->__toString( ) );
@@ -77,9 +76,11 @@ function xml( ) {
         return $result;
     }
     
-    $vault = parse_item( new SimpleXMLElement( file_get_contents( 'm:\\Veritas\\NetBackup\\db\\vault\vault.xml' ) ) );
+    $vault = parse_item( new SimpleXMLElement( file_get_contents( $xmlfile ) ) );
 #   print_r( $vault );
 }
+xml( 'M:/redist/vault-SLR-NBMASTC1.xml' );
+die( );
 
 require_once dirname( __FILE__ ) . '/inc/os.php';
 require_once dirname( __FILE__ ) . '/inc/database.php';
@@ -310,14 +311,14 @@ function nbu_test( $multi_thread = 0 ) {
 #	$t = bpdbjobs_report( );
 #	$t = bppllist_policies( );
 #	$t = bpretlevel( );
-#	$t = vault_xml( 'm:\\Veritas\\NetBackup\\db\\vault' );
+	$t = vault_xml( 'm:\\Veritas\\NetBackup\\db\\vault' );
 #	$t = bpplclients( );
 #	$t = bpimagelist_hoursago( 24 );
 #	$t = bpflist_backupid( 'test_0' );
 #	$t = nbstl( );
 #	$t = bpimmedia( 1 );
 #	$t = bpimmedia_client( 'test' );
-	$t = nbdevquery_listdv_puredisk( );
+#	$t = nbdevquery_listdv_puredisk( );
     if ( $multi_thread == 0 ) {
 		$t->execute( );
 		nbu_process( $t );
