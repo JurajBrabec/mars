@@ -141,6 +141,7 @@ function adminSignedIn( ) {
 		showMessage( 'Ready to upload the package.' );
 	} );
 	$( document ).on( 'click', 'button#nbu_event', function( ) {
+		if ( !confirm( 'Do you want to execute the routine now?' ) ) return;
 		$( 'button#nbu_event' ).attr( 'disabled', 'disabled' ).removeClass( 'btn-success btn-danger' ).addClass( 'btn-default' );
 		startTrack( function( ) {
 			$.ajax( {
@@ -160,6 +161,7 @@ function adminSignedIn( ) {
 		} );
 	} );
 	$( document ).on( 'click', 'button#nbu_maintenance', function( ) {
+		if ( !confirm( 'Do you want to execute the maintenance now?' ) ) return;
 		$( 'button#nbu_maintenance' ).attr( 'disabled', 'disabled' ).removeClass( 'btn-success btn-danger' ).addClass( 'btn-default' );
 		startTrack( function( ) {
 			$.ajax( {

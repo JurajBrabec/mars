@@ -1,16 +1,19 @@
 MARS 4.1 Change Log
 ======================
 
-8.02.2021 version 4.1 build #40
+05.03.2021 version 4.1 build #41
+•	Added confirmation before routine and maintenance calls in Admin interface
+
+08.02.2021 version 4.1 build #40
 •	Fix for VAULT_XML import
 
-2.02.2021 version 4.1 build #39
+02.02.2021 version 4.1 build #39
 •	Fix for NBU_AUDIT report
 
-1.2.2021 version 4.1 build #38
+01.2.2021 version 4.1 build #38
 •	Fix for NBU_HISTORY maintenance
 
-8.1.2021 version 4.1 build #37
+08.1.2021 version 4.1 build #37
 •	BPDBJOBS.stream extended to SMALLINT
 •	BPIMMEDIA_FRAGS.fragment_number extended to SMALLINT
 •	VAULT_XML.duppriority extended to SMALLINT
