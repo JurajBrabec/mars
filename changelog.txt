@@ -1,5 +1,10 @@
 MARS 4.1 Change Log
 ======================
+22.04.2021 version 4.1 build #43
+•	Added possibility to modify EventTypeInstance in SM9 export via NBU2SM9_INSTANCE[<instanceName>]="<policyMatch>" config.ini entries (regExp).
+
+02.04.2021 version 4.1 build #42
+•	HeidiSQL updated to latest version
 
 05.03.2021 version 4.1 build #41
 •	Added confirmation before routine and maintenance calls in Admin interface

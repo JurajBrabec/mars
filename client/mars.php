@@ -180,6 +180,7 @@ function nbu2sm9( ) {
 		ini_default( 'NBU2SM9_FILTER_POLICIES', '' );
 		ini_default( 'NBU2SM9_FILTER_POLICYTYPES', '' );
  		ini_default( 'NBU2SM9_FILTER_STATUSES', '150' );
+		ini_default( 'NBU2SM9_INSTANCE', [] );
 		
 		is_dir( $ini[ 'NBU2SM9_PATH' ] ) || mkdir( $ini[ 'NBU2SM9_PATH' ], 0777, true );
 		$file_name = os( )->path( array( $ini[ 'NBU2SM9_PATH' ] , $ini[ 'NBU2SM9_FILE' ] ) );
@@ -231,6 +232,8 @@ function nbu2sm9( ) {
 				touch( $file_name );
 			}
 			$file = new basic_log_file( $file_name );
+			$instances = $ini[ 'NBU2SM9_INSTANCE' ];
+			if ( !is_array( $instances ) ) $instances = [ ];
 			$i = 0;
 			foreach( database( )->rows( ) as $row ) {
 				debug( $debug_level, timestamp( sprintf( 'ID %s', $row[ 'jobid' ] ) ) );
@@ -241,6 +244,9 @@ function nbu2sm9( ) {
 				if ( $row[ 'date' ] == $date and $row[ 'jobid' ]<= $jobid ) continue;
 				$line = $ini[ 'NBU2SM9_LINE' ];
 				$mtext = $ini[ 'NBU2SM9_MESSAGETEXT' ];
+				foreach ( $instances as $instance=>$filter ) {
+					if ( preg_match( sprintf( '/%s/i', $filter ), $row[ 'policy' ] ) )  $row[ 'eventtypeinstance' ] = $instance;
+				}
 				foreach( $row as $key=>$value ) {
 					if ( is_numeric( $key ) ) continue;
 					$line = str_replace( sprintf( $keymask, strtoupper( $key ) ), trim( $value ), $line );
